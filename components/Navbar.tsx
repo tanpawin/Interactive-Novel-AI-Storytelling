@@ -2,66 +2,55 @@
 
 import React from 'react';
 import Link from 'next/link';
-import '../styles/navbar.css';
+import { usePathname } from 'next/navigation';
 
 interface NavbarProps {
-  activeTab: 'library' | 'discover' | 'my-stories';
-  onTabChange: (tab: 'library' | 'discover' | 'my-stories') => void;
   onOpenCreateModal: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({
-  activeTab,
-  onTabChange,
-  onOpenCreateModal,
-}) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenCreateModal }) => {
+  const pathname = usePathname();
+
   return (
     <header className="navbar-container">
       <div className="navbar-content">
-        {/* Brand Logo */}
-        <div className="navbar-brand" onClick={() => onTabChange('library')}>
-          <div className="logo-icon">📖</div>
+        {/* โลโก้ */}
+        <Link href="/" className="navbar-brand">
+          <span className="logo-icon">📖</span>
           <span className="logo-text">CozyTales</span>
-        </div>
+        </Link>
 
-        {/* Navigation Links */}
+        {/* เมนูเปลี่ยนหน้า */}
         <nav className="navbar-links">
-          <button
-            className={`nav-link ${activeTab === 'library' ? 'active' : ''}`}
-            onClick={() => onTabChange('library')}
+          <Link 
+            href="/" 
+            className={`nav-link ${pathname === '/' ? 'active' : ''}`}
           >
             หน้าหลัก (Library)
-          </button>
-          <button
-            className={`nav-link ${activeTab === 'discover' ? 'active' : ''}`}
-            onClick={() => onTabChange('discover')}
+          </Link>
+          <Link 
+            href="/discover" 
+            className={`nav-link ${pathname === '/discover' ? 'active' : ''}`}
           >
             สำรวจ (Discover)
-          </button>
-          <button
-            className={`nav-link ${activeTab === 'my-stories' ? 'active' : ''}`}
-            onClick={() => onTabChange('my-stories')}
+          </Link>
+          <Link 
+            href="/my-stories" 
+            className={`nav-link ${pathname === '/my-stories' ? 'active' : ''}`}
           >
             นิยายของฉัน (My Stories)
-          </button>
+          </Link>
         </nav>
 
-        {/* Actions (Search, New Story Button, Profile) */}
+        {/* ปุ่มกดเปิด Modal */}
         <div className="navbar-actions">
-          <button className="icon-button" title="ค้นหา">
-            🔍
+          <button 
+            type="button" 
+            className="btn-create-story" 
+            onClick={onOpenCreateModal}
+          >
+            + เรื่องใหม่
           </button>
-          
-          <button className="btn-create-story" onClick={onOpenCreateModal}>
-            <span>+</span> เรื่องใหม่
-          </button>
-
-          <div className="user-avatar" title="โปรไฟล์ของคุณ">
-            <img 
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200" 
-              alt="User Avatar" 
-            />
-          </div>
         </div>
       </div>
     </header>
