@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Story, Chapter } from '../types/story';
-import '../styles/reader.css';
+import { Story, Chapter } from '@/types/story';
+import '@/styles/reader.css';
 
 interface ReaderViewProps {
   story: Story;
@@ -19,43 +19,65 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   const [isGeneratingNext, setIsGeneratingNext] = useState(false);
   const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg'>('md');
 
-  // ฟังก์ชันจำลองการส่งการกระทำของตัวละครให้ AI แต่งบทต่อไป
-  const handleGenerateNextChapter = () => {
+  const handleGenerateNextChapter = async () => {
     if (!userPrompt.trim() || isGeneratingNext) return;
 
     setIsGeneratingNext(true);
 
-    setTimeout(() => {
-      const nextChapterNum = story.chapters.length + 1;
-      const newChapter: Chapter = {
-        id: `c_${Date.now()}`,
-        chapterNumber: nextChapterNum,
-        title: `บทที่ ${nextChapterNum}: จุดเปลี่ยนของโชคชะตา`,
-        content: `หลังจากที่คุณตัดสินใจ "${userPrompt}" บรรยากาศรอบตัวก็เริ่มเปลี่ยนแปลงไป เสียงลมก้องกังวานลึกลับลอยมาตามสายลม เงาร่างปริศนาที่ซ่อนอยู่ในเงามืดค่อยๆ ก้าวออกมา เส้นทางที่คุณเลือกได้เปิดประตูสู่เหตุการณ์ที่ไม่คาดคิด...`,
-        userPromptChoice: userPrompt,
-        createdAt: new Date().toISOString().split('T')[0],
-      };
+    try {
+      const res = await fetch('/api/generate-story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actionType: 'next_chapter',
+          storyTitle: story.title,
+          genre: story.genre,
+          tone: story.tone,
+          previousChapters: story.chapters,
+          userChoice: userPrompt,
+        }),
+      });
 
-      const updatedStory: Story = {
-        ...story,
-        currentChapter: nextChapterNum,
-        totalChapters: Math.max(story.totalChapters, nextChapterNum),
-        wordCount: story.wordCount + 450,
-        chapters: [...story.chapters, newChapter],
-      };
+      const data = await res.json();
 
-      onUpdateStory(updatedStory);
-      setUserPrompt('');
+      if (data.success) {
+        const nextChapterNum = story.chapters.length + 1;
+        const newChapter: Chapter = {
+          id: `c_${Date.now()}`,
+          chapterNumber: nextChapterNum,
+          title: `บทที่ ${nextChapterNum}`,
+          content: data.content,
+          userPromptChoice: userPrompt,
+          createdAt: new Date().toISOString().split('T')[0],
+        };
+
+        const updatedStory: Story = {
+          ...story,
+          currentChapter: nextChapterNum,
+          totalChapters: Math.max(story.totalChapters, nextChapterNum),
+          wordCount: story.wordCount + (data.content?.length || 0),
+          chapters: [...story.chapters, newChapter],
+        };
+
+        onUpdateStory(updatedStory);
+        setUserPrompt('');
+
+        setTimeout(() => {
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 100);
+      } else {
+        alert('เกิดข้อผิดพลาดจาก AI: ' + data.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('ไม่สามารถเชื่อมต่อกับระบบ AI ได้');
+    } finally {
       setIsGeneratingNext(false);
-
-      // เลื่อนหน้าจอลงไปยังบทใหม่
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }, 2500);
+    }
   };
 
   return (
     <div className={`reader-wrapper font-size-${fontSize}`}>
-      {/* Reader Top Bar */}
       <header className="reader-header">
         <button className="btn-back" onClick={onBack}>
           ‹ กลับสู่หน้าหลัก
@@ -71,7 +93,6 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         </div>
       </header>
 
-      {/* Chapter Content Area */}
       <main className="reader-content">
         <div className="story-meta-banner">
           <span className="badge">{story.genre}</span>
@@ -104,16 +125,14 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           ))
         )}
 
-        {/* AI Loading State */}
         {isGeneratingNext && (
           <div className="ai-generating-card">
             <div className="pulse-icon">✨</div>
-            <p>AI กำลังเขียนเนื้อเรื่องบทต่อไปตามการตัดสินใจของคุณ...</p>
+            <p>Gemini AI กำลังเขียนเนื้อเรื่องบทต่อไปตามการตัดสินใจของคุณ...</p>
           </div>
         )}
       </main>
 
-      {/* Bottom Sticky Interactive Prompt Box (Core Reading Loop) */}
       <div className="reader-interactive-bar">
         <div className="interactive-container">
           <label htmlFor="user-action">คุณต้องการให้ตัวละครทำอย่างไรต่อไป?</label>

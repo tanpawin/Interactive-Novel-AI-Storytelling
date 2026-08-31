@@ -7,7 +7,8 @@ import '../styles/modal.css';
 interface CreateStoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: CreateStoryFormData) => void;
+  // ปรับเป็น optional (?) เผื่อไม่ได้ส่งมา
+  onSubmit?: (formData: CreateStoryFormData, initialContent: string) => void;
 }
 
 const GENRES: Genre[] = [
@@ -56,14 +57,51 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (!formData.corePremise.trim() || isGenerating) return;
+
     setIsGenerating(true);
-    // จำลองการประมวลผลของ AI หลังบ้าน
-    setTimeout(() => {
+
+    try {
+      const res = await fetch('/api/generate-story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          actionType: 'create_story',
+          formData: formData,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // เช็คก่อนว่ามีฟังก์ชัน onSubmit ส่งมาจาก Parent หรือไม่
+        if (typeof onSubmit === 'function') {
+          onSubmit(formData, data.content);
+        } else {
+          console.log('Story generated successfully:', data.content);
+        }
+
+        // Reset State
+        setStep(1);
+        setFormData({
+          title: '',
+          corePremise: '',
+          genre: 'แฟนตาซี',
+          tone: 'มืดมนและสมจริง',
+          length: 'นวนิยายขนาดกลาง',
+          protagonist: '',
+          worldSetting: '',
+        });
+        onClose();
+      } else {
+        alert('เกิดข้อผิดพลาดจาก AI: ' + (data.error || 'ไม่สามารถสร้างเนื้อหาได้'));
+      }
+    } catch (err) {
+      console.error('Error generating story:', err);
+      alert('ไม่สามารถเชื่อมต่อกับระบบ AI ได้');
+    } finally {
       setIsGenerating(false);
-      onSubmit(formData);
-      // Reset State
-      setStep(1);
-    }, 2000);
+    }
   };
 
   return (

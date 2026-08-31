@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ClerkProvider } from '@clerk/nextjs';
 
 // 🎨 Import สไตล์ CSS ทั้งหมดของแอปพลิเคชัน
 import '@/styles/globals.css';
@@ -33,19 +34,21 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="th">
-      <body>
-        <Navbar onOpenCreateModal={() => setIsModalOpen(true)} />
-        
-        {/* Render เนื้อหาของแต่ละ Route ตาม URL */}
-        <main>{children}</main>
+    <ClerkProvider>
+      <html lang="th">
+        <body>
+          <Navbar onOpenCreateModal={() => setIsModalOpen(true)} />
+          
+          {/* Render เนื้อหาของแต่ละ Route ตาม URL */}
+          <main>{children}</main>
 
-        <CreateStoryModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={handleCreateStory}
-        />
-      </body>
-    </html>
+          <CreateStoryModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handleCreateStory}
+          />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
