@@ -1,0 +1,452 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+
+import '@/styles/reader.css';
+
+type Branch = {
+    sessionId: string;
+    userId: string;
+    userName: string;
+    currentChapter: number;
+    status: string;
+    generatedChapters: number;
+    createdAt: string;
+    updatedAt: string;
+};
+
+type BranchResponse = {
+    success: boolean;
+    story?: {
+        id: string;
+        title: string;
+        coverImageUrl?: string;
+        genre?: string;
+        tone?: string;
+        synopsis?: string;
+    };
+    branches?: Branch[];
+    error?: string;
+};
+
+export default function BranchesPage() {
+    const params = useParams();
+    const router = useRouter();
+
+    const storyId = params.id as string;
+
+    const [storyTitle, setStoryTitle] = useState('');
+    const [coverImageUrl, setCoverImageUrl] = useState('');
+    const [genre, setGenre] = useState('');
+    const [tone, setTone] = useState('');
+    const [synopsis, setSynopsis] = useState('');
+    const [branches, setBranches] = useState<Branch[]>([]);
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (!storyId) return;
+
+        async function loadBranches() {
+            try {
+                setLoading(true);
+                setError('');
+
+                const response = await fetch(
+                    `/api/stories/${storyId}/branches`
+                );
+
+                const data: BranchResponse =
+                    await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(
+                        data.error ||
+                        'ไม่สามารถโหลดเส้นเรื่องได้'
+                    );
+                }
+
+                setStoryTitle(
+                    data.story?.title ?? ''
+                );
+
+                setCoverImageUrl(
+                    data.story?.coverImageUrl ?? ''
+                );
+
+                setGenre(
+                    data.story?.genre ?? ''
+                );
+
+                setTone(
+                    data.story?.tone ?? ''
+                );
+
+                setSynopsis(
+                    data.story?.synopsis ?? ''
+                );
+
+                setBranches(
+                    data.branches ?? []
+                );
+            } catch (err) {
+                console.error(
+                    'Error loading branches:',
+                    err
+                );
+
+                setError(
+                    err instanceof Error
+                        ? err.message
+                        : 'เกิดข้อผิดพลาดในการโหลดเส้นเรื่อง'
+                );
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadBranches();
+    }, [storyId]);
+
+    return (
+        <div className="reader-wrapper">
+
+            {/* Header */}
+            <header className="reader-header">
+                <button
+                    className="btn-back"
+                    onClick={() =>
+                        router.push(`/story/${storyId}`)
+                    }
+                >
+                    ‹ กลับสู่เรื่อง
+                </button>
+
+                <div className="reader-header-title">
+                    <span>เส้นทางของเรื่องราว</span>
+                </div>
+
+                <div style={{ width: '90px' }} />
+            </header>
+
+            <main className="reader-content">
+
+                {/* Loading */}
+                {loading && (
+                    <div className="reader-empty">
+                        <div>
+                            <span>📖</span>
+
+                            <h2>
+                                กำลังโหลดเส้นเรื่อง...
+                            </h2>
+
+                            <p>
+                                กำลังรวบรวมเส้นทางของผู้เล่น
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Error */}
+                {!loading && error && (
+                    <div className="reader-empty">
+                        <div>
+                            <span>⚠️</span>
+
+                            <h2>
+                                ไม่สามารถโหลดเส้นเรื่องได้
+                            </h2>
+
+                            <p>{error}</p>
+
+                            <button
+                                className="chapter-nav-button"
+                                onClick={() =>
+                                    window.location.reload()
+                                }
+                                style={{
+                                    marginTop: '1rem',
+                                }}
+                            >
+                                ลองอีกครั้ง
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Empty */}
+                {!loading &&
+                    !error &&
+                    branches.length === 0 && (
+                        <div className="reader-empty">
+                            <div>
+                                <span>📖</span>
+
+                                <h2>
+                                    ยังไม่มีเส้นเรื่องอื่น
+                                </h2>
+
+                                <p>
+                                    เมื่อผู้เล่นสร้างเส้นทางของตัวเอง
+                                    จะปรากฏที่นี่
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                {/* Content */}
+                {!loading &&
+                    !error &&
+                    branches.length > 0 && (
+                        <>
+                            {/* Story Cover + Information */}
+                            <div
+                                style={{
+                                    textAlign: 'center',
+                                    marginBottom: '3rem',
+                                }}
+                            >
+                                {coverImageUrl ? (
+                                    <img
+                                        src={coverImageUrl}
+                                        alt={storyTitle}
+                                        style={{
+                                            display: 'block',
+                                            width: '180px',
+                                            height: '260px',
+                                            objectFit: 'cover',
+                                            margin:
+                                                '0 auto 1.5rem',
+                                            borderRadius:
+                                                'var(--radius-md)',
+                                            boxShadow:
+                                                'var(--shadow-md)',
+                                            border:
+                                                '1px solid var(--border-color)',
+                                        }}
+                                    />
+                                ) : (
+                                    <div
+                                        style={{
+                                            width: '180px',
+                                            height: '260px',
+                                            margin:
+                                                '0 auto 1.5rem',
+                                            borderRadius:
+                                                'var(--radius-md)',
+                                            background:
+                                                'var(--bg-subtle)',
+                                            border:
+                                                '1px solid var(--border-color)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '3rem',
+                                        }}
+                                    >
+                                        📖
+                                    </div>
+                                )}
+
+                                <h1
+                                    className="chapter-title"
+                                    style={{
+                                        fontSize: '2rem',
+                                        marginBottom: '0.75rem',
+                                    }}
+                                >
+                                    {storyTitle}
+                                </h1>
+
+                                {/* Genre + Tone */}
+                                {(genre || tone) && (
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            flexWrap: 'wrap',
+                                            marginBottom: '1.25rem',
+                                        }}
+                                    >
+                                        {genre && (
+                                            <span
+                                                className="badge"
+                                                style={{
+                                                    backgroundColor:
+                                                        'var(--accent-light)',
+                                                    border:
+                                                        '1px solid var(--border-color)',
+                                                    color:
+                                                        'var(--accent-color)',
+                                                    padding:
+                                                        '0.45rem 0.8rem',
+                                                    borderRadius:
+                                                        'var(--radius-sm)',
+                                                }}
+                                            >
+                                                {genre}
+                                            </span>
+                                        )}
+
+                                        {tone && (
+                                            <span
+                                                className="badge"
+                                                style={{
+                                                    backgroundColor:
+                                                        'var(--accent-light)',
+                                                    border:
+                                                        '1px solid var(--border-color)',
+                                                    color:
+                                                        'var(--accent-color)',
+                                                    padding:
+                                                        '0.45rem 0.8rem',
+                                                    borderRadius:
+                                                        'var(--radius-sm)',
+                                                }}
+                                            >
+                                                {tone}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Synopsis */}
+                                {synopsis && (
+                                    <p
+                                        className="premise font-serif"
+                                        style={{
+                                            maxWidth: '650px',
+                                            margin:
+                                                '0 auto',
+                                        }}
+                                    >
+                                        "{synopsis}"
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Story Meta */}
+                            <div className="story-meta-banner">
+                                <div className="story-badges">
+                                    <span className="badge">
+                                        เส้นเรื่องทั้งหมด
+                                    </span>
+
+                                    <span className="badge">
+                                        {branches.length} เส้นทาง
+                                    </span>
+                                </div>
+
+                                <p className="premise font-serif">
+                                    "แต่ละการตัดสินใจ
+                                    อาจนำเรื่องราวไปสู่จุดจบที่แตกต่างกัน"
+                                </p>
+
+                                <div className="chapter-counter">
+                                    เลือกเส้นเรื่องที่ต้องการอ่าน
+                                </div>
+                            </div>
+
+                            {/* Branch List */}
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '1.25rem',
+                                }}
+                            >
+                                {branches.map(
+                                    (branch, index) => (
+                                        <article
+                                            key={branch.sessionId}
+                                            className="chapter-block"
+                                            style={{
+                                                marginBottom: 0,
+                                            }}
+                                        >
+                                            <div className="chapter-heading">
+                                                <span>
+                                                    เส้นเรื่องที่ {index + 1}
+                                                </span>
+
+                                                <h2 className="chapter-title">
+                                                    {branch.userName}
+                                                </h2>
+                                            </div>
+
+                                            <div
+                                                style={{
+                                                    color:
+                                                        'var(--text-secondary)',
+                                                    lineHeight: 1.8,
+                                                }}
+                                            >
+                                                <div
+                                                    style={{
+                                                        display: 'flex',
+                                                        flexWrap: 'wrap',
+                                                        gap:
+                                                            '0.5rem 1.25rem',
+                                                        marginBottom:
+                                                            '1rem',
+                                                        fontSize:
+                                                            '0.85rem',
+                                                    }}
+                                                >
+                                                    <span>
+                                                        บทล่าสุด:{' '}
+                                                        <strong>
+                                                            {
+                                                                branch.currentChapter
+                                                            }
+                                                        </strong>
+                                                    </span>
+
+                                                    <span>
+                                                        สร้างเพิ่ม:{' '}
+                                                        <strong>
+                                                            {
+                                                                branch.generatedChapters
+                                                            }
+                                                        </strong>{' '}
+                                                        บท
+                                                    </span>
+
+                                                    <span>
+                                                        {branch.status ===
+                                                            'in_progress'
+                                                            ? 'กำลังดำเนินเรื่อง'
+                                                            : branch.status}
+                                                    </span>
+                                                </div>
+
+                                                <button
+                                                    className="btn-next-chapter"
+                                                    style={{
+                                                        padding:
+                                                            '0.7rem 1.2rem',
+                                                    }}
+                                                    onClick={() =>
+                                                        router.push(
+                                                            `/story/${storyId}/branches/${branch.sessionId}`
+                                                        )
+                                                    }
+                                                >
+                                                    อ่านเส้นเรื่อง ›
+                                                </button>
+                                            </div>
+                                        </article>
+                                    )
+                                )}
+                            </div>
+                        </>
+                    )}
+            </main>
+        </div>
+    );
+}

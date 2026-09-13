@@ -2,92 +2,171 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/nextjs';
+import { usePathname, useRouter } from 'next/navigation';
+import {
+  SignInButton,
+  SignUpButton,
+  UserButton,
+  useAuth,
+} from '@clerk/nextjs';
 
-interface NavbarProps {
-  onOpenCreateModal: () => void;
-}
-
-export const Navbar: React.FC<NavbarProps> = ({ onOpenCreateModal }) => {
+export const Navbar: React.FC = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
+
+  const handleCreateStory = () => {
+    /*
+     * ล้าง Draft ของนิยายเรื่องเก่า
+     * เพื่อให้หน้า Create Story เริ่มเรื่องใหม่แบบสะอาด
+     */
+    sessionStorage.removeItem(
+      'cozytales_create_story_draft'
+    );
+
+    router.push('/story/create');
+  };
 
   return (
     <header className="navbar-container">
       <div className="navbar-content">
-        {/* โลโก้ */}
+
+        {/* ==========================================
+            โลโก้
+        ========================================== */}
         <Link href="/" className="navbar-brand">
           <span className="logo-icon">📖</span>
           <span className="logo-text">CozyTales</span>
         </Link>
 
-        {/* เมนูเปลี่ยนหน้า */}
+
+        {/* ==========================================
+            เมนูเปลี่ยนหน้า
+        ========================================== */}
         <nav className="navbar-links">
-          <Link 
-            href="/" 
-            className={`nav-link ${pathname === '/' ? 'active' : ''}`}
+
+          <Link
+            href="/"
+            className={`nav-link ${
+              pathname === '/' ? 'active' : ''
+            }`}
           >
             หน้าหลัก (Library)
           </Link>
-          <Link 
-            href="/discover" 
-            className={`nav-link ${pathname === '/discover' ? 'active' : ''}`}
+
+          <Link
+            href="/discover"
+            className={`nav-link ${
+              pathname === '/discover' ? 'active' : ''
+            }`}
           >
             สำรวจ (Discover)
           </Link>
-          <Link 
-            href="/my-stories" 
-            className={`nav-link ${pathname === '/my-stories' ? 'active' : ''}`}
+
+          <Link
+            href="/my-stories"
+            className={`nav-link ${
+              pathname === '/my-stories' ? 'active' : ''
+            }`}
           >
             นิยายของฉัน (My Stories)
           </Link>
+
         </nav>
 
-        {/* ปุ่มกดเปิด Modal และระบบ Login / Profile */}
-        <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button 
-            type="button" 
-            className="btn-create-story" 
-            onClick={onOpenCreateModal}
+
+        {/* ==========================================
+            ACTIONS
+        ========================================== */}
+        <div
+          className="navbar-actions"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}
+        >
+
+          {/* ========================================
+              สร้างนิยาย
+          ======================================== */}
+          <button
+            type="button"
+            className="btn-create-story"
+            onClick={handleCreateStory}
           >
             + เรื่องใหม่
           </button>
 
-          {/* รอให้ระบบ Clerk โหลดสถานะเสร็จก่อนแสดงผล */}
+
+          {/* ========================================
+              Clerk Authentication
+          ======================================== */}
           {isLoaded && (
             <>
               {!isSignedIn ? (
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {/* ปุ่มสมัครสมาชิก สำหรับผู้ใช้ใหม่ที่ยังไม่มีบัญชี */}
+
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '8px',
+                  }}
+                >
+
+                  {/* สมัครสมาชิก */}
                   <SignUpButton mode="modal">
-                    <button type="button" className="btn-create-story" style={{ background: '#4b5563' }}>
+                    <button
+                      type="button"
+                      className="btn-create-story"
+                      style={{
+                        background: '#4b5563',
+                      }}
+                    >
                       สมัครสมาชิก
                     </button>
                   </SignUpButton>
 
-                  {/* ปุ่มเข้าสู่ระบบ สำหรับคนที่มีบัญชีอยู่แล้ว */}
+
+                  {/* เข้าสู่ระบบ */}
                   <SignInButton mode="modal">
-                    <button type="button" className="btn-create-story" style={{ background: '#d97706' }}>
+                    <button
+                      type="button"
+                      className="btn-create-story"
+                      style={{
+                        background: '#d97706',
+                      }}
+                    >
                       เข้าสู่ระบบ
                     </button>
                   </SignInButton>
+
                 </div>
+
               ) : (
-                /* Login แล้ว -> แสดงปุ่มโปรไฟล์ และ รูปประจำตัว */
+
                 <>
-                  <Link 
-                    href="/profile" 
-                    className={`nav-link ${pathname === '/profile' ? 'active' : ''}`}
+                  {/* โปรไฟล์ */}
+                  <Link
+                    href="/profile"
+                    className={`nav-link ${
+                      pathname === '/profile'
+                        ? 'active'
+                        : ''
+                    }`}
                   >
                     โปรไฟล์
                   </Link>
-                  <UserButton afterSignOutUrl="/" />
+
+                  {/* รูปโปรไฟล์ */}
+                  <UserButton />
                 </>
+
               )}
             </>
           )}
+
         </div>
+
       </div>
     </header>
   );

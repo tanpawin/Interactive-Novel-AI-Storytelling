@@ -1,0 +1,650 @@
+/* ==========================================
+   CREATE STORY PAGE
+   CozyTales
+========================================== */
+
+.story-create-page {
+  min-height: calc(100vh - 64px);
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(140, 83, 62, 0.05),
+      transparent 35%
+    ),
+    var(--bg-main);
+
+  padding: 3rem 1.5rem 5rem;
+}
+
+.story-create-container {
+  width: 100%;
+  max-width: 920px;
+
+  margin: 0 auto;
+}
+
+.story-create-header {
+  position: relative;
+
+  display: flex;
+  align-items: flex-start;
+
+  margin-bottom: 2.5rem;
+}
+
+.story-create-back {
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  background: none;
+  border: none;
+
+  color: var(--text-secondary);
+
+  font-size: 0.9rem;
+
+  cursor: pointer;
+
+  padding: 0.5rem 0;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.story-create-back:hover {
+  color: var(--accent-color);
+  transform: translateX(-2px);
+}
+
+.story-create-heading {
+  width: 100%;
+
+  text-align: center;
+
+  padding: 0 5rem;
+}
+
+.story-create-subtitle {
+  display: block;
+
+  margin-bottom: 0.35rem;
+
+  color: var(--accent-color);
+
+  font-family: var(--font-serif);
+
+  font-size: 0.85rem;
+
+  letter-spacing: 0.08em;
+}
+
+.story-create-heading h1 {
+  margin: 0;
+
+  color: var(--text-primary);
+
+  font-family: var(--font-serif);
+
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+}
+
+.story-create-heading p {
+  margin: 0.6rem 0 0;
+
+  color: var(--text-secondary);
+
+  font-size: 0.95rem;
+}
+
+/* ==========================================
+   Progress
+========================================== */
+
+.story-create-progress {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 3rem;
+
+  margin-bottom: 2rem;
+}
+
+.story-create-progress-item {
+  display: flex;
+  align-items: center;
+
+  gap: 0.55rem;
+
+  color: var(--text-muted);
+
+  font-size: 0.85rem;
+
+  transition: color 0.2s ease;
+}
+
+.story-create-progress-item.active {
+  color: var(--accent-color);
+}
+
+.story-create-progress-number {
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: var(--bg-subtle);
+
+  border: 1px solid var(--border-color);
+
+  font-weight: 600;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.story-create-progress-item.active
+.story-create-progress-number {
+  background: var(--accent-color);
+
+  border-color: var(--accent-color);
+
+  color: #ffffff;
+}
+
+/* ==========================================
+   Card
+========================================== */
+
+.story-create-card {
+  overflow: hidden;
+
+  background: var(--bg-card);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--radius-lg);
+
+  box-shadow:
+    0 12px 40px rgba(44, 34, 30, 0.07);
+}
+
+.story-create-step {
+  padding: 2.5rem;
+}
+
+.story-create-step-heading {
+  margin-bottom: 2rem;
+}
+
+.story-create-step-heading > span {
+  color: var(--accent-color);
+
+  font-size: 0.8rem;
+
+  font-weight: 600;
+
+  letter-spacing: 0.04em;
+}
+
+.story-create-step-heading h2 {
+  margin: 0.4rem 0 0.45rem;
+
+  color: var(--text-primary);
+
+  font-family: var(--font-serif);
+
+  font-size: 1.6rem;
+}
+
+.story-create-step-heading p {
+  margin: 0;
+
+  color: var(--text-secondary);
+
+  font-size: 0.9rem;
+}
+
+/* ==========================================
+   Fields
+========================================== */
+
+.story-create-fields {
+  display: flex;
+  flex-direction: column;
+
+  gap: 1.5rem;
+}
+
+.story-create-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.55rem;
+}
+
+.story-create-field label {
+  color: var(--text-primary);
+
+  font-size: 0.9rem;
+
+  font-weight: 600;
+}
+
+.story-create-field input,
+.story-create-field textarea {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  background: #ffffff;
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--radius-md);
+
+  padding: 0.8rem 0.95rem;
+
+  color: var(--text-primary);
+
+  font-family: var(--font-sans);
+
+  font-size: 0.9rem;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.story-create-field textarea {
+  resize: vertical;
+
+  min-height: 120px;
+}
+
+.story-create-field input::placeholder,
+.story-create-field textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.story-create-field input:focus,
+.story-create-field textarea:focus {
+  border-color: var(--accent-color);
+
+  box-shadow:
+    0 0 0 3px rgba(140, 83, 62, 0.08);
+}
+
+/* ==========================================
+   Options
+========================================== */
+
+.story-create-options {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 0.6rem;
+}
+
+.story-create-options button {
+  background: var(--bg-main);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: 999px;
+
+  padding: 0.55rem 0.9rem;
+
+  color: var(--text-secondary);
+
+  font-size: 0.85rem;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.story-create-options button:hover {
+  transform: translateY(-1px);
+
+  border-color: var(--accent-color);
+
+  color: var(--accent-color);
+}
+
+.story-create-options button.selected {
+  background: var(--accent-light);
+
+  border-color: var(--accent-color);
+
+  color: var(--accent-color);
+
+  font-weight: 600;
+}
+
+/* ==========================================
+   Length
+========================================== */
+
+.story-create-length-options {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 0.8rem;
+}
+
+.story-create-length-options button {
+  display: flex;
+  flex-direction: column;
+
+  align-items: flex-start;
+
+  gap: 0.3rem;
+
+  text-align: left;
+
+  background: var(--bg-main);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--radius-md);
+
+  padding: 1rem;
+
+  color: var(--text-primary);
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.story-create-length-options button:hover {
+  transform: translateY(-1px);
+
+  border-color: var(--accent-color);
+}
+
+.story-create-length-options button.selected {
+  background: var(--accent-light);
+
+  border-color: var(--accent-color);
+}
+
+.story-create-length-options strong {
+  font-size: 0.9rem;
+}
+
+.story-create-length-options span {
+  color: var(--text-secondary);
+
+  font-size: 0.8rem;
+}
+
+/* ==========================================
+   Cover
+========================================== */
+
+.story-create-cover {
+  width: 220px;
+  aspect-ratio: 2 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-create-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.story-create-cover-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.story-create-upload {
+  width: fit-content;
+
+  margin-top: 0.2rem;
+
+  background: var(--accent-light);
+
+  border: 1px solid rgba(140, 83, 62, 0.2);
+
+  border-radius: 999px;
+
+  padding: 0.55rem 0.9rem;
+
+  color: var(--accent-color);
+
+  font-size: 0.8rem;
+
+  cursor: pointer;
+}
+
+.story-create-upload input {
+  display: none;
+}
+
+/* ==========================================
+   Summary
+========================================== */
+
+.story-create-summary {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 0.8rem;
+
+  margin-top: 0.5rem;
+
+  padding: 1.2rem;
+
+  background: var(--bg-main);
+
+  border: 1px solid var(--border-color);
+
+  border-radius: var(--radius-md);
+}
+
+.story-create-summary div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 0.25rem;
+}
+
+.story-create-summary span {
+  color: var(--text-muted);
+
+  font-size: 0.75rem;
+}
+
+.story-create-summary strong {
+  color: var(--text-primary);
+
+  font-size: 0.85rem;
+}
+
+/* ==========================================
+   Footer
+========================================== */
+
+.story-create-footer {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 1rem;
+
+  padding: 1.2rem 2.5rem;
+
+  background: var(--bg-main);
+
+  border-top: 1px solid var(--border-color);
+}
+
+.story-create-secondary,
+.story-create-primary {
+  border: none;
+
+  border-radius: 999px;
+
+  padding: 0.7rem 1.2rem;
+
+  font-size: 0.85rem;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.story-create-secondary {
+  background: transparent;
+
+  color: var(--text-secondary);
+}
+
+.story-create-secondary:hover {
+  background: var(--bg-subtle);
+
+  color: var(--text-primary);
+}
+
+.story-create-primary {
+  background: var(--accent-color);
+
+  color: #ffffff;
+}
+
+.story-create-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+
+  transform: translateY(-1px);
+}
+
+.story-create-primary:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.45;
+}
+
+/* ==========================================
+   Mobile
+========================================== */
+
+@media (max-width: 700px) {
+  .story-create-page {
+    min-height: calc(100vh - 60px);
+
+    padding: 2rem 1rem 3rem;
+  }
+
+  .story-create-header {
+    margin-bottom: 2rem;
+  }
+
+  .story-create-heading {
+    padding: 0 2.5rem;
+  }
+
+  .story-create-heading h1 {
+    font-size: 1.7rem;
+  }
+
+  .story-create-progress {
+    gap: 0.8rem;
+  }
+
+  .story-create-progress-item {
+    flex-direction: column;
+
+    gap: 0.3rem;
+
+    font-size: 0.7rem;
+  }
+
+  .story-create-step {
+    padding: 1.5rem;
+  }
+
+  .story-create-step-heading h2 {
+    font-size: 1.35rem;
+  }
+
+  .story-create-length-options {
+    grid-template-columns: 1fr;
+  }
+
+  .story-create-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .story-create-footer {
+    padding: 1rem 1.5rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .story-create-page {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .story-create-heading {
+    padding: 0 2rem;
+  }
+
+  .story-create-heading h1 {
+    font-size: 1.5rem;
+  }
+
+  .story-create-back {
+    font-size: 0.8rem;
+  }
+
+  .story-create-step {
+    padding: 1.2rem;
+  }
+}
