@@ -958,34 +958,29 @@
 
     .story-modal-overlay {
         align-items: flex-end;
-
-        padding: 0;
+        padding: 0 18px 18px;
     }
 
+    /* หน้าต่างแก้ไข */
     .story-modal {
         width: 100%;
-
-        max-height: 92vh;
-
-        border-radius:
-            22px 22px 0 0;
+        max-height: 88vh;
+        border-radius: 22px;
+        margin-bottom: 35px;
     }
 
     .story-modal-header {
-        padding: 22px 20px 18px;
+        padding: 18px 20px 14px;
     }
 
     .story-modal-body {
-        padding: 20px;
+        padding: 16px 20px;
     }
 
     .story-modal-footer {
         display: grid;
-
-        grid-template-columns:
-            1fr 1.5fr;
-
-        padding: 16px 20px 20px;
+        grid-template-columns: 1fr 1.5fr;
+        padding: 14px 20px 18px;
     }
 
     .story-modal-cancel,
@@ -999,33 +994,27 @@
 
     .edit-cover-preview {
         width: 90px;
-
         aspect-ratio: 2 / 3;
     }
 
     .story-form-grid {
         grid-template-columns: 1fr;
-
         gap: 0;
     }
 
+    /* หน้าต่างยืนยันการลบ */
     .delete-story-modal {
         width: 100%;
-
-        border-radius:
-            22px 22px 0 0;
-
+        border-radius: 22px;
         padding: 30px 22px 24px;
+        margin-bottom: 35px;
     }
 
     .delete-story-actions {
         display: grid;
-
-        grid-template-columns:
-            1fr 1fr;
+        grid-template-columns: 1fr 1fr;
     }
 }
-
 
 /* ==========================================
    STORY CARD MOBILE

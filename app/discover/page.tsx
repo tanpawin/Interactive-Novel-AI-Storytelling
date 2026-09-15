@@ -24,7 +24,32 @@ export default function DiscoverPage() {
       setIsLoading(true);
 
       try {
-        // โหลดนิยายที่เผยแพร่แล้ว
+        /*
+         * โหลดเรื่องโปรดของผู้ใช้ปัจจุบัน
+         */
+        let favoriteStoryIds: string[] = [];
+
+        try {
+          const favoriteResponse =
+            await fetch('/api/favorites');
+
+          const favoriteData =
+            await favoriteResponse.json();
+
+          if (favoriteData.success) {
+            favoriteStoryIds =
+              favoriteData.favoriteStoryIds || [];
+          }
+        } catch (error) {
+          console.error(
+            'Load Favorites Error:',
+            error
+          );
+        }
+
+        /*
+         * โหลดนิยายทั้งหมด
+         */
         const {
           data: storyData,
           error: storyError,
@@ -48,12 +73,16 @@ export default function DiscoverPage() {
           return;
         }
 
-        // เอา ID ของนิยายทั้งหมด
+        /*
+         * เอา ID ของนิยายทั้งหมด
+         */
         const storyIds = storyData.map(
           (story) => story.id
         );
 
-        // โหลด chapters ของนิยายทั้งหมด
+        /*
+         * โหลด chapters ของนิยายทั้งหมด
+         */
         const {
           data: chapterData,
           error: chapterError,
@@ -75,7 +104,10 @@ export default function DiscoverPage() {
 
         const chapters = chapterData || [];
 
-        // แปลงข้อมูลจาก Database ให้ตรงกับ Story type
+        /*
+         * แปลงข้อมูลจาก Database
+         * ให้ตรงกับ Story type
+         */
         const mappedStories: Story[] =
           storyData.map((story) => {
             const storyChapters: Chapter[] =
@@ -99,8 +131,8 @@ export default function DiscoverPage() {
             const currentChapter =
               storyChapters.length > 0
                 ? storyChapters[
-                  storyChapters.length - 1
-                ].chapterNumber
+                    storyChapters.length - 1
+                  ].chapterNumber
                 : 0;
 
             const wordCount =
@@ -113,9 +145,9 @@ export default function DiscoverPage() {
 
             const isFresh =
               Date.now() -
-              new Date(
-                story.created_at
-              ).getTime() <
+                new Date(
+                  story.created_at
+                ).getTime() <
               7 * 24 * 60 * 60 * 1000;
 
             return {
@@ -159,7 +191,13 @@ export default function DiscoverPage() {
 
               wordCount,
 
-              isFavorite: false,
+              /*
+               * เช็กจาก favorite_stories
+               */
+              isFavorite:
+                favoriteStoryIds.includes(
+                  story.id
+                ),
 
               isFresh,
 

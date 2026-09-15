@@ -46,9 +46,9 @@ export default function StoryDetailPage() {
 
     const loadStory = async () => {
       try {
-        // ==================================================
-        // 1. โหลด Story
-        // ==================================================
+        /* =========================
+           Load Story
+        ========================= */
 
         const {
           data: storyData,
@@ -72,9 +72,48 @@ export default function StoryDetailPage() {
           return;
         }
 
-        // ==================================================
-        // 2. โหลด Shared Chapters
-        // ==================================================
+        /* =========================
+   Load Creator Username
+========================= */
+
+        let creatorName = 'ไม่ระบุชื่อ';
+
+        try {
+          const creatorResponse = await fetch(
+            `/api/stories/${storyId}/creator`,
+            {
+              cache: 'no-store',
+            }
+          );
+
+          const creatorData =
+            await creatorResponse.json();
+
+          if (
+            creatorResponse.ok &&
+            creatorData.success &&
+            typeof creatorData.creatorName ===
+            'string' &&
+            creatorData.creatorName.trim()
+          ) {
+            creatorName =
+              creatorData.creatorName.trim();
+          }
+        } catch (error) {
+          console.error(
+            'Error loading creator username:',
+            error
+          );
+        }
+
+        console.log(
+          'Story creator username:',
+          creatorName
+        );
+
+        /* =========================
+           Load Shared Chapters
+        ========================= */
 
         const {
           data: chapterData,
@@ -101,33 +140,34 @@ export default function StoryDetailPage() {
           chapterData || []
         ).map((chapter) => ({
           id: chapter.id,
-          chapterNumber: chapter.chapter_number,
+
+          chapterNumber:
+            chapter.chapter_number,
+
           title:
             chapter.title ||
             `บทที่ ${chapter.chapter_number}`,
-          content: chapter.content,
-          createdAt: chapter.created_at,
-        }));
 
-        // ==================================================
-        // 3. หาบท Shared ล่าสุด
-        // ==================================================
+          content:
+            chapter.content,
+
+          createdAt:
+            chapter.created_at,
+        }));
 
         const latestSharedChapter =
           sharedChapters.length > 0
             ? Math.max(
               ...sharedChapters.map(
-                (chapter) => chapter.chapterNumber
+                (chapter) =>
+                  chapter.chapterNumber
               )
             )
             : 1;
 
-        // ==================================================
-        // 4. โหลด Game Session เดิม
-        //
-        // ห้ามใช้ upsert เพราะจะเขียน current_chapter
-        // ทับค่าความคืบหน้าของ User เดิม
-        // ==================================================
+        /* =========================
+           Load / Create Game Session
+        ========================= */
 
         const {
           data: existingSession,
@@ -149,15 +189,8 @@ export default function StoryDetailPage() {
           return;
         }
 
-        // ==================================================
-        // 5. ถ้ายังไม่มี Session ค่อยสร้างใหม่
-        //
-        // ถ้ามีการเรียก loadStory ซ้อนกัน
-        // INSERT อาจเจอ duplicate key (23505)
-        // ในกรณีนั้นให้โหลด Session เดิมกลับมาใช้
-        // ==================================================
-
-        let currentSession = existingSession;
+        let currentSession =
+          existingSession;
 
         if (!currentSession) {
           const {
@@ -168,7 +201,8 @@ export default function StoryDetailPage() {
             .insert({
               user_id: user.id,
               story_id: storyId,
-              current_chapter: latestSharedChapter,
+              current_chapter:
+                latestSharedChapter,
               status: 'in_progress',
               current_inventory: [],
             })
@@ -178,19 +212,19 @@ export default function StoryDetailPage() {
             .single();
 
           if (createSessionError) {
-            // ================================================
-            // ถ้า Session ถูกสร้างโดย request อื่นไปแล้ว
-            // ให้โหลด Session เดิมกลับมาใช้
-            // ================================================
-
-            if (createSessionError.code === '23505') {
+            if (
+              createSessionError.code ===
+              '23505'
+            ) {
               console.log(
                 'Session already exists, loading existing session...'
               );
 
               const {
-                data: existingSessionAfterConflict,
-                error: reloadSessionError,
+                data:
+                existingSessionAfterConflict,
+                error:
+                reloadSessionError,
               } = await supabase
                 .from('game_sessions')
                 .select(
@@ -208,7 +242,9 @@ export default function StoryDetailPage() {
                 return;
               }
 
-              if (!existingSessionAfterConflict) {
+              if (
+                !existingSessionAfterConflict
+              ) {
                 console.error(
                   'Game session conflict occurred but existing session was not found'
                 );
@@ -256,11 +292,9 @@ export default function StoryDetailPage() {
           currentSession.current_chapter
         );
 
-        // ==================================================
-        // 6. โหลด Session Chapters
-        //
-        // เฉพาะ Branch ของ User คนปัจจุบัน
-        // ==================================================
+        /* =========================
+           Load Session Chapters
+        ========================= */
 
         const {
           data: sessionChapterData,
@@ -286,34 +320,37 @@ export default function StoryDetailPage() {
           return;
         }
 
-        // ==================================================
-        // 7. แปลง Session Chapters
-        // ==================================================
-
         const sessionChapters: Chapter[] = (
           sessionChapterData || []
         ).map((chapter) => ({
           id: chapter.id,
-          chapterNumber: chapter.chapter_number,
+
+          chapterNumber:
+            chapter.chapter_number,
+
           title:
             chapter.title ||
             `บทที่ ${chapter.chapter_number}`,
-          content: chapter.content,
+
+          content:
+            chapter.content,
+
           userPromptChoice:
-            chapter.user_choice || undefined,
-          createdAt: chapter.created_at,
+            chapter.user_choice ||
+            undefined,
+
+          createdAt:
+            chapter.created_at,
         }));
 
-        // ==================================================
-        // 8. รวม Shared + Session Chapters
-        //
-        // ถ้าเลขบทซ้ำกัน:
-        // Session Chapter จะทับ Shared Chapter
-        //
-        // ทำให้ A/B/C มีเนื้อหาสาขาของตัวเอง
-        // ==================================================
+        /* =========================
+           Merge Chapters
+        ========================= */
 
-        const chapterMap = new Map<number, Chapter>();
+        const chapterMap = new Map<
+          number,
+          Chapter
+        >();
 
         for (const chapter of sharedChapters) {
           chapterMap.set(
@@ -337,23 +374,12 @@ export default function StoryDetailPage() {
             b.chapterNumber
         );
 
-        // ==================================================
-        // 9. หาบทล่าสุดของ Branch นี้
-        // ==================================================
-
         const latestLoadedChapter =
           chapters.length > 0
             ? chapters[
               chapters.length - 1
             ].chapterNumber
             : 1;
-
-        // ==================================================
-        // 10. Current Chapter
-        //
-        // ใช้ค่าจาก Game Session เป็นหลัก
-        // และป้องกันกรณี Session Chapter มีบทที่ใหม่กว่า
-        // ==================================================
 
         const sessionCurrentChapter =
           Number(
@@ -380,9 +406,9 @@ export default function StoryDetailPage() {
           currentChapter
         );
 
-        // ==================================================
-        // 11. Sync Session เฉพาะกรณีข้อมูลบทใหม่กว่า Session
-        // ==================================================
+        /* =========================
+           Sync Session Chapter
+        ========================= */
 
         if (
           currentChapter >
@@ -395,6 +421,7 @@ export default function StoryDetailPage() {
             .update({
               current_chapter:
                 currentChapter,
+
               updated_at:
                 new Date().toISOString(),
             })
@@ -411,16 +438,12 @@ export default function StoryDetailPage() {
           }
         }
 
-        // ==================================================
-        // 12. จำนวนบททั้งหมด
-        // ==================================================
+        /* =========================
+           Build Story Object
+        ========================= */
 
         const totalChapters =
           storyData.total_chapters || 5;
-
-        // ==================================================
-        // 13. สร้าง Story Object
-        // ==================================================
 
         const loadedStory: Story = {
           id: storyData.id,
@@ -429,8 +452,7 @@ export default function StoryDetailPage() {
             storyData.title ||
             'นิยายไม่มีชื่อ',
 
-          author:
-            'ผู้เขียนร่วมกับ AI',
+          author: creatorName,
 
           genre: (
             storyData.genre ||
@@ -477,10 +499,6 @@ export default function StoryDetailPage() {
           chapters,
         };
 
-        // ==================================================
-        // 14. Debug
-        // ==================================================
-
         console.log(
           '========================================'
         );
@@ -502,6 +520,11 @@ export default function StoryDetailPage() {
         console.log(
           'Story Owner ID:',
           storyData.user_id
+        );
+
+        console.log(
+          'Story Creator Name:',
+          creatorName
         );
 
         console.log(
@@ -567,10 +590,6 @@ export default function StoryDetailPage() {
     loadStory();
   }, [storyId, user, isLoaded]);
 
-  // ==================================================
-  // อัปเดต Story
-  // ==================================================
-
   const handleUpdateStory = async (
     updatedStory: Story
   ) => {
@@ -608,10 +627,6 @@ export default function StoryDetailPage() {
     }
   };
 
-  // ==================================================
-  // Loading
-  // ==================================================
-
   if (!isLoaded || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -621,10 +636,6 @@ export default function StoryDetailPage() {
       </div>
     );
   }
-
-  // ==================================================
-  // ยังไม่ได้ Login
-  // ==================================================
 
   if (!user) {
     return (
@@ -643,10 +654,6 @@ export default function StoryDetailPage() {
       </div>
     );
   }
-
-  // ==================================================
-  // ไม่พบ Story
-  // ==================================================
 
   if (!story) {
     return (
@@ -669,10 +676,6 @@ export default function StoryDetailPage() {
       </div>
     );
   }
-
-  // ==================================================
-  // Reader
-  // ==================================================
 
   return (
     <ReaderView

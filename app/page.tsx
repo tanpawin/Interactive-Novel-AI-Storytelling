@@ -22,26 +22,26 @@ export default function HomePage() {
   const [stories, setStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // =========================
-  // Load stories from Supabase
-  // =========================
-
   useEffect(() => {
     if (!isLoaded) return;
-
-    if (!user) {
-      setStories([]);
-      setIsLoading(false);
-      return;
-    }
 
     const loadStories = async () => {
       setIsLoading(true);
 
       try {
-        // =========================
-        // 1. ดึงนิยายของ User
-        // =========================
+        /*
+         * ถ้ายังไม่ได้ Login
+         */
+        if (!user) {
+          setStories([]);
+          return;
+        }
+
+        /*
+         * ========================================
+         * 1. โหลดนิยายทั้งหมด
+         * ========================================
+         */
 
         const {
           data: storyData,
@@ -49,7 +49,6 @@ export default function HomePage() {
         } = await supabase
           .from('stories')
           .select('*')
-          .eq('user_id', user.id)
           .order('created_at', {
             ascending: false,
           });
@@ -59,6 +58,8 @@ export default function HomePage() {
             'Supabase Story Error:',
             storyError
           );
+
+          setStories([]);
           return;
         }
 
@@ -67,17 +68,21 @@ export default function HomePage() {
           return;
         }
 
-        // =========================
-        // 2. เตรียม Story IDs
-        // =========================
+        /*
+         * ========================================
+         * 2. เตรียม Story IDs
+         * ========================================
+         */
 
         const storyIds = storyData.map(
           (story) => story.id
         );
 
-        // =========================
-        // 3. ดึง Chapters
-        // =========================
+        /*
+         * ========================================
+         * 3. โหลด Chapters
+         * ========================================
+         */
 
         const {
           data: chapterData,
@@ -95,17 +100,107 @@ export default function HomePage() {
             'Supabase Chapter Error:',
             chapterError
           );
+
+          setStories([]);
           return;
         }
 
         const chapters = chapterData || [];
 
-        // =========================
-        // 4. Map Supabase → Story
-        // =========================
+        /*
+         * ========================================
+         * 4. โหลด Game Sessions
+         *
+         * ใช้สำหรับดูว่า User คนนี้
+         * อ่านเรื่องไหนไปถึงบทไหนแล้ว
+         * ========================================
+         */
+
+        const {
+          data: sessionData,
+          error: sessionError,
+        } = await supabase
+          .from('game_sessions')
+          .select(
+            'story_id, current_chapter, status'
+          )
+          .eq('user_id', user.id);
+
+        if (sessionError) {
+          console.error(
+            'Supabase Session Error:',
+            sessionError
+          );
+        }
+
+        const sessions = sessionData || [];
+
+        /*
+         * ========================================
+         * 5. โหลด Favorite ของ User
+         * ========================================
+         */
+
+        let favoriteStoryIds: string[] = [];
+
+        try {
+          const favoriteResponse =
+            await fetch('/api/favorites');
+
+          const favoriteData =
+            await favoriteResponse.json();
+
+          if (favoriteData.success) {
+            favoriteStoryIds =
+              favoriteData.favoriteStoryIds || [];
+          }
+        } catch (error) {
+          console.error(
+            'Load Favorites Error:',
+            error
+          );
+        }
+
+        /*
+         * ========================================
+         * 6. โหลดชื่อผู้เขียนทุกเรื่อง
+         * ========================================
+         */
+
+        let creatorMap: Record<
+          string,
+          string
+        > = {};
+
+        try {
+          const creatorResponse =
+            await fetch('/api/stories/creators');
+
+          const creatorData =
+            await creatorResponse.json();
+
+          if (creatorData.success) {
+            creatorMap =
+              creatorData.creators || {};
+          }
+        } catch (error) {
+          console.error(
+            'Load Creators Error:',
+            error
+          );
+        }
+
+        /*
+         * ========================================
+         * 7. Map Supabase → Story
+         * ========================================
+         */
 
         const mappedStories: Story[] =
           storyData.map((story) => {
+            /*
+             * Chapters ของเรื่องนี้
+             */
             const storyChapters: Chapter[] =
               chapters
                 .filter(
@@ -128,21 +223,26 @@ export default function HomePage() {
                     chapter.created_at,
                 }));
 
-            // =========================
-            // บทล่าสุด
-            // =========================
+            /*
+             * Session ของ User คนปัจจุบัน
+             */
+            const userSession =
+              sessions.find(
+                (session) =>
+                  session.story_id === story.id
+              );
 
+            /*
+             * Progress ของ User
+             *
+             * ถ้ายังไม่เคยเล่น = 0
+             */
             const currentChapter =
-              storyChapters.length > 0
-                ? storyChapters[
-                    storyChapters.length - 1
-                  ].chapterNumber
-                : 0;
+              userSession?.current_chapter || 0;
 
-            // =========================
-            // จำนวนตัวอักษร
-            // =========================
-
+            /*
+             * จำนวนตัวอักษร
+             */
             const wordCount =
               storyChapters.reduce(
                 (total, chapter) =>
@@ -151,9 +251,15 @@ export default function HomePage() {
                 0
               );
 
-            // =========================
-            // Story Object
-            // =========================
+            /*
+             * นิยายใหม่ภายใน 7 วัน
+             */
+            const isFresh =
+              Date.now() -
+                new Date(
+                  story.created_at
+                ).getTime() <
+              7 * 24 * 60 * 60 * 1000;
 
             return {
               id: story.id,
@@ -187,8 +293,11 @@ export default function HomePage() {
               coverUrl:
                 story.cover_image_url || '',
 
+              /*
+               * ชื่อผู้เขียนจริงจาก profiles
+               */
               author:
-                user.fullName ||
+                creatorMap[story.id] ||
                 'ไม่ระบุชื่อ',
 
               totalChapters:
@@ -201,28 +310,22 @@ export default function HomePage() {
               chapters:
                 storyChapters,
 
-              // =========================
-              // Favorite
-              // =========================
-
+              /*
+               * Favorite ของ User คนปัจจุบัน
+               */
               isFavorite:
-                story.is_favorite ?? false,
+                favoriteStoryIds.includes(
+                  story.id
+                ),
 
-              // =========================
-              // Fresh
-              // =========================
+              /*
+               * เรื่องใหม่
+               */
+              isFresh,
 
-              isFresh:
-                Date.now() -
-                  new Date(
-                    story.created_at
-                  ).getTime() <
-                7 * 24 * 60 * 60 * 1000,
-
-              // =========================
-              // Trending
-              // =========================
-
+              /*
+               * ยังไม่มีระบบ Trending จริง
+               */
               isTrending: false,
             };
           });
@@ -233,6 +336,8 @@ export default function HomePage() {
           'Load stories error:',
           error
         );
+
+        setStories([]);
       } finally {
         setIsLoading(false);
       }
@@ -241,9 +346,11 @@ export default function HomePage() {
     loadStories();
   }, [user, isLoaded]);
 
-  // =========================
-  // Favorite
-  // =========================
+  /*
+   * ========================================
+   * Favorite
+   * ========================================
+   */
 
   const handleFavoriteChange = (
     storyId: string,
@@ -261,9 +368,11 @@ export default function HomePage() {
     );
   };
 
-  // =========================
-  // Loading
-  // =========================
+  /*
+   * ========================================
+   * Loading
+   * ========================================
+   */
 
   if (!isLoaded || isLoading) {
     return (
@@ -273,42 +382,37 @@ export default function HomePage() {
     );
   }
 
-  // =========================
-  // Render
-  // =========================
+  /*
+   * ========================================
+   * Render
+   * ========================================
+   */
 
   return (
-    <>
-      <LibraryView
-        stories={stories}
+    <LibraryView
+      stories={stories}
 
-        onSelectStory={(storyId) =>
-          router.push(
-            `/story/${storyId}`
-          )
-        }
+      onSelectStory={(storyId) =>
+        router.push(
+          `/story/${storyId}`
+        )
+      }
 
-        // =========================
-        // สร้างนิยาย
-        // ล้าง Draft เก่าก่อน
-        // ไปหน้า /story/create
-        // =========================
-        onOpenCreateModal={() => {
-          sessionStorage.removeItem(
-            'cozytales_create_story_draft'
-          );
+      onOpenCreateModal={() => {
+        sessionStorage.removeItem(
+          'cozytales_create_story_draft'
+        );
 
-          router.push('/story/create');
-        }}
+        router.push('/story/create');
+      }}
 
-        onGoToDiscover={() => {
-          // Discover ยังไม่ได้ทำ
-        }}
+      onGoToDiscover={() => {
+        router.push('/discover');
+      }}
 
-        onFavoriteChange={
-          handleFavoriteChange
-        }
-      />
-    </>
+      onFavoriteChange={
+        handleFavoriteChange
+      }
+    />
   );
 }

@@ -1,283 +1,6 @@
 /* ==========================================
-   VIEW CONTAINER
-========================================== */
-
-.view-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 1.5rem 4rem 1.5rem;
-}
-
-
-/* ==========================================
-   NOOK HEADER
-========================================== */
-
-.nook-header {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: 2.5rem;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    margin-bottom: 2.5rem;
-}
-
-.nook-subtitle {
-    font-size: 0.85rem;
-    color: var(--accent-color);
-    font-weight: 600;
-
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.nook-title {
-    font-family: var(--font-serif);
-    font-size: 2.2rem;
-    color: var(--text-primary);
-
-    margin: 0.2rem 0 0.5rem 0;
-}
-
-.nook-desc {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-
-    max-width: 500px;
-
-    margin-bottom: 1.5rem;
-}
-
-.nook-actions {
-    display: flex;
-    gap: 1rem;
-}
-
-.btn-hero-primary {
-    background-color: var(--accent-color);
-    color: #ffffff;
-
-    padding: 0.7rem 1.4rem;
-
-    border-radius: 25px;
-
-    font-weight: 600;
-    font-size: 0.95rem;
-
-    cursor: pointer;
-
-    border: none;
-}
-
-.btn-hero-primary:hover {
-    background-color: var(--accent-hover);
-}
-
-.btn-hero-secondary {
-    background-color: var(--bg-subtle);
-    color: var(--text-primary);
-
-    padding: 0.7rem 1.4rem;
-
-    border-radius: 25px;
-
-    font-weight: 600;
-    font-size: 0.95rem;
-
-    cursor: pointer;
-
-    border: none;
-}
-
-.nook-stats {
-    display: flex;
-    align-items: center;
-
-    gap: 1.5rem;
-
-    background-color: var(--bg-main);
-
-    padding: 1.25rem 2rem;
-
-    border-radius: var(--radius-md);
-
-    border: 1px solid var(--border-color);
-}
-
-.stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.stat-number {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--accent-color);
-}
-
-.stat-label {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-.stat-divider {
-    width: 1px;
-    height: 35px;
-
-    background-color: var(--border-color);
-}
-
-
-/* ==========================================
-   STORY SECTIONS
-========================================== */
-
-.story-section {
-    margin-bottom: 2.5rem;
-}
-
-.section-header h2 {
-    font-family: var(--font-serif);
-    font-size: 1.35rem;
-    color: var(--text-primary);
-
-    margin-bottom: 1.25rem;
-}
-
-.story-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(auto-fill, minmax(180px, 1fr));
-
-    gap: 1.25rem;
-}
-
-
-/* ==========================================
-   QUOTE BANNER
-========================================== */
-
-.quote-banner {
-    background-color: var(--bg-subtle);
-
-    border-radius: var(--radius-md);
-
-    padding: 2rem;
-
-    text-align: center;
-
-    margin-top: 3rem;
-}
-
-.quote-text {
-    font-family: var(--font-serif);
-    font-style: italic;
-
-    font-size: 1.1rem;
-
-    color: var(--text-primary);
-}
-
-.quote-author {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-
-    display: block;
-
-    margin-top: 0.5rem;
-}
-
-
-/* ==========================================
-   DISCOVER LAYOUT
-========================================== */
-
-.discover-header {
-    display: flex;
-
-    justify-content: space-between;
-    align-items: flex-end;
-
-    margin-bottom: 1.5rem;
-}
-
-.search-input-wrapper input {
-    width: 300px;
-
-    padding: 0.6rem 1rem;
-
-    border-radius: 20px;
-
-    border: 1px solid var(--border-color);
-
-    background-color: var(--bg-card);
-
-    outline: none;
-}
-
-.category-scroll {
-    display: flex;
-
-    gap: 0.5rem;
-
-    overflow-x: auto;
-
-    padding-bottom: 0.5rem;
-
-    margin-bottom: 1.5rem;
-}
-
-.cat-pill {
-    background-color: var(--bg-card);
-
-    border: 1px solid var(--border-color);
-
-    color: var(--text-secondary);
-
-    padding: 0.4rem 1rem;
-
-    border-radius: 20px;
-
-    font-size: 0.85rem;
-
-    white-space: nowrap;
-}
-
-.cat-pill.active {
-    background-color: var(--accent-color);
-
-    color: #ffffff;
-
-    border-color: var(--accent-color);
-}
-
-.highlight-grid {
-    display: grid;
-
-    grid-template-columns: 1fr 1fr;
-
-    gap: 1rem;
-}
-
-.highlight-card {
-    padding: 1.5rem;
-
-    border-radius: var(--radius-md);
-
-    border: 1px solid var(--border-color);
-
-    background-color: var(--bg-card);
-}
-
-
-/* ==========================================
-   MY STORIES VIEW
+   MY STORIES
+   CozyTales Theme
 ========================================== */
 
 .mystories-header {
@@ -286,8 +9,19 @@
     justify-content: space-between;
     align-items: center;
 
+    gap: 1rem;
+
     margin-bottom: 1.5rem;
 }
+
+.mystories-header > div:first-child {
+    min-width: 0;
+}
+
+
+/* ==========================================
+   AUTHOR STATS
+========================================== */
 
 .author-stats-banner {
     display: flex;
@@ -307,11 +41,13 @@
 
 .stat-box {
     display: flex;
+
     flex-direction: column;
 }
 
 .stat-val {
     font-size: 1.6rem;
+
     font-weight: 700;
 
     color: var(--accent-color);
@@ -319,11 +55,18 @@
 
 .stat-lbl {
     font-size: 0.8rem;
+
     color: var(--text-muted);
 }
 
+
+/* ==========================================
+   STORY LIST
+========================================== */
+
 .my-stories-list {
     display: flex;
+
     flex-direction: column;
 
     gap: 1rem;
@@ -404,7 +147,7 @@
 
 
 /* ==========================================
-   STORY TITLE + GENRE
+   STORY TITLE
 ========================================== */
 
 .my-story-top {
@@ -506,7 +249,7 @@
 
 
 /* ==========================================
-   STORY ACTION AREA
+   ACTION AREA
 ========================================== */
 
 .my-story-action {
@@ -516,11 +259,6 @@
 
     margin-left: auto;
 }
-
-
-/* ==========================================
-   STORY ACTION BUTTONS
-========================================== */
 
 .story-card-actions {
     display: flex;
@@ -580,6 +318,7 @@
 
 .story-action-btn span {
     font-size: 14px;
+
     line-height: 1;
 }
 
@@ -589,7 +328,7 @@
 
 
 /* ==========================================
-   CONTINUE BUTTON
+   CONTINUE
 ========================================== */
 
 .story-action-continue {
@@ -616,7 +355,7 @@
 
 
 /* ==========================================
-   EDIT BUTTON
+   EDIT
 ========================================== */
 
 .story-action-edit:hover {
@@ -629,7 +368,7 @@
 
 
 /* ==========================================
-   DELETE BUTTON
+   DELETE
 ========================================== */
 
 .story-action-delete {
@@ -646,7 +385,7 @@
 
 
 /* ==========================================
-   CONTINUE LEGACY BUTTON
+   LEGACY CONTINUE
 ========================================== */
 
 .btn-continue {
@@ -698,10 +437,58 @@
 
 @media (max-width: 700px) {
 
-    .view-container {
-        padding:
-            1.5rem 1rem 3rem 1rem;
+    /* Header */
+
+    .mystories-header {
+        display: flex;
+
+        align-items: flex-end;
+        justify-content: space-between;
+
+        gap: 0.75rem;
+
+        margin-bottom: 1.25rem;
     }
+
+    .mystories-header > div:first-child {
+        min-width: 0;
+    }
+
+    .mystories-header h1 {
+        margin: 0;
+
+        font-size: 1.8rem;
+
+        line-height: 1.2;
+    }
+
+
+    /* ปุ่มสร้างเรื่องใหม่ */
+
+    .mystories-header .btn-hero-primary {
+        flex: 0 0 auto !important;
+
+        width: fit-content !important;
+
+        min-width: 0 !important;
+
+        max-width: max-content !important;
+
+        min-height: 36px;
+
+        padding: 0.45rem 0.75rem;
+
+        border-radius: 18px;
+
+        font-size: 0.72rem;
+
+        white-space: nowrap;
+
+        margin-left: auto;
+    }
+
+
+    /* Story */
 
     .my-story-item {
         display: grid;
@@ -754,9 +541,8 @@
         padding: 0 8px;
     }
 
-    .mystories-header {
-        gap: 1rem;
-    }
+
+    /* Stats */
 
     .author-stats-banner {
         gap: 1rem;
@@ -772,6 +558,37 @@
 ========================================== */
 
 @media (max-width: 420px) {
+
+    .mystories-header {
+        gap: 0.5rem;
+
+        margin-bottom: 1.15rem;
+    }
+
+    .mystories-header h1 {
+        font-size: 1.55rem;
+    }
+
+    .mystories-header .btn-hero-primary {
+        flex: 0 0 auto !important;
+
+        width: fit-content !important;
+
+        min-width: 0 !important;
+
+        max-width: max-content !important;
+
+        min-height: 34px;
+
+        padding: 0.4rem 0.6rem;
+
+        border-radius: 17px;
+
+        font-size: 0.68rem;
+    }
+
+
+    /* Story */
 
     .my-story-item {
         padding: 0.8rem;
@@ -820,5 +637,37 @@
 
     .story-action-btn span {
         font-size: 12px;
+    }
+}
+
+
+/* ==========================================
+   VERY SMALL MOBILE
+========================================== */
+
+@media (max-width: 360px) {
+
+    .mystories-header {
+        gap: 0.4rem;
+    }
+
+    .mystories-header h1 {
+        font-size: 1.4rem;
+    }
+
+    .mystories-header .btn-hero-primary {
+        flex: 0 0 auto !important;
+
+        width: fit-content !important;
+
+        min-width: 0 !important;
+
+        max-width: max-content !important;
+
+        min-height: 32px;
+
+        padding: 0.35rem 0.5rem;
+
+        font-size: 0.64rem;
     }
 }

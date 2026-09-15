@@ -23,50 +23,42 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
   onFavoriteChange,
 }) => {
   // =========================
-  // รายการนิยายตามสถานะ
+  // กำลังอ่านต่อ
   // =========================
 
-  // กำลังอ่าน แต่ยังอ่านไม่ถึงบทสุดท้าย
   const continueReadingList = stories.filter(
     (story) =>
       story.currentChapter > 0 &&
       story.currentChapter < story.totalChapters
   );
 
-  // นิยายที่อ่านจบแล้ว
-  const completedList = stories.filter(
-    (story) =>
-      story.currentChapter >= story.totalChapters
-  );
-
-  // นิยายที่เป็น Trending
-  const trendingList = stories.filter(
-    (story) => story.isTrending
-  );
-
+  // =========================
   // นิยายโปรด
+  // =========================
+
   const favoriteList = stories.filter(
     (story) => story.isFavorite
   );
 
   // =========================
-  // สถิติจากข้อมูลจริง
+  // นิยายล่าสุด
+  //
+  // stories ถูกเรียงจาก created_at
+  // ใหม่ → เก่า มาจาก HomePage
   // =========================
 
-  const totalStories = stories.length;
-
-  const readingStories =
-    continueReadingList.length;
-
-  const completedStories =
-    completedList.length;
+  const discoverList = stories.slice(0, 6);
 
   return (
     <div className="view-container">
 
-      {/* Hero Header */}
+      {/* =========================
+          Hero Header
+      ========================= */}
+
       <section className="nook-header">
         <div className="nook-title-area">
+
           <span className="nook-subtitle">
             ต้อนรับกลับสู่มุมโปรด
           </span>
@@ -76,10 +68,12 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
           </h1>
 
           <p className="nook-desc">
-            พักผ่อนกับเรื่องราวที่คุณชื่นชอบ หรือสร้างสรรค์โลกใบใหม่ไปพร้อมกับ AI
+            พักผ่อนกับเรื่องราวที่คุณชื่นชอบ
+            หรือสร้างสรรค์โลกใบใหม่ไปพร้อมกับ AI
           </p>
 
           <div className="nook-actions">
+
             <button
               className="btn-hero-primary"
               onClick={onOpenCreateModal}
@@ -93,56 +87,22 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
             >
               🔍 สำรวจคลังนิยาย
             </button>
-          </div>
-        </div>
 
-        {/* User Stats */}
-        <div className="nook-stats font-serif">
-
-          <div className="stat-item">
-            <span className="stat-number">
-              {totalStories}
-            </span>
-
-            <span className="stat-label">
-              เรื่องทั้งหมด
-            </span>
-          </div>
-
-          <div className="stat-divider" />
-
-          <div className="stat-item">
-            <span className="stat-number">
-              {readingStories}
-            </span>
-
-            <span className="stat-label">
-              กำลังอ่านค้าง
-            </span>
-          </div>
-
-          <div className="stat-divider" />
-
-          <div className="stat-item">
-            <span className="stat-number">
-              {completedStories}
-            </span>
-
-            <span className="stat-label">
-              แต่งสำเร็จ
-            </span>
           </div>
 
         </div>
       </section>
 
-      {/* Section 1: Continue Reading */}
+      {/* =========================
+          Section 1: Continue Reading
+      ========================= */}
+
       {continueReadingList.length > 0 && (
         <section className="story-section">
 
           <div className="section-header">
             <h2>
-              📖 อ่านต่อจากที่ค้างไว้ (Continue Reading)
+              📖 อ่านต่อจากที่ค้างไว้
             </h2>
           </div>
 
@@ -154,6 +114,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
                 onClick={onSelectStory}
                 onFavoriteChange={onFavoriteChange}
                 showProgress
+                branchFrom="home"
               />
             ))}
           </div>
@@ -161,37 +122,16 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
         </section>
       )}
 
-      {/* Section 2: Trending */}
-      {trendingList.length > 0 && (
-        <section className="story-section">
+      {/* =========================
+          Section 2: Your Favourites
+      ========================= */}
 
-          <div className="section-header">
-            <h2>
-              🔥 กำลังเป็นที่นิยม (Trending on CozyTales)
-            </h2>
-          </div>
-
-          <div className="story-grid">
-            {trendingList.map((story) => (
-              <StoryCard
-                key={story.id}
-                story={story}
-                onClick={onSelectStory}
-                onFavoriteChange={onFavoriteChange}
-              />
-            ))}
-          </div>
-
-        </section>
-      )}
-
-      {/* Section 3: Your Favourites */}
       {favoriteList.length > 0 && (
         <section className="story-section">
 
           <div className="section-header">
             <h2>
-              ⭐ เรื่องโปรดของคุณ (Your Favourites)
+              ⭐ เรื่องโปรดของคุณ
             </h2>
           </div>
 
@@ -202,6 +142,7 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
                 story={story}
                 onClick={onSelectStory}
                 onFavoriteChange={onFavoriteChange}
+                branchFrom="home"
               />
             ))}
           </div>
@@ -209,15 +150,59 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
         </section>
       )}
 
-      {/* Quote Banner */}
+      {/* =========================
+          Section 3: Discover
+      ========================= */}
+
+      {discoverList.length > 0 && (
+        <section className="story-section">
+
+          <div className="section-header discover-section-header">
+
+            <h2>
+              ค้นพบเรื่องราวเพิ่มเติม
+            </h2>
+
+            <button
+              type="button"
+              className="section-link"
+              onClick={onGoToDiscover}
+            >
+              ดูทั้งหมด →
+            </button>
+
+          </div>
+
+          <div className="story-grid">
+            {discoverList.map((story) => (
+              <StoryCard
+                key={story.id}
+                story={story}
+                onClick={onSelectStory}
+                onFavoriteChange={onFavoriteChange}
+                branchFrom="home"
+              />
+            ))}
+          </div>
+
+        </section>
+      )}
+
+      {/* =========================
+          Quote Banner
+      ========================= */}
+
       <div className="quote-banner">
+
         <p className="quote-text">
-          "A reader lives a thousand lives before he dies. The man who never reads lives only one."
+          "A reader lives a thousand lives before he dies.
+          The man who never reads lives only one."
         </p>
 
         <span className="quote-author">
           — George R.R. Martin
         </span>
+
       </div>
 
     </div>

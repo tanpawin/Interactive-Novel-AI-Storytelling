@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import {
+    useParams,
+    useRouter,
+    useSearchParams,
+} from 'next/navigation';
 
 import '@/styles/reader.css';
 
@@ -33,8 +37,10 @@ type BranchResponse = {
 export default function BranchesPage() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const storyId = params.id as string;
+    const from = searchParams.get('from');
 
     const [storyTitle, setStoryTitle] = useState('');
     const [coverImageUrl, setCoverImageUrl] = useState('');
@@ -45,6 +51,26 @@ export default function BranchesPage() {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    const handleBack = () => {
+        switch (from) {
+            case 'home':
+                router.push('/');
+                break;
+
+            case 'discover':
+                router.push('/discover');
+                break;
+
+            case 'profile':
+                router.push('/profile/branches');
+                break;
+
+            default:
+                router.push(`/story/${storyId}`);
+                break;
+        }
+    };
 
     useEffect(() => {
         if (!storyId) return;
@@ -117,11 +143,9 @@ export default function BranchesPage() {
             <header className="reader-header">
                 <button
                     className="btn-back"
-                    onClick={() =>
-                        router.push(`/story/${storyId}`)
-                    }
+                    onClick={handleBack}
                 >
-                    ‹ กลับสู่เรื่อง
+                    ‹ ย้อนกลับ
                 </button>
 
                 <div className="reader-header-title">
@@ -433,7 +457,7 @@ export default function BranchesPage() {
                                                     }}
                                                     onClick={() =>
                                                         router.push(
-                                                            `/story/${storyId}/branches/${branch.sessionId}`
+                                                            `/story/${storyId}/branches/${branch.sessionId}${from ? `?from=${from}` : ''}`
                                                         )
                                                     }
                                                 >

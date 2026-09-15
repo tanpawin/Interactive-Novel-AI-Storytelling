@@ -12,7 +12,7 @@ import type {
   CreateStoryFormData,
 } from '@/types/story';
 
-import '@style/generating.css';
+import '../../../styles/generating.css';
 
 const CREATE_KEY =
   'cozytales_create_story';

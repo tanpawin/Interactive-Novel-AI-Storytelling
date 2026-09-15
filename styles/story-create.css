@@ -7,11 +7,9 @@
   min-height: calc(100vh - 64px);
 
   background:
-    radial-gradient(
-      circle at top left,
+    radial-gradient(circle at top left,
       rgba(140, 83, 62, 0.05),
-      transparent 35%
-    ),
+      transparent 35%),
     var(--bg-main);
 
   padding: 3rem 1.5rem 5rem;
@@ -33,31 +31,69 @@
   margin-bottom: 2.5rem;
 }
 
+/* ==========================================
+   Back Button
+   Style เดียวกับ Favorites Discover Button
+========================================== */
+
 .story-create-back {
   position: absolute;
   left: 0;
   top: 0;
 
-  background: none;
+  display: inline-flex;
+  align-items: center;
+
+  padding: 6px 0;
+
+  background: transparent;
+
   border: none;
 
-  color: var(--text-secondary);
+  color: var(--accent-color);
 
-  font-size: 0.9rem;
+  font-family: var(--font-sans);
+
+  font-size: 0.86rem;
+
+  font-weight: 600;
+
+  line-height: 1.4;
 
   cursor: pointer;
 
-  padding: 0.5rem 0;
+  transition:
+    color 0.2s ease;
+}
+
+.story-create-back::after {
+  content: '';
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 1px;
+
+  height: 1px;
+
+  background: var(--accent-color);
+
+  transform: scaleX(0);
+
+  transform-origin: right;
 
   transition:
-    color 0.2s ease,
-    transform 0.2s ease;
+    transform 0.25s ease;
 }
 
 .story-create-back:hover {
-  color: var(--accent-color);
-  transform: translateX(-2px);
+  color: var(--accent-hover);
 }
+
+/* ==========================================
+   Heading
+========================================== */
 
 .story-create-heading {
   width: 100%;
@@ -152,8 +188,7 @@
     color 0.2s ease;
 }
 
-.story-create-progress-item.active
-.story-create-progress-number {
+.story-create-progress-item.active .story-create-progress-number {
   background: var(--accent-color);
 
   border-color: var(--accent-color);
@@ -186,7 +221,7 @@
   margin-bottom: 2rem;
 }
 
-.story-create-step-heading > span {
+.story-create-step-heading>span {
   color: var(--accent-color);
 
   font-size: 0.8rem;
@@ -408,10 +443,15 @@
 .story-create-cover {
   width: 220px;
   aspect-ratio: 2 / 3;
+
   border-radius: 12px;
+
   overflow: hidden;
+
   background: var(--bg-subtle);
+
   border: 1px solid var(--border-color);
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -420,18 +460,24 @@
 .story-create-cover img {
   width: 100%;
   height: 100%;
+
   object-fit: cover;
+
   display: block;
 }
 
 .story-create-cover-empty {
   width: 100%;
   height: 100%;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   color: var(--text-muted);
+
   font-size: 0.9rem;
+
   text-align: center;
 }
 
@@ -593,6 +639,16 @@
     font-size: 1.7rem;
   }
 
+  .story-create-back {
+    min-height: 36px;
+
+    padding: 0.5rem 0.75rem;
+
+    border-radius: 9px;
+
+    font-size: 0.8rem;
+  }
+
   .story-create-progress {
     gap: 0.8rem;
   }
@@ -641,7 +697,11 @@
   }
 
   .story-create-back {
-    font-size: 0.8rem;
+    min-height: 34px;
+
+    padding: 0.45rem 0.65rem;
+
+    font-size: 0.76rem;
   }
 
   .story-create-step {

@@ -272,7 +272,7 @@ export default function CreateStoryPage() {
         DRAFT_KEY
       );
 
-      router.push('/mystories');
+      router.push('/');
       return;
     }
 
@@ -383,7 +383,7 @@ export default function CreateStoryPage() {
             className="story-create-back"
             onClick={handleBack}
           >
-            ← กลับ
+            ‹ กลับหน้าหลัก
           </button>
 
           <div className="story-create-heading">

@@ -3,10 +3,15 @@
 import React from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
 
-// 🎨 Import สไตล์ CSS ทั้งหมดของแอปพลิเคชัน
 import '@/styles/globals.css';
 import '@/styles/navbar.css';
-import '@/styles/views.css';
+
+import '@/styles/library.css';
+import '@/styles/discover.css';
+import '@/styles/mystories.css';
+
+import '@/styles/profile.css';
+
 import '@/styles/reader.css';
 import '@/styles/story-create.css';
 import '@/styles/story-modal.css';
@@ -24,7 +29,6 @@ export default function RootLayout({
         <body>
           <Navbar />
 
-          {/* Render เนื้อหาของแต่ละ Route ตาม URL */}
           <main>{children}</main>
         </body>
       </html>

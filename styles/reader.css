@@ -40,24 +40,6 @@
   color: var(--accent-hover);
 }
 
-.reader-header-title {
-  text-align: center;
-  min-width: 0;
-}
-
-.reader-header-title h2 {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  color: var(--text-primary);
-}
-
-.reader-header-title span {
-  font-family: var(--font-serif);
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-}
-
 /* =========================
    Font Size
 ========================= */
@@ -117,6 +99,24 @@
   padding-bottom: 1.5rem;
 
   border-bottom: 1px solid var(--border-color);
+}
+
+.story-main-title {
+  margin: 0 0 1.25rem;
+
+  color: var(--text-primary);
+
+  font-family: var(--font-serif);
+
+  font-size: 2.25rem;
+
+  font-weight: 700;
+
+  line-height: 1.25;
+
+  text-align: center;
+
+  overflow-wrap: anywhere;
 }
 
 .story-badges {
@@ -567,28 +567,6 @@
     flex-shrink: 0;
   }
 
-  .reader-header-title {
-    flex: 1;
-
-    min-width: 0;
-  }
-
-  .reader-header-title h2 {
-    font-size: 1rem;
-
-    max-width: 100%;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-  }
-
-  .reader-header-title span {
-    font-size: 0.85rem;
-  }
-
   /* Reader content */
   .reader-content {
     width: 100%;
@@ -603,6 +581,12 @@
     margin-bottom: 2rem;
 
     padding-bottom: 1.25rem;
+  }
+
+  .story-main-title {
+    font-size: 1.8rem;
+
+    margin-bottom: 1rem;
   }
 
   .story-meta-banner .premise {
@@ -770,12 +754,14 @@
     font-size: 0.75rem;
   }
 
-  .reader-header-title span {
-    font-size: 0.8rem;
-  }
-
   .reader-content {
     padding: 0 0.85rem;
+  }
+
+  .story-main-title {
+    font-size: 1.6rem;
+
+    margin-bottom: 0.9rem;
   }
 
   .chapter-title {

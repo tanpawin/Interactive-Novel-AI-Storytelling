@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { clerkClient } from '@clerk/nextjs/server';
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export async function GET(
@@ -14,35 +14,45 @@ export async function GET(
   }
 ) {
   try {
-    const { storyId, sessionId } = await params;
+    const {
+      storyId,
+      sessionId,
+    } = await params;
 
     if (!storyId || !sessionId) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Missing storyId or sessionId',
+          error:
+            'Missing storyId or sessionId',
         },
         { status: 400 }
       );
     }
 
+    // ==================================================
     // 1. ตรวจสอบ Story
-    const { data: story, error: storyError } =
-      await supabaseAdmin
-        .from('stories')
-        .select(
-          `
-          id,
-          title,
-          total_chapters,
-          cover_image_url,
-          genre,
-          tone,
-          synopsis
-          `
-        )
-        .eq('id', storyId)
-        .single();
+    // ==================================================
+
+    const {
+      data: story,
+      error: storyError,
+    } = await supabaseAdmin
+      .from('stories')
+      .select(
+        `
+        id,
+        title,
+        user_id,
+        total_chapters,
+        cover_image_url,
+        genre,
+        tone,
+        synopsis
+        `
+      )
+      .eq('id', storyId)
+      .single();
 
     if (storyError || !story) {
       return NextResponse.json(
@@ -54,28 +64,76 @@ export async function GET(
       );
     }
 
-    // 2. โหลด Branch
-    // ต้องตรวจสอบทั้ง sessionId และ storyId
-    // เพื่อป้องกันการเอา session ของ Story อื่นมาอ่าน
-    const { data: session, error: sessionError } =
-      await supabaseAdmin
-        .from('game_sessions')
-        .select(
-          `
-          id,
-          user_id,
-          story_id,
-          current_chapter,
-          status,
-          created_at,
-          updated_at
-          `
-        )
-        .eq('id', sessionId)
-        .eq('story_id', storyId)
-        .single();
+    // ==================================================
+    // 2. โหลด Username ของเจ้าของ Story
+    // stories.user_id
+    //        ↓
+    // profiles.user_id
+    //        ↓
+    // profiles.display_name
+    // ==================================================
 
-    if (sessionError || !session) {
+    let creatorName = 'ไม่ระบุชื่อ';
+
+    if (story.user_id) {
+      const {
+        data: creatorProfile,
+        error: creatorProfileError,
+      } = await supabaseAdmin
+        .from('profiles')
+        .select(
+          'user_id, display_name'
+        )
+        .eq(
+          'user_id',
+          story.user_id
+        )
+        .maybeSingle();
+
+      if (creatorProfileError) {
+        console.error(
+          'Error loading creator profile:',
+          creatorProfileError
+        );
+      }
+
+      if (
+        creatorProfile?.display_name &&
+        creatorProfile.display_name.trim()
+      ) {
+        creatorName =
+          creatorProfile.display_name.trim();
+      }
+    }
+
+    // ==================================================
+    // 3. โหลด Branch
+    // ==================================================
+
+    const {
+      data: session,
+      error: sessionError,
+    } = await supabaseAdmin
+      .from('game_sessions')
+      .select(
+        `
+        id,
+        user_id,
+        story_id,
+        current_chapter,
+        status,
+        created_at,
+        updated_at
+        `
+      )
+      .eq('id', sessionId)
+      .eq('story_id', storyId)
+      .single();
+
+    if (
+      sessionError ||
+      !session
+    ) {
       return NextResponse.json(
         {
           success: false,
@@ -85,30 +143,52 @@ export async function GET(
       );
     }
 
-    // 3. โหลดชื่อผู้เล่นจาก Clerk
-    let userName = 'ผู้เล่น';
+    // ==================================================
+    // 4. โหลด Username ของเจ้าของ Branch
+    // game_sessions.user_id
+    //        ↓
+    // profiles.user_id
+    //        ↓
+    // profiles.display_name
+    // ==================================================
+
+    let userName = 'ไม่ระบุชื่อ';
 
     if (session.user_id) {
-      try {
-        const clerk = await clerkClient();
-        const user = await clerk.users.getUser(
+      const {
+        data: playerProfile,
+        error: playerProfileError,
+      } = await supabaseAdmin
+        .from('profiles')
+        .select(
+          'user_id, display_name'
+        )
+        .eq(
+          'user_id',
           session.user_id
-        );
+        )
+        .maybeSingle();
 
-        userName =
-          user.fullName ||
-          user.username ||
-          user.firstName ||
-          'ผู้เล่น';
-      } catch (error) {
+      if (playerProfileError) {
         console.error(
-          'Error loading Clerk user:',
-          error
+          'Error loading player profile:',
+          playerProfileError
         );
+      }
+
+      if (
+        playerProfile?.display_name &&
+        playerProfile.display_name.trim()
+      ) {
+        userName =
+          playerProfile.display_name.trim();
       }
     }
 
-    // 4. โหลด Chapter กลางของ Story
+    // ==================================================
+    // 5. โหลด Chapter กลางของ Story
+    // ==================================================
+
     const {
       data: sharedChapters,
       error: sharedError,
@@ -137,13 +217,17 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          error: 'Failed to load story chapters',
+          error:
+            'Failed to load story chapters',
         },
         { status: 500 }
       );
     }
 
-    // 5. โหลด Chapter เฉพาะของ Branch นี้
+    // ==================================================
+    // 6. โหลด Chapter ของ Branch
+    // ==================================================
+
     const {
       data: sessionChapters,
       error: sessionChapterError,
@@ -160,7 +244,10 @@ export async function GET(
         created_at
         `
       )
-      .eq('session_id', sessionId)
+      .eq(
+        'session_id',
+        sessionId
+      )
       .order('chapter_number', {
         ascending: true,
       });
@@ -174,13 +261,17 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          error: 'Failed to load branch chapters',
+          error:
+            'Failed to load branch chapters',
         },
         { status: 500 }
       );
     }
 
-    // 6. รวม Chapter กลาง + Chapter ของ Branch
+    // ==================================================
+    // 7. รวม Chapter กลาง + Branch
+    // ==================================================
+
     const chapterMap = new Map<
       number,
       {
@@ -193,76 +284,126 @@ export async function GET(
       }
     >();
 
-    // Chapter กลาง
-    for (const chapter of sharedChapters ?? []) {
+    // Shared Chapters
+    for (
+      const chapter of
+        sharedChapters ?? []
+    ) {
       chapterMap.set(
         chapter.chapter_number,
         {
           id: chapter.id,
+
           chapterNumber:
             chapter.chapter_number,
+
           title:
             chapter.title ??
-            `Chapter ${chapter.chapter_number}`,
-          content: chapter.content,
-          createdAt: chapter.created_at,
+            `บทที่ ${chapter.chapter_number}`,
+
+          content:
+            chapter.content,
+
+          createdAt:
+            chapter.created_at,
         }
       );
     }
 
-    // Chapter ของ Branch จะทับ Chapter กลาง
-    // ถ้ามีเลข chapter เดียวกัน
-    for (const chapter of sessionChapters ?? []) {
+    // Branch Chapters
+    // ถ้ามีเลขบทเดียวกัน
+    // Branch จะทับ Shared Chapter
+    for (
+      const chapter of
+        sessionChapters ?? []
+    ) {
       chapterMap.set(
         chapter.chapter_number,
         {
           id: chapter.id,
+
           chapterNumber:
             chapter.chapter_number,
+
           title:
             chapter.title ??
-            `Chapter ${chapter.chapter_number}`,
-          content: chapter.content,
+            `บทที่ ${chapter.chapter_number}`,
+
+          content:
+            chapter.content,
+
           userPromptChoice:
             chapter.user_choice ??
             undefined,
-          createdAt: chapter.created_at,
+
+          createdAt:
+            chapter.created_at,
         }
       );
     }
 
-    const chapters = Array.from(
-      chapterMap.values()
-    ).sort(
-      (a, b) =>
-        a.chapterNumber -
-        b.chapterNumber
-    );
+    const chapters =
+      Array.from(
+        chapterMap.values()
+      ).sort(
+        (a, b) =>
+          a.chapterNumber -
+          b.chapterNumber
+      );
+
+    // ==================================================
+    // 8. Response
+    // ==================================================
 
     return NextResponse.json({
       success: true,
 
       story: {
         id: story.id,
+
         title: story.title,
+
         totalChapters:
           story.total_chapters,
+
         coverImageUrl:
           story.cover_image_url ?? '',
-        genre: story.genre ?? '',
-        tone: story.tone ?? '',
-        synopsis: story.synopsis ?? '',
+
+        genre:
+          story.genre ?? '',
+
+        tone:
+          story.tone ?? '',
+
+        synopsis:
+          story.synopsis ?? '',
+
+        // Username ของเจ้าของ Story
+        creatorName,
       },
 
       branch: {
-        sessionId: session.id,
-        userId: session.user_id,
+        sessionId:
+          session.id,
+
+        userId:
+          session.user_id,
+
+        // Username ของเจ้าของ Branch
         userName,
+
         currentChapter:
-          session.current_chapter ?? 1,
-        status: session.status,
-        createdAt: session.created_at,
-        updatedAt: session.updated_at,
+          session.current_chapter ??
+          1,
+
+        status:
+          session.status,
+
+        createdAt:
+          session.created_at,
+
+        updatedAt:
+          session.updated_at,
       },
 
       chapters,

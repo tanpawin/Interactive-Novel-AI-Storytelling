@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -15,16 +15,25 @@ export const Navbar: React.FC = () => {
   const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] =
+    useState(false);
+
   const handleCreateStory = () => {
-    /*
-     * ล้าง Draft ของนิยายเรื่องเก่า
-     * เพื่อให้หน้า Create Story เริ่มเรื่องใหม่แบบสะอาด
-     */
     sessionStorage.removeItem(
       'cozytales_create_story_draft'
     );
 
+    setIsMobileMenuOpen(false);
+
     router.push('/story/create');
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  const isActive = (path: string) => {
+    return pathname === path;
   };
 
   return (
@@ -32,23 +41,32 @@ export const Navbar: React.FC = () => {
       <div className="navbar-content">
 
         {/* ==========================================
-            โลโก้
+            LOGO
         ========================================== */}
-        <Link href="/" className="navbar-brand">
+
+        <Link
+          href="/"
+          className="navbar-brand"
+          onClick={closeMobileMenu}
+        >
           <span className="logo-icon">📖</span>
-          <span className="logo-text">CozyTales</span>
+
+          <span className="logo-text">
+            CozyTales
+          </span>
         </Link>
 
 
         {/* ==========================================
-            เมนูเปลี่ยนหน้า
+            DESKTOP NAVIGATION
         ========================================== */}
+
         <nav className="navbar-links">
 
           <Link
             href="/"
             className={`nav-link ${
-              pathname === '/' ? 'active' : ''
+              isActive('/') ? 'active' : ''
             }`}
           >
             หน้าหลัก (Library)
@@ -57,7 +75,7 @@ export const Navbar: React.FC = () => {
           <Link
             href="/discover"
             className={`nav-link ${
-              pathname === '/discover' ? 'active' : ''
+              isActive('/discover') ? 'active' : ''
             }`}
           >
             สำรวจ (Discover)
@@ -66,7 +84,7 @@ export const Navbar: React.FC = () => {
           <Link
             href="/my-stories"
             className={`nav-link ${
-              pathname === '/my-stories' ? 'active' : ''
+              isActive('/my-stories') ? 'active' : ''
             }`}
           >
             นิยายของฉัน (My Stories)
@@ -78,18 +96,11 @@ export const Navbar: React.FC = () => {
         {/* ==========================================
             ACTIONS
         ========================================== */}
-        <div
-          className="navbar-actions"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-          }}
-        >
 
-          {/* ========================================
-              สร้างนิยาย
-          ======================================== */}
+        <div className="navbar-actions">
+
+          {/* สร้างนิยาย */}
+
           <button
             type="button"
             className="btn-create-story"
@@ -100,41 +111,28 @@ export const Navbar: React.FC = () => {
 
 
           {/* ========================================
-              Clerk Authentication
+              AUTHENTICATION
           ======================================== */}
+
           {isLoaded && (
             <>
               {!isSignedIn ? (
 
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '8px',
-                  }}
-                >
+                <div className="navbar-auth-buttons">
 
-                  {/* สมัครสมาชิก */}
                   <SignUpButton mode="modal">
                     <button
                       type="button"
-                      className="btn-create-story"
-                      style={{
-                        background: '#4b5563',
-                      }}
+                      className="btn-create-story btn-signup"
                     >
                       สมัครสมาชิก
                     </button>
                   </SignUpButton>
 
-
-                  {/* เข้าสู่ระบบ */}
                   <SignInButton mode="modal">
                     <button
                       type="button"
-                      className="btn-create-story"
-                      style={{
-                        background: '#d97706',
-                      }}
+                      className="btn-create-story btn-login"
                     >
                       เข้าสู่ระบบ
                     </button>
@@ -145,11 +143,12 @@ export const Navbar: React.FC = () => {
               ) : (
 
                 <>
-                  {/* โปรไฟล์ */}
+                  {/* โปรไฟล์ Desktop */}
+
                   <Link
                     href="/profile"
-                    className={`nav-link ${
-                      pathname === '/profile'
+                    className={`nav-link navbar-profile-link ${
+                      isActive('/profile')
                         ? 'active'
                         : ''
                     }`}
@@ -158,16 +157,151 @@ export const Navbar: React.FC = () => {
                   </Link>
 
                   {/* รูปโปรไฟล์ */}
-                  <UserButton />
+
+                  <div className="navbar-user-button">
+                    <UserButton />
+                  </div>
                 </>
 
               )}
             </>
           )}
 
+
+          {/* ========================================
+              MOBILE MENU BUTTON
+          ======================================== */}
+
+          <button
+            type="button"
+            className={`mobile-menu-button ${
+              isMobileMenuOpen ? 'open' : ''
+            }`}
+            onClick={() =>
+              setIsMobileMenuOpen(
+                (prev) => !prev
+              )
+            }
+            aria-label={
+              isMobileMenuOpen
+                ? 'ปิดเมนู'
+                : 'เปิดเมนู'
+            }
+            aria-expanded={isMobileMenuOpen}
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
         </div>
 
       </div>
+
+
+      {/* ==========================================
+          MOBILE MENU
+      ========================================== */}
+
+      <div
+        className={`mobile-menu ${
+          isMobileMenuOpen
+            ? 'mobile-menu-open'
+            : ''
+        }`}
+      >
+
+        <nav className="mobile-menu-links">
+
+          <Link
+            href="/"
+            className={`mobile-nav-link ${
+              isActive('/')
+                ? 'active'
+                : ''
+            }`}
+            onClick={closeMobileMenu}
+          >
+            <span>หน้าหลัก</span>
+            <small>Library</small>
+          </Link>
+
+          <Link
+            href="/discover"
+            className={`mobile-nav-link ${
+              isActive('/discover')
+                ? 'active'
+                : ''
+            }`}
+            onClick={closeMobileMenu}
+          >
+            <span>สำรวจ</span>
+            <small>Discover</small>
+          </Link>
+
+          <Link
+            href="/my-stories"
+            className={`mobile-nav-link ${
+              isActive('/my-stories')
+                ? 'active'
+                : ''
+            }`}
+            onClick={closeMobileMenu}
+          >
+            <span>นิยายของฉัน</span>
+            <small>My Stories</small>
+          </Link>
+
+          {isSignedIn && (
+            <Link
+              href="/profile"
+              className={`mobile-nav-link ${
+                isActive('/profile')
+                  ? 'active'
+                  : ''
+              }`}
+              onClick={closeMobileMenu}
+            >
+              <span>โปรไฟล์</span>
+              <small>Profile</small>
+            </Link>
+          )}
+
+        </nav>
+
+
+        {/* ========================================
+            MOBILE AUTH
+        ======================================== */}
+
+        {!isSignedIn && isLoaded && (
+          <div className="mobile-auth-buttons">
+
+            <SignUpButton mode="modal">
+              <button
+                type="button"
+                className="mobile-auth-button mobile-signup"
+                onClick={closeMobileMenu}
+              >
+                สมัครสมาชิก
+              </button>
+            </SignUpButton>
+
+            <SignInButton mode="modal">
+              <button
+                type="button"
+                className="mobile-auth-button mobile-login"
+                onClick={closeMobileMenu}
+              >
+                เข้าสู่ระบบ
+              </button>
+            </SignInButton>
+
+          </div>
+        )}
+
+      </div>
+
     </header>
   );
 };

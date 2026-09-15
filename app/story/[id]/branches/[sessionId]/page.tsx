@@ -1,7 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  useParams,
+  useRouter,
+  useSearchParams,
+} from 'next/navigation';
 
 import '@/styles/reader.css';
 
@@ -32,6 +40,7 @@ interface BranchResponse {
     genre?: string;
     tone?: string;
     synopsis?: string;
+    creatorName?: string;
   };
 
   branch?: Branch;
@@ -44,31 +53,80 @@ interface BranchResponse {
 export default function BranchReaderPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const storyId = params.id as string;
-  const sessionId = params.sessionId as string;
+  const storyId =
+    params.id as string;
 
-  const [storyTitle, setStoryTitle] = useState('');
-  const [totalChapters, setTotalChapters] = useState(0);
-  const [genre, setGenre] = useState('');
-  const [tone, setTone] = useState('');
-  const [synopsis, setSynopsis] = useState('');
-  const [playerName, setPlayerName] = useState('');
+  const sessionId =
+    params.sessionId as string;
 
-  const [chapters, setChapters] = useState<Chapter[]>([]);
+  const from =
+    searchParams.get('from');
 
-  const [fontSize, setFontSize] = useState<
-    'sm' | 'md' | 'lg'
-  >('md');
+  // แก้ตรงนี้:
+  // Branch Reader → กลับไปหน้า Branches ของเรื่องนี้ก่อนเสมอ
+  const handleBack = () => {
+    router.push(
+      `/story/${storyId}/branches${
+        from ? `?from=${from}` : ''
+      }`
+    );
+  };
 
-  const [selectedChapter, setSelectedChapter] =
-    useState(1);
+  const [storyTitle, setStoryTitle] =
+    useState('');
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [
+    totalChapters,
+    setTotalChapters,
+  ] = useState(0);
+
+  const [genre, setGenre] =
+    useState('');
+
+  const [tone, setTone] =
+    useState('');
+
+  const [synopsis, setSynopsis] =
+    useState('');
+
+  const [
+    creatorName,
+    setCreatorName,
+  ] = useState('');
+
+  const [
+    playerName,
+    setPlayerName,
+  ] = useState('');
+
+  const [chapters, setChapters] =
+    useState<Chapter[]>([]);
+
+  const [fontSize, setFontSize] =
+    useState<
+      'sm' | 'md' | 'lg'
+    >('md');
+
+  const [
+    selectedChapter,
+    setSelectedChapter,
+  ] = useState(1);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState('');
 
   useEffect(() => {
-    if (!storyId || !sessionId) return;
+    if (
+      !storyId ||
+      !sessionId
+    ) {
+      return;
+    }
 
     async function loadBranch() {
       try {
@@ -82,7 +140,10 @@ export default function BranchReaderPage() {
         const data: BranchResponse =
           await res.json();
 
-        if (!res.ok || !data.success) {
+        if (
+          !res.ok ||
+          !data.success
+        ) {
           throw new Error(
             data.error ||
               'ไม่สามารถโหลดเส้นเรื่องได้'
@@ -94,7 +155,8 @@ export default function BranchReaderPage() {
         );
 
         setTotalChapters(
-          data.story?.totalChapters ?? 0
+          data.story
+            ?.totalChapters ?? 0
         );
 
         setGenre(
@@ -109,8 +171,15 @@ export default function BranchReaderPage() {
           data.story?.synopsis ?? ''
         );
 
+        setCreatorName(
+          data.story
+            ?.creatorName ??
+            'ไม่ระบุชื่อ'
+        );
+
         setPlayerName(
-          data.branch?.userName ?? 'ผู้เล่น'
+          data.branch?.userName ??
+            'ผู้เล่น'
         );
 
         const loadedChapters =
@@ -121,7 +190,8 @@ export default function BranchReaderPage() {
         );
 
         const latestChapter =
-          loadedChapters.length > 0
+          loadedChapters.length >
+          0
             ? Math.max(
                 ...loadedChapters.map(
                   (chapter) =>
@@ -150,7 +220,10 @@ export default function BranchReaderPage() {
     }
 
     loadBranch();
-  }, [storyId, sessionId]);
+  }, [
+    storyId,
+    sessionId,
+  ]);
 
   const currentChapter =
     chapters.find(
@@ -169,24 +242,60 @@ export default function BranchReaderPage() {
     });
   };
 
+  /* =========================
+     Loading
+  ========================= */
+
   if (loading) {
     return (
       <div className="reader-wrapper">
         <header className="reader-header">
           <button
             className="btn-back"
-            onClick={() =>
-              router.push(
-                `/story/${storyId}/branches`
-              )
-            }
+            onClick={handleBack}
           >
-            ‹ กลับสู่เส้นเรื่อง
+            ‹ ย้อนกลับ
           </button>
 
-          <div className="reader-header-title">
-            <h2>กำลังโหลด...</h2>
-            <span>ผู้เขียนร่วมกับ AI</span>
+          <div className="font-size-controls">
+            <button
+              onClick={() =>
+                setFontSize('sm')
+              }
+              className={
+                fontSize === 'sm'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A-
+            </button>
+
+            <button
+              onClick={() =>
+                setFontSize('md')
+              }
+              className={
+                fontSize === 'md'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A
+            </button>
+
+            <button
+              onClick={() =>
+                setFontSize('lg')
+              }
+              className={
+                fontSize === 'lg'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A+
+            </button>
           </div>
         </header>
 
@@ -207,24 +316,60 @@ export default function BranchReaderPage() {
     );
   }
 
+  /* =========================
+     Error
+  ========================= */
+
   if (error) {
     return (
       <div className="reader-wrapper">
         <header className="reader-header">
           <button
             className="btn-back"
-            onClick={() =>
-              router.push(
-                `/story/${storyId}/branches`
-              )
-            }
+            onClick={handleBack}
           >
-            ‹ กลับสู่เส้นเรื่อง
+            ‹ ย้อนกลับ
           </button>
 
-          <div className="reader-header-title">
-            <h2>{storyTitle}</h2>
-            <span>ผู้เขียนร่วมกับ AI</span>
+          <div className="font-size-controls">
+            <button
+              onClick={() =>
+                setFontSize('sm')
+              }
+              className={
+                fontSize === 'sm'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A-
+            </button>
+
+            <button
+              onClick={() =>
+                setFontSize('md')
+              }
+              className={
+                fontSize === 'md'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A
+            </button>
+
+            <button
+              onClick={() =>
+                setFontSize('lg')
+              }
+              className={
+                fontSize === 'lg'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A+
+            </button>
           </div>
         </header>
 
@@ -255,39 +400,117 @@ export default function BranchReaderPage() {
     );
   }
 
+  /* =========================
+     Empty Branch
+  ========================= */
+
   if (!currentChapter) {
     return (
       <div className="reader-wrapper">
         <header className="reader-header">
           <button
             className="btn-back"
-            onClick={() =>
-              router.push(
-                `/story/${storyId}/branches`
-              )
-            }
+            onClick={handleBack}
           >
-            ‹ กลับสู่เส้นเรื่อง
+            ‹ ย้อนกลับ
           </button>
 
-          <div className="reader-header-title">
-            <h2>{storyTitle}</h2>
-            <span>ผู้เขียนร่วมกับ AI</span>
+          <div className="font-size-controls">
+            <button
+              onClick={() =>
+                setFontSize('sm')
+              }
+              className={
+                fontSize === 'sm'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A-
+            </button>
+
+            <button
+              onClick={() =>
+                setFontSize('md')
+              }
+              className={
+                fontSize === 'md'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A
+            </button>
+
+            <button
+              onClick={() =>
+                setFontSize('lg')
+              }
+              className={
+                fontSize === 'lg'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A+
+            </button>
           </div>
         </header>
 
-        <main className="reader-empty">
-          <div>
-            <span>📖</span>
+        <main className="reader-content">
+          <div className="story-meta-banner">
+            <h1 className="story-main-title">
+              {storyTitle}
+            </h1>
 
-            <h2>
-              ยังไม่มีเนื้อเรื่อง
-            </h2>
+            <div className="story-badges">
+              {genre && (
+                <span className="badge">
+                  {genre}
+                </span>
+              )}
 
-            <p>
-              ไม่พบเนื้อหาในเส้นเรื่องนี้
-            </p>
+              {tone && (
+                <span className="badge">
+                  {tone}
+                </span>
+              )}
+            </div>
+
+            {synopsis && (
+              <p className="premise font-serif">
+                "{synopsis}"
+              </p>
+            )}
+
+            <div className="chapter-counter">
+              สร้างโดย{' '}
+              <strong>
+                "{creatorName}"
+              </strong>
+            </div>
+
+            <div className="chapter-counter">
+              เส้นเรื่องของ{' '}
+              <strong>
+                "{playerName}"
+              </strong>
+            </div>
           </div>
+
+          <main className="reader-empty">
+            <div>
+              <span>📖</span>
+
+              <h2>
+                ยังไม่มีเนื้อเรื่อง
+              </h2>
+
+              <p>
+                ไม่พบเนื้อหาในเส้นเรื่องนี้
+              </p>
+            </div>
+          </main>
         </main>
       </div>
     );
@@ -297,27 +520,19 @@ export default function BranchReaderPage() {
     <div
       className={`reader-wrapper font-size-${fontSize}`}
     >
-      {/* Header */}
-      <header className="reader-header">
+      {/* =========================
+          Header
+      ========================= */}
 
+      <header className="reader-header">
         <button
           className="btn-back"
-          onClick={() =>
-            router.push(
-              `/story/${storyId}/branches`
-            )
-          }
+          onClick={handleBack}
         >
-          ‹ กลับสู่เส้นเรื่อง
+          ‹ ย้อนกลับ
         </button>
 
-        <div className="reader-header-title">
-          <h2>{storyTitle}</h2>
-          <span>ผู้เขียนร่วมกับ AI</span>
-        </div>
-
         <div className="font-size-controls">
-
           <button
             onClick={() =>
               setFontSize('sm')
@@ -356,34 +571,57 @@ export default function BranchReaderPage() {
           >
             A+
           </button>
-
         </div>
       </header>
 
-      {/* Main Reader */}
+      {/* =========================
+          Main Reader
+      ========================= */}
+
       <main className="reader-content">
 
-        {/* Story Info */}
+        {/* =========================
+            Story Info
+        ========================= */}
+
         <div className="story-meta-banner">
 
+          <h1 className="story-main-title">
+            {storyTitle}
+          </h1>
+
           <div className="story-badges">
+            {genre && (
+              <span className="badge">
+                {genre}
+              </span>
+            )}
 
-            <span className="badge">
-              {genre}
-            </span>
-
-            <span className="badge">
-              {tone}
-            </span>
-
+            {tone && (
+              <span className="badge">
+                {tone}
+              </span>
+            )}
           </div>
 
-          {/* ใช้ synopsis แบบเดียวกับ ReaderView */}
-          <p className="premise font-serif">
-            "{synopsis}"
-          </p>
+          {synopsis && (
+            <p className="premise font-serif">
+              "{synopsis}"
+            </p>
+          )}
 
-          {/* เพิ่มเฉพาะข้อมูลเส้นเรื่อง */}
+          {/* เจ้าของเรื่อง */}
+
+          <div className="chapter-counter">
+            ผู้เขียน{' '}
+            <strong>
+              {creatorName}
+            </strong>{' '}
+            ร่วมกับ AI
+          </div>
+
+          {/* ผู้เล่น Branch */}
+
           <div className="chapter-counter">
             เส้นเรื่องของ{' '}
             <strong>
@@ -391,34 +629,38 @@ export default function BranchReaderPage() {
             </strong>
           </div>
 
-          {/* เปลี่ยนจาก currentChapter / currentChapter
-              เป็น currentChapter / totalChapters */}
+          {/* Chapter */}
+
           <div className="chapter-counter">
             บทที่{' '}
             {currentChapter.chapterNumber}
             {' / '}
             {totalChapters}
           </div>
-
         </div>
 
-        {/* Current Chapter */}
+        {/* =========================
+            Current Chapter
+        ========================= */}
+
         <article
           className="chapter-block"
           key={currentChapter.id}
         >
-
           {currentChapter.userPromptChoice && (
             <div className="user-choice-badge">
               🎯 การตัดสินใจของคุณ:{' '}
               <span>
-                "{currentChapter.userPromptChoice}"
+                "
+                {
+                  currentChapter.userPromptChoice
+                }
+                "
               </span>
             </div>
           )}
 
           <div className="chapter-heading">
-
             <span>
               บทที่{' '}
               {currentChapter.chapterNumber}
@@ -427,28 +669,30 @@ export default function BranchReaderPage() {
             <h1 className="chapter-title">
               {currentChapter.title}
             </h1>
-
           </div>
 
           <div className="chapter-text font-serif">
-
             {currentChapter.content
               .split('\n')
-              .map((paragraph, idx) =>
-                paragraph.trim() ? (
-                  <p key={idx}>
-                    {paragraph}
-                  </p>
-                ) : null
+              .map(
+                (
+                  paragraph,
+                  idx
+                ) =>
+                  paragraph.trim() ? (
+                    <p key={idx}>
+                      {paragraph}
+                    </p>
+                  ) : null
               )}
-
           </div>
-
         </article>
 
-        {/* Navigation */}
-        <div className="chapter-navigation">
+        {/* =========================
+            Navigation
+        ========================= */}
 
+        <div className="chapter-navigation">
           <button
             className="chapter-nav-button"
             disabled={
@@ -458,6 +702,7 @@ export default function BranchReaderPage() {
               setSelectedChapter(
                 selectedChapter - 1
               );
+
               scrollToTop();
             }}
           >
@@ -479,14 +724,13 @@ export default function BranchReaderPage() {
               setSelectedChapter(
                 selectedChapter + 1
               );
+
               scrollToTop();
             }}
           >
             บทถัดไป ›
           </button>
-
         </div>
-
       </main>
     </div>
   );

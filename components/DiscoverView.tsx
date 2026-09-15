@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Story, Genre } from '../types/story';
 import { StoryCard } from './StoryCard';
 
@@ -21,69 +21,209 @@ const CATEGORIES: ('ทั้งหมด' | Genre)[] = [
   'วรรณกรรม',
 ];
 
-export const DiscoverView: React.FC<DiscoverViewProps> = ({ stories, onSelectStory }) => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('ทั้งหมด');
+export const DiscoverView: React.FC<DiscoverViewProps> = ({
+  stories,
+  onSelectStory,
+}) => {
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>('ทั้งหมด');
+
   const [searchQuery, setSearchQuery] = useState('');
+
+  const [isCategoryOpen, setIsCategoryOpen] =
+    useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(
+          event.target as Node
+        )
+      ) {
+        setIsCategoryOpen(false);
+      }
+    };
+
+    document.addEventListener(
+      'mousedown',
+      handleClickOutside
+    );
+
+    return () => {
+      document.removeEventListener(
+        'mousedown',
+        handleClickOutside
+      );
+    };
+  }, []);
 
   const filteredStories = stories.filter((story) => {
     const matchesCategory =
-      selectedCategory === 'ทั้งหมด' || story.genre === selectedCategory;
+      selectedCategory === 'ทั้งหมด' ||
+      story.genre === selectedCategory;
+
     const matchesSearch =
-      story.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      story.corePremise.toLowerCase().includes(searchQuery.toLowerCase());
+      story.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      story.corePremise
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
     return matchesCategory && matchesSearch;
   });
 
   return (
     <div className="view-container">
+
       {/* Title & Search Bar */}
       <div className="discover-header">
-        <div>
-          <span className="nook-subtitle">ค้นพบโลกใบใหม่</span>
-          <h1 className="nook-title">Discover Stories</h1>
+        <div className="discover-title">
+          <span className="nook-subtitle">
+            ค้นพบโลกใบใหม่
+          </span>
+
+          <h1 className="nook-title">
+            Discover Stories
+          </h1>
         </div>
 
         <div className="search-input-wrapper">
+          <span className="search-icon" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-4-4" />
+            </svg>
+          </span>
+
           <input
             type="text"
-            placeholder="ค้นหาชื่อเรื่อง, พล็อตเรื่อง..."
+            placeholder="ค้นหาชื่อเรื่อง..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) =>
+              setSearchQuery(e.target.value)
+            }
           />
         </div>
       </div>
 
-      {/* Category Pills */}
+
+      {/* ==========================================
+          DESKTOP - CATEGORY PILLS
+      ========================================== */}
+
       <div className="category-scroll">
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
-            className={`cat-pill ${selectedCategory === cat ? 'active' : ''}`}
-            onClick={() => setSelectedCategory(cat)}
+            type="button"
+            className={`cat-pill ${
+              selectedCategory === cat ? 'active' : ''
+            }`}
+            onClick={() =>
+              setSelectedCategory(cat)
+            }
           >
             {cat}
           </button>
         ))}
       </div>
 
-      {/* Highlight Banners */}
-      <div className="highlight-grid">
-        <div className="highlight-card trending">
-          <h3>🔥 Trending This Week</h3>
-          <p>เรื่องยอดนิยมที่มีผู้อ่านสูงสุดในสัปดาห์นี้</p>
-        </div>
-        <div className="highlight-card editors">
-          <h3>💡 Editor's Picks</h3>
-          <p>คัดสรรโดยทีมงานและนักเขียนบท AI</p>
+
+      {/* ==========================================
+          MOBILE - CUSTOM CATEGORY DROPDOWN
+      ========================================== */}
+
+      <div className="discover-filters">
+        <div
+          className="filter-group"
+          ref={dropdownRef}
+        >
+          <label>
+            หมวดหมู่
+          </label>
+
+          <button
+            type="button"
+            className={`category-select ${
+              isCategoryOpen ? 'open' : ''
+            }`}
+            onClick={() =>
+              setIsCategoryOpen((prev) => !prev)
+            }
+            aria-expanded={isCategoryOpen}
+          >
+            <span>
+              {selectedCategory}
+            </span>
+
+            <span
+              className={`category-arrow ${
+                isCategoryOpen ? 'open' : ''
+              }`}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </span>
+          </button>
+
+          {isCategoryOpen && (
+            <div className="category-menu">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`category-option ${
+                    selectedCategory === cat
+                      ? 'selected'
+                      : ''
+                  }`}
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    setIsCategoryOpen(false);
+                  }}
+                >
+                  <span>{cat}</span>
+
+                  {selectedCategory === cat && (
+                    <span className="category-check">
+                      ✓
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
+
       {/* Stories Grid */}
-      <div className="story-grid" style={{ marginTop: '2rem' }}>
+      <div className="story-grid">
         {filteredStories.map((story) => (
-          <StoryCard key={story.id} story={story} onClick={onSelectStory} />
+          <StoryCard
+            key={story.id}
+            story={story}
+            onClick={onSelectStory}
+            branchFrom="discover"
+          />
         ))}
       </div>
+
     </div>
   );
 };

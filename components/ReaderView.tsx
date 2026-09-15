@@ -1,42 +1,63 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import type { Story, Chapter } from '@/types/story';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
+
+import type {
+  Story,
+  Chapter,
+} from '@/types/story';
+
 import '@/styles/reader.css';
 
 interface ReaderViewProps {
   story: Story;
   onBack: () => void;
-  onUpdateStory: (updatedStory: Story) => void;
+  onUpdateStory: (
+    updatedStory: Story
+  ) => void;
 }
 
-export const ReaderView: React.FC<ReaderViewProps> = ({
+export const ReaderView: React.FC<
+  ReaderViewProps
+> = ({
   story,
   onBack,
   onUpdateStory,
 }) => {
-  const [userPrompt, setUserPrompt] = useState('');
-  const [isGeneratingNext, setIsGeneratingNext] = useState(false);
-  const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg'>('md');
+  const [userPrompt, setUserPrompt] =
+    useState('');
 
-  // บทที่กำลังอ่าน
-  const [selectedChapter, setSelectedChapter] = useState(
-    story.currentChapter
-  );
+  const [
+    isGeneratingNext,
+    setIsGeneratingNext,
+  ] = useState(false);
 
-  // สำคัญ:
-  // เมื่อ story.currentChapter ถูกโหลด/เปลี่ยนจาก page.tsx
-  // ให้ ReaderView เลือกบทล่าสุดตาม session ของผู้ใช้ทันที
+  const [fontSize, setFontSize] =
+    useState<'sm' | 'md' | 'lg'>('md');
+
+  const [
+    selectedChapter,
+    setSelectedChapter,
+  ] = useState(story.currentChapter);
+
   useEffect(() => {
-    setSelectedChapter(story.currentChapter);
+    setSelectedChapter(
+      story.currentChapter
+    );
   }, [story.currentChapter]);
 
-  // หาบทที่กำลังอ่าน
   const currentChapter =
     story.chapters.find(
       (chapter) =>
-        chapter.chapterNumber === selectedChapter
-    ) || story.chapters[story.chapters.length - 1];
+        chapter.chapterNumber ===
+        selectedChapter
+    ) ||
+    story.chapters[
+      story.chapters.length - 1
+    ];
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -46,91 +67,127 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
   };
 
   const isLatestChapter =
-    selectedChapter === story.currentChapter;
+    selectedChapter ===
+    story.currentChapter;
 
-  const handleGenerateNextChapter = async () => {
-    if (
-      !userPrompt.trim() ||
-      isGeneratingNext ||
-      story.currentChapter >= story.totalChapters
-    ) {
-      return;
-    }
-
-    setIsGeneratingNext(true);
-
-    try {
-      const res = await fetch('/api/generate-story', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          actionType: 'next_chapter',
-          storyId: story.id,
-          storyTitle: story.title,
-          genre: story.genre,
-          tone: story.tone,
-          previousChapters: story.chapters,
-          userChoice: userPrompt,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(
-          data.error || 'ไม่สามารถสร้างบทถัดไปได้'
-        );
+  const handleGenerateNextChapter =
+    async () => {
+      if (
+        !userPrompt.trim() ||
+        isGeneratingNext ||
+        story.currentChapter >=
+          story.totalChapters
+      ) {
+        return;
       }
 
-      const newChapter: Chapter = {
-        id: data.chapter.id,
-        chapterNumber: data.chapter.chapterNumber,
-        title:
-          data.chapter.title ||
-          `บทที่ ${data.chapter.chapterNumber}`,
-        content: data.chapter.content,
-        userPromptChoice: userPrompt,
-        createdAt: data.chapter.createdAt,
-      };
+      setIsGeneratingNext(true);
 
-      const updatedStory: Story = {
-        ...story,
-        currentChapter: newChapter.chapterNumber,
-        totalChapters: story.totalChapters,
-        wordCount:
-          story.wordCount + newChapter.content.length,
-        chapters: [
-          ...story.chapters,
-          newChapter,
-        ],
-      };
+      try {
+        const res = await fetch(
+          '/api/generate-story',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type':
+                'application/json',
+            },
+            body: JSON.stringify({
+              actionType:
+                'next_chapter',
+              storyId: story.id,
+              storyTitle:
+                story.title,
+              genre: story.genre,
+              tone: story.tone,
+              previousChapters:
+                story.chapters,
+              userChoice:
+                userPrompt,
+            }),
+          }
+        );
 
-      onUpdateStory(updatedStory);
+        const data = await res.json();
 
-      // เปิดบทใหม่ทันที
-      setSelectedChapter(newChapter.chapterNumber);
-      setUserPrompt('');
+        if (
+          !res.ok ||
+          !data.success
+        ) {
+          throw new Error(
+            data.error ||
+              'ไม่สามารถสร้างบทถัดไปได้'
+          );
+        }
 
-      setTimeout(() => {
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth',
-        });
-      }, 100);
-    } catch (err) {
-      console.error(err);
+        const newChapter: Chapter = {
+          id: data.chapter.id,
 
-      alert(
-        err instanceof Error
-          ? err.message
-          : 'ไม่สามารถสร้างบทใหม่ได้'
-      );
-    } finally {
-      setIsGeneratingNext(false);
-    }
-  };
+          chapterNumber:
+            data.chapter
+              .chapterNumber,
+
+          title:
+            data.chapter.title ||
+            `บทที่ ${data.chapter.chapterNumber}`,
+
+          content:
+            data.chapter.content,
+
+          userPromptChoice:
+            userPrompt,
+
+          createdAt:
+            data.chapter.createdAt,
+        };
+
+        const updatedStory: Story = {
+          ...story,
+
+          currentChapter:
+            newChapter.chapterNumber,
+
+          totalChapters:
+            story.totalChapters,
+
+          wordCount:
+            story.wordCount +
+            newChapter.content.length,
+
+          chapters: [
+            ...story.chapters,
+            newChapter,
+          ],
+        };
+
+        onUpdateStory(
+          updatedStory
+        );
+
+        setSelectedChapter(
+          newChapter.chapterNumber
+        );
+
+        setUserPrompt('');
+
+        setTimeout(() => {
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+          });
+        }, 100);
+      } catch (err) {
+        console.error(err);
+
+        alert(
+          err instanceof Error
+            ? err.message
+            : 'ไม่สามารถสร้างบทใหม่ได้'
+        );
+      } finally {
+        setIsGeneratingNext(false);
+      }
+    };
 
   if (!currentChapter) {
     return (
@@ -147,7 +204,11 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
         <main className="reader-empty">
           <div>
             <span>📖</span>
-            <h2>ยังไม่มีเนื้อเรื่อง</h2>
+
+            <h2>
+              ยังไม่มีเนื้อเรื่อง
+            </h2>
+
             <p>
               เรื่องราวกำลังจะเริ่มต้นขึ้น
             </p>
@@ -170,34 +231,41 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           ‹ กลับสู่หน้าหลัก
         </button>
 
-        <div className="reader-header-title">
-          <h2>{story.title}</h2>
-          <span>{story.author}</span>
-        </div>
-
         <div className="font-size-controls">
           <button
-            onClick={() => setFontSize('sm')}
+            onClick={() =>
+              setFontSize('sm')
+            }
             className={
-              fontSize === 'sm' ? 'active' : ''
+              fontSize === 'sm'
+                ? 'active'
+                : ''
             }
           >
             A-
           </button>
 
           <button
-            onClick={() => setFontSize('md')}
+            onClick={() =>
+              setFontSize('md')
+            }
             className={
-              fontSize === 'md' ? 'active' : ''
+              fontSize === 'md'
+                ? 'active'
+                : ''
             }
           >
             A
           </button>
 
           <button
-            onClick={() => setFontSize('lg')}
+            onClick={() =>
+              setFontSize('lg')
+            }
             className={
-              fontSize === 'lg' ? 'active' : ''
+              fontSize === 'lg'
+                ? 'active'
+                : ''
             }
           >
             A+
@@ -210,6 +278,11 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
 
         {/* Story Info */}
         <div className="story-meta-banner">
+
+          <h1 className="story-main-title">
+            {story.title}
+          </h1>
+
           <div className="story-badges">
             <span className="badge">
               {story.genre}
@@ -225,8 +298,14 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           </p>
 
           <div className="chapter-counter">
-            บทที่ {currentChapter.chapterNumber} /{' '}
-            {story.currentChapter}
+            ผู้เขียน {story.author} ร่วมกับ AI
+          </div>
+
+          <div className="chapter-counter">
+            บทที่{' '}
+            {currentChapter.chapterNumber}
+            {' / '}
+            {story.totalChapters}
           </div>
         </div>
 
@@ -239,14 +318,19 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
             <div className="user-choice-badge">
               🎯 การตัดสินใจของคุณ:{' '}
               <span>
-                "{currentChapter.userPromptChoice}"
+                "
+                {
+                  currentChapter.userPromptChoice
+                }
+                "
               </span>
             </div>
           )}
 
           <div className="chapter-heading">
             <span>
-              บทที่ {currentChapter.chapterNumber}
+              บทที่{' '}
+              {currentChapter.chapterNumber}
             </span>
 
             <h1 className="chapter-title">
@@ -257,13 +341,17 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
           <div className="chapter-text font-serif">
             {currentChapter.content
               .split('\n')
-              .map((paragraph, idx) => (
-                paragraph.trim() ? (
-                  <p key={idx}>
-                    {paragraph}
-                  </p>
-                ) : null
-              ))}
+              .map(
+                (
+                  paragraph,
+                  idx
+                ) =>
+                  paragraph.trim() ? (
+                    <p key={idx}>
+                      {paragraph}
+                    </p>
+                  ) : null
+              )}
           </div>
         </article>
 
@@ -275,7 +363,10 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
               selectedChapter <= 1
             }
             onClick={() => {
-              setSelectedChapter(selectedChapter - 1);
+              setSelectedChapter(
+                selectedChapter - 1
+              );
+
               scrollToTop();
             }}
           >
@@ -294,7 +385,10 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
               story.currentChapter
             }
             onClick={() => {
-              setSelectedChapter(selectedChapter + 1);
+              setSelectedChapter(
+                selectedChapter + 1
+              );
+
               scrollToTop();
             }}
           >
@@ -322,55 +416,54 @@ export const ReaderView: React.FC<ReaderViewProps> = ({
       {isLatestChapter && (
         <div className="reader-interactive-bar">
           <div className="interactive-container">
-
             <label htmlFor="user-action">
               {story.currentChapter >=
-                story.totalChapters
+              story.totalChapters
                 ? 'เรื่องราวจบลงแล้ว'
-                : `คุณต้องการให้ตัวละครทำอะไรต่อไป?`}
+                : 'คุณต้องการให้ตัวละครทำอะไรต่อไป?'}
             </label>
 
             {story.currentChapter <
               story.totalChapters && (
-                <div className="input-group">
+              <div className="input-group">
+                <input
+                  id="user-action"
+                  type="text"
+                  placeholder="เช่น เดินเข้าไปสำรวจประตูไม้เก่า..."
+                  value={userPrompt}
+                  onChange={(e) =>
+                    setUserPrompt(
+                      e.target.value
+                    )
+                  }
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === 'Enter'
+                    ) {
+                      handleGenerateNextChapter();
+                    }
+                  }}
+                  disabled={
+                    isGeneratingNext
+                  }
+                />
 
-                  <input
-                    id="user-action"
-                    type="text"
-                    placeholder="เช่น เดินเข้าไปสำรวจประตูไม้เก่า..."
-                    value={userPrompt}
-                    onChange={(e) =>
-                      setUserPrompt(
-                        e.target.value
-                      )
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleGenerateNextChapter();
-                      }
-                    }}
-                    disabled={
-                      isGeneratingNext
-                    }
-                  />
-
-                  <button
-                    className="btn-next-chapter"
-                    onClick={
-                      handleGenerateNextChapter
-                    }
-                    disabled={
-                      !userPrompt.trim() ||
-                      isGeneratingNext
-                    }
-                  >
-                    {isGeneratingNext
-                      ? 'กำลังแต่ง...'
-                      : 'ดำเนินเรื่องต่อ ›'}
-                  </button>
-
-                </div>
-              )}
+                <button
+                  className="btn-next-chapter"
+                  onClick={
+                    handleGenerateNextChapter
+                  }
+                  disabled={
+                    !userPrompt.trim() ||
+                    isGeneratingNext
+                  }
+                >
+                  {isGeneratingNext
+                    ? 'กำลังแต่ง...'
+                    : 'ดำเนินเรื่องต่อ ›'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

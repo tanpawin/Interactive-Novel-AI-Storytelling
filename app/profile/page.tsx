@@ -123,9 +123,9 @@ export default function ProfilePage() {
         <button
           type="button"
           className="profile-back"
-          onClick={() => router.back()}
+          onClick={() => router.push('/')}
         >
-          ‹ ย้อนกลับ
+          ‹ กลับสู่หน้าหลัก
         </button>
 
         {/* Profile Card */}
@@ -331,9 +331,7 @@ export default function ProfilePage() {
             <button
               type="button"
               className="profile-activity-item"
-              onClick={() => {
-                // หน้ารวมเรื่องโปรดจะเชื่อมต่อในขั้นถัดไป
-              }}
+              onClick={() => router.push('/favorites')}
             >
               <div className="profile-activity-content">
                 <h3>เรื่องโปรด</h3>
@@ -351,9 +349,7 @@ export default function ProfilePage() {
             <button
               type="button"
               className="profile-activity-item"
-              onClick={() => {
-                // หน้ารวมเส้นเรื่องจะเชื่อมต่อในขั้นถัดไป
-              }}
+              onClick={() => router.push('/profile/branches')}
             >
               <div className="profile-activity-content">
                 <h3>เส้นเรื่องของฉัน</h3>
