@@ -192,13 +192,15 @@ export const ReaderView: React.FC<
   if (!currentChapter) {
     return (
       <div className="reader-wrapper">
-        <header className="reader-header">
-          <button
-            className="btn-back"
-            onClick={onBack}
-          >
-            ‹ กลับสู่หน้าหลัก
-          </button>
+        <header className="reader-header story-reader-header">
+          <div className="story-reader-header-inner">
+            <button
+              className="btn-back"
+              onClick={onBack}
+            >
+              ‹ กลับสู่หน้าหลัก
+            </button>
+          </div>
         </header>
 
         <main className="reader-empty">
@@ -223,53 +225,55 @@ export const ReaderView: React.FC<
       className={`reader-wrapper font-size-${fontSize}`}
     >
       {/* Header */}
-      <header className="reader-header">
-        <button
-          className="btn-back"
-          onClick={onBack}
-        >
-          ‹ กลับสู่หน้าหลัก
-        </button>
-
-        <div className="font-size-controls">
+      <header className="reader-header story-reader-header">
+        <div className="story-reader-header-inner">
           <button
-            onClick={() =>
-              setFontSize('sm')
-            }
-            className={
-              fontSize === 'sm'
-                ? 'active'
-                : ''
-            }
+            className="btn-back"
+            onClick={onBack}
           >
-            A-
+            ‹ กลับสู่หน้าหลัก
           </button>
 
-          <button
-            onClick={() =>
-              setFontSize('md')
-            }
-            className={
-              fontSize === 'md'
-                ? 'active'
-                : ''
-            }
-          >
-            A
-          </button>
+          <div className="font-size-controls">
+            <button
+              onClick={() =>
+                setFontSize('sm')
+              }
+              className={
+                fontSize === 'sm'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A-
+            </button>
 
-          <button
-            onClick={() =>
-              setFontSize('lg')
-            }
-            className={
-              fontSize === 'lg'
-                ? 'active'
-                : ''
-            }
-          >
-            A+
-          </button>
+            <button
+              onClick={() =>
+                setFontSize('md')
+              }
+              className={
+                fontSize === 'md'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A
+            </button>
+
+            <button
+              onClick={() =>
+                setFontSize('lg')
+              }
+              className={
+                fontSize === 'lg'
+                  ? 'active'
+                  : ''
+              }
+            >
+              A+
+            </button>
+          </div>
         </div>
       </header>
 

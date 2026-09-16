@@ -387,9 +387,6 @@ export default function CreateStoryPage() {
           </button>
 
           <div className="story-create-heading">
-            <span className="story-create-subtitle">
-              CozyTales
-            </span>
 
             <h1>
               สร้างนิยายเรื่องใหม่

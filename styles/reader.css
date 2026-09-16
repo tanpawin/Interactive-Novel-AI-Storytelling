@@ -18,7 +18,7 @@
 
   border-bottom: 1px solid var(--border-color);
 
-  padding: 0.75rem 1.5rem;
+  padding: 1.15rem 1.5rem;
 
   display: flex;
   align-items: center;
@@ -28,16 +28,95 @@
 }
 
 .btn-back {
-  background: none;
+  background: none !important;
+  border: none !important;
+  text-decoration: none !important;
+
   color: var(--accent-color);
   font-weight: 600;
   font-size: 0.9rem;
 
   white-space: nowrap;
+
+  position: static !important;
+  left: auto !important;
+
+  margin: 0 !important;
+
+  padding: 0.4rem 0 !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.btn-back::before,
+.btn-back::after {
+  display: none !important;
+  content: none !important;
 }
 
 .btn-back:hover {
   color: var(--accent-hover);
+  text-decoration: none !important;
+}
+
+/* =========================
+   Story Reader Header
+========================= */
+
+.story-reader-header {
+  border-bottom: none !important;
+  margin-bottom: 2.5rem;
+}
+
+.story-reader-header .story-reader-header-inner {
+  width: 720px;
+  max-width: 100%;
+
+  margin: 0 auto;
+
+  padding-left: 1rem;
+  padding-right: 0;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.story-reader-header .btn-back {
+  position: static !important;
+
+  margin: 0 !important;
+
+  padding: 0.4rem 0 !important;
+
+  background: transparent !important;
+  border: none !important;
+
+  color: var(--accent-color);
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  line-height: 1.4;
+
+  text-decoration: none !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.story-reader-header .btn-back::before,
+.story-reader-header .btn-back::after {
+  display: none !important;
+  content: none !important;
+}
+
+.story-reader-header .btn-back:hover {
+  color: var(--accent-hover);
+  text-decoration: none !important;
 }
 
 /* =========================
@@ -181,7 +260,7 @@
   border-left: 3px solid var(--accent-color);
 }
 
-.chapter-heading > span {
+.chapter-heading>span {
   display: block;
 
   margin-bottom: 0.25rem;
@@ -290,7 +369,7 @@
   box-sizing: border-box;
 }
 
-.chapter-navigation > span {
+.chapter-navigation>span {
   color: var(--text-muted);
 
   font-size: 0.8rem;
@@ -554,17 +633,48 @@
 
   /* Header */
   .reader-header {
-    padding: 0.7rem 0.85rem;
+    padding: 1rem 0.85rem;
 
     gap: 0.5rem;
   }
 
   .btn-back {
+    position: static !important;
+
+    margin: 0 !important;
+
+    padding: 0.35rem 0 !important;
+
     font-size: 0.8rem;
 
-    padding: 0.35rem 0;
-
     flex-shrink: 0;
+  }
+
+  /* Story Reader Header */
+  .story-reader-header {
+    padding-left: 1rem;
+    padding-right: 1rem;
+
+    padding-top: 0.95rem;
+    padding-bottom: 0.95rem;
+
+    margin-bottom: 1.8rem;
+  }
+
+  .story-reader-header .story-reader-header-inner {
+    width: 100%;
+    max-width: none;
+
+    padding-left: 0.75rem;
+    padding-right: 0;
+
+    box-sizing: border-box;
+  }
+
+  .story-reader-header .btn-back {
+    font-size: 0.8rem;
+
+    padding: 0.35rem 0 !important;
   }
 
   /* Reader content */
@@ -622,7 +732,7 @@
     padding-left: 0.75rem;
   }
 
-  .chapter-heading > span {
+  .chapter-heading>span {
     font-size: 0.7rem;
   }
 
@@ -666,7 +776,7 @@
     gap: 0.25rem;
   }
 
-  .chapter-navigation > span {
+  .chapter-navigation>span {
     font-size: 0.7rem;
 
     text-align: center;
@@ -751,7 +861,35 @@
   }
 
   .btn-back {
+    position: static !important;
+
+    margin: 0 !important;
+
+    padding: 0.3rem 0 !important;
+
     font-size: 0.75rem;
+  }
+
+  /* Story Reader Header */
+  .story-reader-header {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+
+    padding-top: 0.9rem;
+    padding-bottom: 0.9rem;
+
+    margin-bottom: 1.6rem;
+  }
+
+  .story-reader-header .story-reader-header-inner {
+    padding-left: 0.6rem;
+    padding-right: 0;
+  }
+
+  .story-reader-header .btn-back {
+    font-size: 0.75rem;
+
+    padding: 0.3rem 0 !important;
   }
 
   .reader-content {
@@ -777,5 +915,122 @@
 
     padding-left: 0.35rem;
     padding-right: 0.35rem;
+  }
+}
+
+/* =========================
+   Branches Header
+========================= */
+
+.branches-reader-header {
+  border-bottom: none !important;
+}
+
+/*
+  ใช้ความกว้างและตำแหน่งเดียวกับ reader-content
+  และเพิ่ม 1rem ให้ตรงกับตัวหนังสือใน .chapter-heading
+*/
+.branches-reader-header .branches-header-inner {
+  width: 720px;
+  max-width: 100%;
+
+  margin: 0 auto;
+
+  padding-left: 1rem;
+  padding-right: 0;
+
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.branches-reader-header .btn-back {
+  position: static !important;
+
+  margin: 0 !important;
+
+  padding: 0.4rem 0 !important;
+
+  background: transparent !important;
+  border: none !important;
+
+  color: var(--accent-color);
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  line-height: 1.4;
+
+  text-decoration: none !important;
+
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.branches-reader-header .btn-back::before,
+.branches-reader-header .btn-back::after {
+  display: none !important;
+  content: none !important;
+}
+
+.branches-reader-header .btn-back:hover {
+  color: var(--accent-hover);
+  text-decoration: none !important;
+}
+
+/* =========================
+   Branches Header Mobile
+========================= */
+
+@media (max-width: 640px) {
+  .branches-reader-header {
+    padding-left: 1rem;
+    padding-right: 1rem;
+
+    padding-top: 0.95rem;
+    padding-bottom: 0.95rem;
+  }
+
+  .branches-reader-header .branches-header-inner {
+    width: 100%;
+    max-width: none;
+
+    padding-left: 0.75rem;
+    padding-right: 0;
+
+    box-sizing: border-box;
+  }
+
+  .branches-reader-header .btn-back {
+    font-size: 0.8rem;
+
+    padding: 0.35rem 0 !important;
+  }
+}
+
+/* =========================
+   Branches Header Small Mobile
+========================= */
+
+@media (max-width: 380px) {
+  .branches-reader-header {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+
+    padding-top: 0.9rem;
+    padding-bottom: 0.9rem;
+  }
+
+  .branches-reader-header .branches-header-inner {
+    padding-left: 0.6rem;
+    padding-right: 0;
+  }
+
+  .branches-reader-header .btn-back {
+    font-size: 0.75rem;
+
+    padding: 0.3rem 0 !important;
   }
 }

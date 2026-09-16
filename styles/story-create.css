@@ -26,44 +26,35 @@
   position: relative;
 
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
 
   margin-bottom: 2.5rem;
 }
 
-/* ==========================================
-   Back Button
-   Style เดียวกับ Favorites Discover Button
-========================================== */
-
 .story-create-back {
-  position: absolute;
-  left: 0;
-  top: 0;
+  position: static;
+  align-self: flex-start;
 
   display: inline-flex;
   align-items: center;
 
   padding: 6px 0;
+  margin-bottom: 1.2rem;
 
   background: transparent;
-
   border: none;
 
   color: var(--accent-color);
 
   font-family: var(--font-sans);
-
   font-size: 0.86rem;
-
   font-weight: 600;
-
   line-height: 1.4;
 
   cursor: pointer;
 
-  transition:
-    color 0.2s ease;
+  transition: color 0.2s ease;
 }
 
 .story-create-back::after {
@@ -100,7 +91,7 @@
 
   text-align: center;
 
-  padding: 0 5rem;
+  padding: 0;
 }
 
 .story-create-subtitle {
@@ -631,15 +622,11 @@
     margin-bottom: 2rem;
   }
 
-  .story-create-heading {
-    padding: 0 2.5rem;
-  }
-
-  .story-create-heading h1 {
-    font-size: 1.7rem;
-  }
-
   .story-create-back {
+    align-self: flex-start;
+
+    margin-bottom: 1rem;
+
     min-height: 36px;
 
     padding: 0.5rem 0.75rem;
@@ -647,6 +634,20 @@
     border-radius: 9px;
 
     font-size: 0.8rem;
+
+    white-space: nowrap;
+  }
+
+  .story-create-heading {
+    width: 100%;
+
+    padding: 0;
+
+    text-align: center;
+  }
+
+  .story-create-heading h1 {
+    font-size: 1.7rem;
   }
 
   .story-create-progress {
@@ -688,20 +689,26 @@
     padding-right: 0.75rem;
   }
 
-  .story-create-heading {
-    padding: 0 2rem;
-  }
-
-  .story-create-heading h1 {
-    font-size: 1.5rem;
-  }
-
   .story-create-back {
+    margin-bottom: 0.9rem;
+
     min-height: 34px;
 
     padding: 0.45rem 0.65rem;
 
     font-size: 0.76rem;
+  }
+
+  .story-create-heading {
+    width: 100%;
+
+    padding: 0;
+
+    text-align: center;
+  }
+
+  .story-create-heading h1 {
+    font-size: 1.5rem;
   }
 
   .story-create-step {

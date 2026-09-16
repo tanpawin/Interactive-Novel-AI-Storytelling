@@ -140,19 +140,17 @@ export default function BranchesPage() {
         <div className="reader-wrapper">
 
             {/* Header */}
-            <header className="reader-header">
-                <button
-                    className="btn-back"
-                    onClick={handleBack}
-                >
-                    ‹ ย้อนกลับ
-                </button>
+            <header className="reader-header branches-reader-header">
+                <div className="branches-header-inner">
+                    <button
+                        className="btn-back"
+                        onClick={handleBack}
+                    >
+                        ‹ ย้อนกลับ
+                    </button>
 
-                <div className="reader-header-title">
-                    <span>เส้นทางของเรื่องราว</span>
+                    <div style={{ width: '90px' }} />
                 </div>
-
-                <div style={{ width: '90px' }} />
             </header>
 
             <main className="reader-content">
