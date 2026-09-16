@@ -15,8 +15,6 @@ import {
   StoryLength,
 } from '../types/story';
 
-import '../styles/modal.css';
-
 interface CreateStoryModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -110,6 +108,7 @@ export const CreateStoryModal: React.FC<
   // ==========================================
   // RESTORE DRAFT
   // ==========================================
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -127,8 +126,7 @@ export const CreateStoryModal: React.FC<
       const data = JSON.parse(savedDraft);
 
       setFormData({
-        title:
-          data.title || '',
+        title: data.title || '',
         corePremise:
           data.corePremise || '',
         genre:
@@ -175,6 +173,7 @@ export const CreateStoryModal: React.FC<
   // ==========================================
   // AUTO SAVE DRAFT
   // ==========================================
+
   useEffect(() => {
     if (
       !isOpen ||
@@ -211,6 +210,7 @@ export const CreateStoryModal: React.FC<
   // ==========================================
   // UPDATE FORM
   // ==========================================
+
   const updateFormData = (
     changes: Partial<CreateStoryFormData>
   ) => {
@@ -223,6 +223,7 @@ export const CreateStoryModal: React.FC<
   // ==========================================
   // SAVE DRAFT IMMEDIATELY
   // ==========================================
+
   const saveDraftNow = (
     extraCoverUrl?: string
   ) => {
@@ -250,6 +251,7 @@ export const CreateStoryModal: React.FC<
   // ==========================================
   // NEXT
   // ==========================================
+
   const handleNext = (
     e?: React.MouseEvent<HTMLButtonElement>
   ) => {
@@ -275,6 +277,7 @@ export const CreateStoryModal: React.FC<
   // ==========================================
   // BACK
   // ==========================================
+
   const handleBack = (
     e?: React.MouseEvent<HTMLButtonElement>
   ) => {
@@ -294,6 +297,7 @@ export const CreateStoryModal: React.FC<
   // ==========================================
   // CLOSE
   // ==========================================
+
   const handleClose = (
     e?: React.MouseEvent<HTMLButtonElement>
   ) => {
@@ -325,12 +329,10 @@ export const CreateStoryModal: React.FC<
   // ==========================================
   // COVER UPLOAD
   // ==========================================
+
   const handleCoverChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    // สำคัญ:
-    // ป้องกัน event จาก input
-    // ไม่ให้ไปทำงานกับ parent
     e.stopPropagation();
 
     const file =
@@ -378,11 +380,13 @@ export const CreateStoryModal: React.FC<
     // ========================================
     // บันทึกข้อมูลก่อน Upload
     // ========================================
+
     saveDraftNow();
 
     // ========================================
     // PREVIEW
     // ========================================
+
     const previewUrl =
       URL.createObjectURL(file);
 
@@ -426,6 +430,7 @@ export const CreateStoryModal: React.FC<
       // ======================================
       // URL จาก Supabase Storage
       // ======================================
+
       setCoverImageUrl(
         data.url
       );
@@ -437,6 +442,7 @@ export const CreateStoryModal: React.FC<
       // ======================================
       // บันทึก Draft ทันที
       // ======================================
+
       saveDraftNow(
         data.url
       );
@@ -473,6 +479,7 @@ export const CreateStoryModal: React.FC<
   // ==========================================
   // OPEN FILE PICKER
   // ==========================================
+
   const handleSelectCover = (
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
@@ -491,6 +498,7 @@ export const CreateStoryModal: React.FC<
   // ==========================================
   // SUBMIT
   // ==========================================
+
   const handleSubmit = (
     e: React.MouseEvent<HTMLButtonElement>
   ) => {
@@ -561,19 +569,20 @@ export const CreateStoryModal: React.FC<
   // ==========================================
   // CLOSED
   // ==========================================
+
   if (!isOpen) {
     return null;
   }
 
   return (
     <div
-      className="modal-overlay"
+      className="story-modal-overlay"
       onClick={(e) => {
         e.stopPropagation();
       }}
     >
       <div
-        className="modal-container"
+        className="story-modal"
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -582,49 +591,59 @@ export const CreateStoryModal: React.FC<
         {/* =====================================
             HEADER
         ====================================== */}
-        <div className="modal-header">
-          <div className="step-indicator">
-            <span>
-              📌 ขั้นตอนที่ {step} จาก 3
-            </span>
 
-            <span className="step-tag">
-              {step === 1 &&
-                'พล็อตเรื่อง (Premise)'}
+        <div className="story-modal-header">
 
-              {step === 2 &&
-                'สไตล์และหมวดหมู่ (Style)'}
+          <div className="story-modal-header-content">
 
-              {step === 3 &&
-                'รายละเอียดเพิ่มเติม (Details)'}
-            </span>
+            <div className="story-modal-step-indicator">
+              <span>
+                📌 ขั้นตอนที่ {step} จาก 3
+              </span>
+
+              <span className="story-modal-step-tag">
+                {step === 1 &&
+                  'พล็อตเรื่อง (Premise)'}
+
+                {step === 2 &&
+                  'สไตล์และหมวดหมู่ (Style)'}
+
+                {step === 3 &&
+                  'รายละเอียดเพิ่มเติม (Details)'}
+              </span>
+            </div>
+
           </div>
 
           <button
             type="button"
-            className="btn-close"
+            className="story-modal-close"
             onClick={handleClose}
           >
             ✕
           </button>
+
         </div>
 
         {/* =====================================
             BODY
         ====================================== */}
-        <div className="modal-body">
+
+        <div className="story-modal-body">
 
           {/* =====================================
               STEP 1
           ====================================== */}
+
           {step === 1 && (
-            <div className="step-content">
+            <div className="story-modal-step-content">
 
               <h2>
                 เรื่องราวของคุณเกี่ยวกับอะไร?
               </h2>
 
-              <div className="form-group">
+              <div className="story-form-field">
+
                 <label>
                   ชื่อเรื่อง (ไม่จำเป็นต้องระบุ)
                 </label>
@@ -642,9 +661,11 @@ export const CreateStoryModal: React.FC<
                     })
                   }
                 />
+
               </div>
 
-              <div className="form-group">
+              <div className="story-form-field">
+
                 <label>
                   พล็อตหลัก / เรื่องย่อ
                   {' '}
@@ -665,10 +686,11 @@ export const CreateStoryModal: React.FC<
                   }
                 />
 
-                <small className="form-tip">
+                <small className="story-modal-form-tip">
                   AI จะใช้พล็อตนี้เป็นจุดเริ่มต้น
                   ในการสร้างเนื้อเรื่องทั้งหมดของคุณ
                 </small>
+
               </div>
 
             </div>
@@ -677,26 +699,28 @@ export const CreateStoryModal: React.FC<
           {/* =====================================
               STEP 2
           ====================================== */}
+
           {step === 2 && (
-            <div className="step-content">
+            <div className="story-modal-step-content">
 
               <h2>
                 กำหนดโทนและหมวดหมู่ของเรื่อง
               </h2>
 
-              <div className="form-section">
+              <div className="story-modal-form-section">
 
-                <label className="section-label">
+                <label className="story-modal-section-label">
                   หมวดหมู่ (Genre)
                 </label>
 
-                <div className="pill-grid">
+                <div className="story-modal-pill-grid">
+
                   {GENRES.map(
                     (genre) => (
                       <button
                         key={genre}
                         type="button"
-                        className={`pill-btn ${
+                        className={`story-modal-pill-btn ${
                           formData.genre ===
                           genre
                             ? 'selected'
@@ -712,24 +736,26 @@ export const CreateStoryModal: React.FC<
                       </button>
                     )
                   )}
+
                 </div>
 
               </div>
 
-              <div className="form-section">
+              <div className="story-modal-form-section">
 
-                <label className="section-label">
+                <label className="story-modal-section-label">
                   โทนเรื่อง
                   (Narrative Tone)
                 </label>
 
-                <div className="pill-grid">
+                <div className="story-modal-pill-grid">
+
                   {TONES.map(
                     (tone) => (
                       <button
                         key={tone}
                         type="button"
-                        className={`pill-btn ${
+                        className={`story-modal-pill-btn ${
                           formData.tone ===
                           tone
                             ? 'selected'
@@ -745,18 +771,20 @@ export const CreateStoryModal: React.FC<
                       </button>
                     )
                   )}
+
                 </div>
 
               </div>
 
-              <div className="form-section">
+              <div className="story-modal-form-section">
 
-                <label className="section-label">
+                <label className="story-modal-section-label">
                   ความยาวของเรื่อง
                   (Story Length)
                 </label>
 
-                <div className="length-grid">
+                <div className="story-modal-length-grid">
+
                   {LENGTHS.map(
                     (item) => (
                       <button
@@ -764,7 +792,7 @@ export const CreateStoryModal: React.FC<
                           item.label
                         }
                         type="button"
-                        className={`length-card ${
+                        className={`story-modal-length-card ${
                           formData.length ===
                           item.label
                             ? 'selected'
@@ -777,13 +805,13 @@ export const CreateStoryModal: React.FC<
                           })
                         }
                       >
-                        <span className="length-title">
+                        <span className="story-modal-length-title">
                           {
                             item.label
                           }
                         </span>
 
-                        <span className="length-desc">
+                        <span className="story-modal-length-desc">
                           {
                             item.desc
                           }
@@ -791,6 +819,7 @@ export const CreateStoryModal: React.FC<
                       </button>
                     )
                   )}
+
                 </div>
 
               </div>
@@ -801,14 +830,16 @@ export const CreateStoryModal: React.FC<
           {/* =====================================
               STEP 3
           ====================================== */}
+
           {step === 3 && (
-            <div className="step-content">
+            <div className="story-modal-step-content">
 
               <h2>
                 ระบุตัวละครและฉากหลัง
               </h2>
 
-              <div className="form-group">
+              <div className="story-form-field">
+
                 <label>
                   ชื่อตัวละครเอก
                   {' '}
@@ -828,9 +859,11 @@ export const CreateStoryModal: React.FC<
                     })
                   }
                 />
+
               </div>
 
-              <div className="form-group">
+              <div className="story-form-field">
+
                 <label>
                   โลก / ฉากหลัง
                   {' '}
@@ -850,61 +883,37 @@ export const CreateStoryModal: React.FC<
                     })
                   }
                 />
+
               </div>
 
               {/* ==================================
                   COVER
               =================================== */}
-              <div className="form-section">
 
-                <label className="section-label">
+              <div className="story-modal-form-section">
+
+                <label className="story-modal-section-label">
                   หน้าปกนิยาย
                   {' '}
                   (ไม่จำเป็นต้องระบุ)
                 </label>
 
-                <div className="cover-upload-box">
+                <div className="story-modal-cover-upload">
 
                   {coverPreview ? (
-                    <div
-                      className="cover-preview-wrapper"
-                      style={{
-                        width:
-                          '220px',
-                        height:
-                          '140px',
-                        maxWidth:
-                          '100%',
-                        margin:
-                          '0 auto 12px',
-                        overflow:
-                          'hidden',
-                        borderRadius:
-                          '12px',
-                      }}
-                    >
+                    <div className="story-modal-cover-preview-wrapper">
                       <img
                         src={
                           coverPreview
                         }
                         alt="ตัวอย่างหน้าปกนิยาย"
-                        className="cover-preview"
-                        style={{
-                          width:
-                            '100%',
-                          height:
-                            '100%',
-                          objectFit:
-                            'cover',
-                          display:
-                            'block',
-                        }}
+                        className="story-modal-cover-preview"
                       />
                     </div>
                   ) : (
-                    <div className="cover-placeholder">
+                    <div className="story-modal-cover-placeholder">
 
-                      <span className="cover-icon">
+                      <span className="story-modal-cover-icon">
                         🖼️
                       </span>
 
@@ -918,6 +927,7 @@ export const CreateStoryModal: React.FC<
                   {/* ==================================
                       HIDDEN FILE INPUT
                   =================================== */}
+
                   <input
                     ref={
                       fileInputRef
@@ -936,9 +946,10 @@ export const CreateStoryModal: React.FC<
                   {/* ==================================
                       SELECT BUTTON
                   =================================== */}
+
                   <button
                     type="button"
-                    className="btn-secondary"
+                    className="story-modal-cover-button"
                     onClick={
                       handleSelectCover
                     }
@@ -954,51 +965,47 @@ export const CreateStoryModal: React.FC<
                   </button>
 
                   {isUploadingCover && (
-                    <small className="form-tip">
+                    <small className="story-modal-form-tip">
                       กำลังอัปโหลดหน้าปกไปยังระบบ...
                     </small>
                   )}
 
                   {coverImageUrl &&
                     !isUploadingCover && (
-                      <small className="form-tip">
+                      <small className="story-modal-form-tip story-modal-success">
                         ✓ อัปโหลดหน้าปกสำเร็จ
                       </small>
                     )}
 
                   {coverError && (
-                    <small
-                      className="form-tip"
-                      style={{
-                        color:
-                          '#b42318',
-                      }}
-                    >
+                    <small className="story-modal-form-tip story-modal-cover-error">
                       {
                         coverError
                       }
                     </small>
                   )}
 
-                  <small className="form-tip">
+                  <small className="story-modal-form-tip">
                     รองรับ JPG, PNG, WEBP
                     ขนาดไม่เกิน 5 MB
                   </small>
 
                 </div>
+
               </div>
 
               {/* ==================================
                   BLUEPRINT
               =================================== */}
-              <div className="blueprint-box">
 
-                <span className="blueprint-title">
+              <div className="story-modal-blueprint">
+
+                <span className="story-modal-blueprint-title">
                   📐 โครงร่างนิยาย
                   (STORY BLUEPRINT)
                 </span>
 
-                <p className="blueprint-story-title">
+                <p className="story-modal-blueprint-story-title">
                   <strong>
                     ชื่อเรื่อง:
                   </strong>{' '}
@@ -1006,21 +1013,21 @@ export const CreateStoryModal: React.FC<
                     '(รอให้ AI ตั้งชื่อให้อัตโนมัติ)'}
                 </p>
 
-                <div className="blueprint-tags">
+                <div className="story-modal-blueprint-tags">
 
-                  <span className="tag">
+                  <span className="story-modal-tag">
                     {
                       formData.genre
                     }
                   </span>
 
-                  <span className="tag">
+                  <span className="story-modal-tag">
                     {
                       formData.tone
                     }
                   </span>
 
-                  <span className="tag">
+                  <span className="story-modal-tag">
                     {
                       formData.length
                     }
@@ -1029,7 +1036,7 @@ export const CreateStoryModal: React.FC<
                 </div>
 
                 {formData.corePremise && (
-                  <p className="blueprint-premise">
+                  <p className="story-modal-blueprint-premise">
                     "
                     {
                       formData.corePremise
@@ -1048,12 +1055,13 @@ export const CreateStoryModal: React.FC<
         {/* =====================================
             FOOTER
         ====================================== */}
-        <div className="modal-footer">
+
+        <div className="story-modal-footer">
 
           {step > 1 ? (
             <button
               type="button"
-              className="btn-secondary"
+              className="story-modal-cancel"
               onClick={handleBack}
             >
               ‹ ย้อนกลับ
@@ -1061,7 +1069,7 @@ export const CreateStoryModal: React.FC<
           ) : (
             <button
               type="button"
-              className="btn-secondary"
+              className="story-modal-cancel"
               onClick={handleClose}
             >
               ยกเลิก
@@ -1071,7 +1079,7 @@ export const CreateStoryModal: React.FC<
           {step < 3 ? (
             <button
               type="button"
-              className="btn-primary"
+              className="story-modal-save"
               onClick={handleNext}
               disabled={
                 step === 1 &&
@@ -1083,7 +1091,7 @@ export const CreateStoryModal: React.FC<
           ) : (
             <button
               type="button"
-              className="btn-generate"
+              className="story-modal-generate"
               onClick={handleSubmit}
               disabled={
                 !formData.corePremise.trim() ||

@@ -5,13 +5,10 @@ import { ClerkProvider } from '@clerk/nextjs';
 
 import '@/styles/globals.css';
 import '@/styles/navbar.css';
-
 import '@/styles/library.css';
 import '@/styles/discover.css';
 import '@/styles/mystories.css';
-
 import '@/styles/profile.css';
-
 import '@/styles/reader.css';
 import '@/styles/story-create.css';
 import '@/styles/story-modal.css';
