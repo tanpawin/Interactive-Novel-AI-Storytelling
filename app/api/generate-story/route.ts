@@ -1906,557 +1906,558 @@ ${formData.worldSetting || 'ไม่ระบุ'}
           alreadyCreated: false,
         });
       }
+    }
 
-      /* =========================================================
-         NEXT CHAPTER
-      ========================================================= */
+    /* =========================================================
+       NEXT CHAPTER
+    ========================================================= */
+
+    if (
+      actionType ===
+      'next_chapter'
+    ) {
+      if (!storyId) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'ไม่พบ Story ID',
+          },
+          { status: 400 }
+        );
+      }
+
+      /* =====================================================
+         Get Story
+ 
+         เจ้าของเล่นได้เสมอ
+         ผู้ใช้อื่นเล่นได้ถ้า Story ถูก publish
+      ===================================================== */
+
+      const {
+        data: story,
+        error: storyError,
+      } = await supabaseAdmin
+        .from('stories')
+        .select('*')
+        .eq('id', storyId)
+        .maybeSingle();
 
       if (
-        actionType ===
-        'next_chapter'
+        storyError ||
+        !story
       ) {
-        if (!storyId) {
-          return NextResponse.json(
-            {
-              success: false,
-              error:
-                'ไม่พบ Story ID',
-            },
-            { status: 400 }
-          );
-        }
+        console.error(
+          'Next chapter story error:',
+          JSON.stringify(
+            storyError,
+            null,
+            2
+          )
+        );
 
-        /* =====================================================
-           Get Story
-  
-           เจ้าของเล่นได้เสมอ
-           ผู้ใช้อื่นเล่นได้ถ้า Story ถูก publish
-        ===================================================== */
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'ไม่พบเรื่องนี้',
+          },
+          { status: 404 }
+        );
+      }
 
-        const {
-          data: story,
-          error: storyError,
-        } = await supabaseAdmin
-          .from('stories')
-          .select('*')
-          .eq('id', storyId)
-          .maybeSingle();
+      /* =====================================================
+         Check Story Access
+      ===================================================== */
 
-        if (
-          storyError ||
-          !story
-        ) {
-          console.error(
-            'Next chapter story error:',
-            JSON.stringify(
-              storyError,
-              null,
-              2
+      const isOwner =
+        story.user_id === userId;
+
+      const isPublished =
+        story.is_published === true;
+
+      if (!isOwner && !isPublished) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'นิยายเรื่องนี้ยังไม่ได้เผยแพร่',
+          },
+          { status: 403 }
+        );
+      }
+
+      /* =====================================================
+         Get / Create Game Session
+ 
+         สำคัญ:
+         Session เป็นของ user + story
+         ทำให้ผู้เล่นแต่ละคนมีเส้นเรื่องของตัวเอง
+      ===================================================== */
+
+      const {
+        data: existingSession,
+        error: existingSessionError,
+      } = await supabaseAdmin
+        .from('game_sessions')
+        .select(
+          'id, user_id, story_id, current_chapter, status, current_inventory, is_public'
+        )
+        .eq(
+          'user_id',
+          userId
+        )
+        .eq(
+          'story_id',
+          story.id
+        )
+        .maybeSingle();
+
+      if (
+        existingSessionError
+      ) {
+        console.error(
+          'Get Game Session Error:',
+          JSON.stringify(
+            existingSessionError,
+            null,
+            2
+          )
+        );
+
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'ไม่สามารถโหลด Session ของผู้เล่นได้',
+          },
+          { status: 500 }
+        );
+      }
+
+      let session =
+        existingSession;
+
+      /* =====================================================
+         Get Shared Chapters
+ 
+         chapters = เนื้อเรื่องต้นฉบับ / shared content
+      ===================================================== */
+
+      const {
+        data: databaseChapters,
+        error: databaseChapterError,
+      } = await supabaseAdmin
+        .from('chapters')
+        .select(
+          'id, chapter_number, title, content, created_at'
+        )
+        .eq(
+          'story_id',
+          story.id
+        )
+        .order(
+          'chapter_number',
+          {
+            ascending: true,
+          }
+        );
+
+      if (
+        databaseChapterError
+      ) {
+        console.error(
+          'Database Chapters Error:',
+          JSON.stringify(
+            databaseChapterError,
+            null,
+            2
+          )
+        );
+
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'ไม่สามารถตรวจสอบบทของนิยายได้',
+          },
+          { status: 500 }
+        );
+      }
+
+      const sharedChapters =
+        databaseChapters || [];
+
+      /* =====================================================
+         If Session Does Not Exist
+ 
+         เริ่มต้นจากบทล่าสุดของเนื้อเรื่องต้นฉบับ
+ 
+         สำหรับ Story ใหม่:
+         shared chapter = 1
+         → session current chapter = 1
+ 
+         สำหรับ Story เก่า:
+         ถ้ามี shared chapter ถึง 4
+         → session current chapter = 4
+      ===================================================== */
+
+      const latestSharedChapter =
+        sharedChapters.length > 0
+          ? Math.max(
+            ...sharedChapters.map(
+              (chapter) =>
+                chapter.chapter_number
             )
-          );
-
-          return NextResponse.json(
-            {
-              success: false,
-              error:
-                'ไม่พบเรื่องนี้',
-            },
-            { status: 404 }
-          );
-        }
-
-        /* =====================================================
-           Check Story Access
-        ===================================================== */
-
-        const isOwner =
-          story.user_id === userId;
-
-        const isPublished =
-          story.is_published === true;
-
-        if (!isOwner && !isPublished) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: 'นิยายเรื่องนี้ยังไม่ได้เผยแพร่',
-            },
-            { status: 403 }
-          );
-        }
-
-        /* =====================================================
-           Get / Create Game Session
-  
-           สำคัญ:
-           Session เป็นของ user + story
-           ทำให้ผู้เล่นแต่ละคนมีเส้นเรื่องของตัวเอง
-        ===================================================== */
-
-        const {
-          data: existingSession,
-          error: existingSessionError,
-        } = await supabaseAdmin
-          .from('game_sessions')
-          .select(
-            'id, user_id, story_id, current_chapter, status, current_inventory, is_public'
           )
-          .eq(
-            'user_id',
-            userId
-          )
-          .eq(
-            'story_id',
-            story.id
-          )
-          .maybeSingle();
+          : 0;
 
-        if (
-          existingSessionError
-        ) {
-          console.error(
-            'Get Game Session Error:',
-            JSON.stringify(
-              existingSessionError,
-              null,
-              2
-            )
+      if (!session) {
+        session =
+          await getOrCreateGameSession(
+            userId,
+            story.id,
+            latestSharedChapter || 1
           );
-
-          return NextResponse.json(
-            {
-              success: false,
-              error:
-                'ไม่สามารถโหลด Session ของผู้เล่นได้',
-            },
-            { status: 500 }
-          );
-        }
-
-        let session =
-          existingSession;
-
-        /* =====================================================
-           Get Shared Chapters
-  
-           chapters = เนื้อเรื่องต้นฉบับ / shared content
-        ===================================================== */
-
-        const {
-          data: databaseChapters,
-          error: databaseChapterError,
-        } = await supabaseAdmin
-          .from('chapters')
-          .select(
-            'id, chapter_number, title, content, created_at'
-          )
-          .eq(
-            'story_id',
-            story.id
-          )
-          .order(
-            'chapter_number',
-            {
-              ascending: true,
-            }
-          );
-
-        if (
-          databaseChapterError
-        ) {
-          console.error(
-            'Database Chapters Error:',
-            JSON.stringify(
-              databaseChapterError,
-              null,
-              2
-            )
-          );
-
-          return NextResponse.json(
-            {
-              success: false,
-              error:
-                'ไม่สามารถตรวจสอบบทของนิยายได้',
-            },
-            { status: 500 }
-          );
-        }
-
-        const sharedChapters =
-          databaseChapters || [];
-
-        /* =====================================================
-           If Session Does Not Exist
-  
-           เริ่มต้นจากบทล่าสุดของเนื้อเรื่องต้นฉบับ
-  
-           สำหรับ Story ใหม่:
-           shared chapter = 1
-           → session current chapter = 1
-  
-           สำหรับ Story เก่า:
-           ถ้ามี shared chapter ถึง 4
-           → session current chapter = 4
-        ===================================================== */
-
-        const latestSharedChapter =
-          sharedChapters.length > 0
-            ? Math.max(
-              ...sharedChapters.map(
-                (chapter) =>
-                  chapter.chapter_number
-              )
-            )
-            : 0;
 
         if (!session) {
-          session =
-            await getOrCreateGameSession(
-              userId,
-              story.id,
-              latestSharedChapter || 1
-            );
-
-          if (!session) {
-            return NextResponse.json(
-              {
-                success: false,
-                error:
-                  'ไม่สามารถสร้าง Session สำหรับการเล่นได้',
-              },
-              { status: 500 }
-            );
-          }
-        }
-
-        await initializeSessionCharacters(
-          session.id,
-          story.id
-        );
-
-        /* =====================================================
-           Get Session Chapters
-  
-           session_chapters = บทเฉพาะของผู้เล่นคนนี้
-        ===================================================== */
-
-        const {
-          data: sessionChapterData,
-          error: sessionChapterError,
-        } = await supabaseAdmin
-          .from('session_chapters')
-          .select(
-            'id, session_id, chapter_number, title, content, user_choice, created_at'
-          )
-          .eq(
-            'session_id',
-            session.id
-          )
-          .order(
-            'chapter_number',
-            {
-              ascending: true,
-            }
-          );
-
-        if (
-          sessionChapterError
-        ) {
-          console.error(
-            'Session Chapters Error:',
-            JSON.stringify(
-              sessionChapterError,
-              null,
-              2
-            )
-          );
-
           return NextResponse.json(
             {
               success: false,
               error:
-                'ไม่สามารถโหลดบทของ Session ได้',
+                'ไม่สามารถสร้าง Session สำหรับการเล่นได้',
             },
             { status: 500 }
           );
         }
+      }
 
-        const sessionChapters =
-          sessionChapterData || [];
+      await initializeSessionCharacters(
+        session.id,
+        story.id
+      );
 
-        /* =====================================================
-           Calculate Latest Chapter
-  
-           ใช้ค่าที่มากที่สุดจาก:
-           - shared chapters
-           - session chapters
-           - game session
-        ===================================================== */
+      /* =====================================================
+         Get Session Chapters
+ 
+         session_chapters = บทเฉพาะของผู้เล่นคนนี้
+      ===================================================== */
 
-        const latestSessionChapter =
-          sessionChapters.length > 0
-            ? Math.max(
-              ...sessionChapters.map(
-                (chapter) =>
-                  chapter.chapter_number
-              )
+      const {
+        data: sessionChapterData,
+        error: sessionChapterError,
+      } = await supabaseAdmin
+        .from('session_chapters')
+        .select(
+          'id, session_id, chapter_number, title, content, user_choice, created_at'
+        )
+        .eq(
+          'session_id',
+          session.id
+        )
+        .order(
+          'chapter_number',
+          {
+            ascending: true,
+          }
+        );
+
+      if (
+        sessionChapterError
+      ) {
+        console.error(
+          'Session Chapters Error:',
+          JSON.stringify(
+            sessionChapterError,
+            null,
+            2
+          )
+        );
+
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'ไม่สามารถโหลดบทของ Session ได้',
+          },
+          { status: 500 }
+        );
+      }
+
+      const sessionChapters =
+        sessionChapterData || [];
+
+      /* =====================================================
+         Calculate Latest Chapter
+ 
+         ใช้ค่าที่มากที่สุดจาก:
+         - shared chapters
+         - session chapters
+         - game session
+      ===================================================== */
+
+      const latestSessionChapter =
+        sessionChapters.length > 0
+          ? Math.max(
+            ...sessionChapters.map(
+              (chapter) =>
+                chapter.chapter_number
             )
-            : 0;
+          )
+          : 0;
 
-        const latestChapterNumber =
-          Math.max(
-            latestSharedChapter,
-            latestSessionChapter,
-            session.current_chapter || 0
-          );
-
-        console.log(
-          '========================================'
+      const latestChapterNumber =
+        Math.max(
+          latestSharedChapter,
+          latestSessionChapter,
+          session.current_chapter || 0
         );
 
-        console.log(
-          'NEXT CHAPTER REQUEST'
-        );
+      console.log(
+        '========================================'
+      );
 
-        console.log(
-          'Story ID:',
-          story.id
-        );
+      console.log(
+        'NEXT CHAPTER REQUEST'
+      );
 
-        console.log(
-          'User ID:',
-          userId
-        );
+      console.log(
+        'Story ID:',
+        story.id
+      );
 
-        console.log(
-          'Is Owner:',
-          isOwner
-        );
+      console.log(
+        'User ID:',
+        userId
+      );
 
-        console.log(
-          'Is Published:',
-          isPublished
-        );
+      console.log(
+        'Is Owner:',
+        isOwner
+      );
 
-        console.log(
-          'Session ID:',
+      console.log(
+        'Is Published:',
+        isPublished
+      );
+
+      console.log(
+        'Session ID:',
+        session.id
+      );
+
+      console.log(
+        'Latest Shared Chapter:',
+        latestSharedChapter
+      );
+
+      console.log(
+        'Latest Session Chapter:',
+        latestSessionChapter
+      );
+
+      console.log(
+        'Session Current Chapter:',
+        session.current_chapter
+      );
+
+      console.log(
+        'Latest Chapter:',
+        latestChapterNumber
+      );
+
+      /* =====================================================
+         Load Session Character Context
+ 
+         สำคัญ:
+         โหลดจาก session.id โดยตรง
+         เพื่อให้ผู้เล่นแต่ละคนมีข้อมูลตัวละครของตัวเอง
+      ===================================================== */
+
+      const {
+        characters: sessionCharacters,
+        relationships: sessionRelationships,
+      } =
+        await loadSessionCharacterContext(
           session.id
         );
 
-        console.log(
-          'Latest Shared Chapter:',
-          latestSharedChapter
+      console.log(
+        'Session Characters:',
+        sessionCharacters.map(
+          (character) =>
+            `${character.name} (${character.role})`
+        )
+      );
+
+      console.log(
+        'Session Relationships:',
+        sessionRelationships.length
+      );
+
+      /* =====================================================
+         Check Completed
+      ===================================================== */
+
+      if (
+        latestChapterNumber >=
+        story.total_chapters
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'นิยายเรื่องนี้ครบจำนวนบทแล้ว',
+          },
+          { status: 400 }
         );
+      }
 
-        console.log(
-          'Latest Session Chapter:',
-          latestSessionChapter
-        );
+      /* =====================================================
+         Next Chapter Number
+      ===================================================== */
 
-        console.log(
-          'Session Current Chapter:',
-          session.current_chapter
-        );
+      const nextChapterNumber =
+        latestChapterNumber + 1;
 
-        console.log(
-          'Latest Chapter:',
-          latestChapterNumber
-        );
+      /* =====================================================
+         Check Existing Session Chapter
+ 
+         สำคัญมาก:
+         ตรวจใน session_chapters
+         ไม่ใช่ chapters
+      ===================================================== */
 
-        /* =====================================================
-           Load Session Character Context
-  
-           สำคัญ:
-           โหลดจาก session.id โดยตรง
-           เพื่อให้ผู้เล่นแต่ละคนมีข้อมูลตัวละครของตัวเอง
-        ===================================================== */
+      const {
+        data: existingNextChapter,
+        error: existingNextChapterError,
+      } = await supabaseAdmin
+        .from('session_chapters')
+        .select(
+          'id, session_id, chapter_number, title, content, user_choice, created_at'
+        )
+        .eq(
+          'session_id',
+          session.id
+        )
+        .eq(
+          'chapter_number',
+          nextChapterNumber
+        )
+        .maybeSingle();
 
-        const {
-          characters: sessionCharacters,
-          relationships: sessionRelationships,
-        } =
-          await loadSessionCharacterContext(
-            session.id
-          );
-
-        console.log(
-          'Session Characters:',
-          sessionCharacters.map(
-            (character) =>
-              `${character.name} (${character.role})`
+      if (
+        existingNextChapterError
+      ) {
+        console.error(
+          'Existing Session Chapter Check Error:',
+          JSON.stringify(
+            existingNextChapterError,
+            null,
+            2
           )
         );
+      }
 
+      if (
+        existingNextChapter
+      ) {
         console.log(
-          'Session Relationships:',
-          sessionRelationships.length
+          'Existing session chapter found:',
+          existingNextChapter.id
         );
 
-        /* =====================================================
-           Check Completed
-        ===================================================== */
-
-        if (
-          latestChapterNumber >=
-          story.total_chapters
-        ) {
-          return NextResponse.json(
-            {
-              success: false,
-              error:
-                'นิยายเรื่องนี้ครบจำนวนบทแล้ว',
-            },
-            { status: 400 }
-          );
-        }
-
-        /* =====================================================
-           Next Chapter Number
-        ===================================================== */
-
-        const nextChapterNumber =
-          latestChapterNumber + 1;
-
-        /* =====================================================
-           Check Existing Session Chapter
-  
-           สำคัญมาก:
-           ตรวจใน session_chapters
-           ไม่ใช่ chapters
-        ===================================================== */
+        const isCompleted =
+          existingNextChapter.chapter_number >=
+          story.total_chapters;
 
         const {
-          data: existingNextChapter,
-          error: existingNextChapterError,
+          error:
+          existingSessionUpdateError,
         } = await supabaseAdmin
-          .from('session_chapters')
-          .select(
-            'id, session_id, chapter_number, title, content, user_choice, created_at'
-          )
+          .from('game_sessions')
+          .update({
+            current_chapter:
+              existingNextChapter.chapter_number,
+
+            status:
+              isCompleted
+                ? 'completed'
+                : 'in_progress',
+
+            updated_at:
+              new Date().toISOString(),
+          })
           .eq(
-            'session_id',
+            'id',
             session.id
-          )
-          .eq(
-            'chapter_number',
-            nextChapterNumber
-          )
-          .maybeSingle();
+          );
 
         if (
-          existingNextChapterError
+          existingSessionUpdateError
         ) {
           console.error(
-            'Existing Session Chapter Check Error:',
+            'Existing Session Update Error:',
             JSON.stringify(
-              existingNextChapterError,
+              existingSessionUpdateError,
               null,
               2
             )
           );
         }
 
-        if (
-          existingNextChapter
-        ) {
-          console.log(
-            'Existing session chapter found:',
-            existingNextChapter.id
-          );
+        return NextResponse.json({
+          success: true,
 
-          const isCompleted =
-            existingNextChapter.chapter_number >=
-            story.total_chapters;
+          storyId:
+            story.id,
 
-          const {
-            error:
-            existingSessionUpdateError,
-          } = await supabaseAdmin
-            .from('game_sessions')
-            .update({
-              current_chapter:
-                existingNextChapter.chapter_number,
+          alreadyCreated:
+            true,
 
-              status:
-                isCompleted
-                  ? 'completed'
-                  : 'in_progress',
+          chapter: {
+            id:
+              existingNextChapter.id,
 
-              updated_at:
-                new Date().toISOString(),
-            })
-            .eq(
-              'id',
-              session.id
-            );
+            chapterNumber:
+              existingNextChapter.chapter_number,
 
-          if (
-            existingSessionUpdateError
-          ) {
-            console.error(
-              'Existing Session Update Error:',
-              JSON.stringify(
-                existingSessionUpdateError,
-                null,
-                2
-              )
-            );
-          }
+            title:
+              existingNextChapter.title,
 
-          return NextResponse.json({
-            success: true,
+            content:
+              existingNextChapter.content,
 
-            storyId:
-              story.id,
+            userChoice:
+              existingNextChapter.user_choice,
 
-            alreadyCreated:
-              true,
+            createdAt:
+              existingNextChapter.created_at,
+          },
+        });
+      }
 
-            chapter: {
-              id:
-                existingNextChapter.id,
+      /* =====================================================
+         Prepare Previous Chapters
+ 
+         ใช้ previousChapters จาก ReaderView
+         ซึ่งภายหลังเราจะทำให้ประกอบด้วย:
+ 
+         shared chapters
+         +
+         session chapters ของผู้เล่นคนนี้
+      ===================================================== */
 
-              chapterNumber:
-                existingNextChapter.chapter_number,
-
-              title:
-                existingNextChapter.title,
-
-              content:
-                existingNextChapter.content,
-
-              userChoice:
-                existingNextChapter.user_choice,
-
-              createdAt:
-                existingNextChapter.created_at,
-            },
-          });
-        }
-
-        /* =====================================================
-           Prepare Previous Chapters
-  
-           ใช้ previousChapters จาก ReaderView
-           ซึ่งภายหลังเราจะทำให้ประกอบด้วย:
-  
-           shared chapters
-           +
-           session chapters ของผู้เล่นคนนี้
-        ===================================================== */
-
-        const chapterContext =
-          previousChapters
-            .map(
-              (
-                chapter: {
-                  chapterNumber?: number;
-                  title?: string;
-                  content?: string;
-                }
-              ) =>
-                `
+      const chapterContext =
+        previousChapters
+          .map(
+            (
+              chapter: {
+                chapterNumber?: number;
+                title?: string;
+                content?: string;
+              }
+            ) =>
+              `
 บทที่ ${chapter.chapterNumber || ''}
 
 ชื่อบท:
@@ -2465,99 +2466,99 @@ ${chapter.title || ''}
 เนื้อหา:
 ${chapter.content || ''}
 `
-            )
-            .join('\n');
+          )
+          .join('\n');
 
-        /* =====================================================
-           Character Context
-        ===================================================== */
+      /* =====================================================
+         Character Context
+      ===================================================== */
 
-        const characterContext =
-          sessionCharacters.length > 0
-            ? sessionCharacters
-              .map(
-                (character) => `
+      const characterContext =
+        sessionCharacters.length > 0
+          ? sessionCharacters
+            .map(
+              (character) => `
 - ชื่อ: ${character.name}
   บทบาท: ${character.role}
   รูปลักษณ์: ${character.appearance || 'ไม่ระบุ'
-                  }
+                }
   บุคลิก: ${character.personality || 'ไม่ระบุ'
-                  }
+                }
   สิ่งของเริ่มต้น: ${Array.isArray(character.initial_items)
-                    ? character.initial_items.join(', ') || 'ไม่มี'
-                    : 'ไม่มี'
-                  }
+                  ? character.initial_items.join(', ') || 'ไม่มี'
+                  : 'ไม่มี'
+                }
 `
-              )
-              .join('\n')
-            : 'ยังไม่มีข้อมูลตัวละครใน Session';
-
-        /* =====================================================
-           Relationship Context
-        ===================================================== */
-
-        const characterMap =
-          new Map(
-            sessionCharacters.map(
-              (character) => [
-                character.id,
-                character.name,
-              ]
             )
-          );
+            .join('\n')
+          : 'ยังไม่มีข้อมูลตัวละครใน Session';
 
-        const relationshipContext =
-          sessionRelationships.length > 0
-            ? sessionRelationships
-              .map(
-                (relationship) => {
-                  const fromName =
-                    characterMap.get(
-                      relationship.from_character_id
-                    ) ||
-                    'ไม่ทราบ';
+      /* =====================================================
+         Relationship Context
+      ===================================================== */
 
-                  const toName =
-                    characterMap.get(
-                      relationship.to_character_id
-                    ) ||
-                    'ไม่ทราบ';
+      const characterMap =
+        new Map(
+          sessionCharacters.map(
+            (character) => [
+              character.id,
+              character.name,
+            ]
+          )
+        );
 
-                  return `
+      const relationshipContext =
+        sessionRelationships.length > 0
+          ? sessionRelationships
+            .map(
+              (relationship) => {
+                const fromName =
+                  characterMap.get(
+                    relationship.from_character_id
+                  ) ||
+                  'ไม่ทราบ';
+
+                const toName =
+                  characterMap.get(
+                    relationship.to_character_id
+                  ) ||
+                  'ไม่ทราบ';
+
+                return `
 - ${fromName} → ${toName}
   ความสัมพันธ์: ${relationship.relationship_type
-                    }
+                  }
   รายละเอียด: ${relationship.description ||
-                    'ไม่ระบุ'
-                    }
+                  'ไม่ระบุ'
+                  }
 `;
-                }
-              )
-              .join('\n')
-            : 'ยังไม่มีข้อมูลความสัมพันธ์';
+              }
+            )
+            .join('\n')
+          : 'ยังไม่มีข้อมูลความสัมพันธ์';
 
-        /* =====================================================
-           Gemini
-  
-           ไม่เปลี่ยน logic หลักของ AI
-        ===================================================== */
+      /* =====================================================
+         Gemini
+ 
+         ไม่เปลี่ยน logic หลักของ AI
+      ===================================================== */
 
-        const ai =
-          new GoogleGenAI({
-            apiKey,
-          });
+      const ai =
+        new GoogleGenAI({
+          apiKey,
+        });
 
-        /* =====================================================
-           Final Chapter Detection
-        ===================================================== */
+      /* =====================================================
+         Final Chapter Detection
+      ===================================================== */
 
-        const isFinalChapter =
-          nextChapterNumber >=
-          story.total_chapters;
+      const isFinalChapter =
+        nextChapterNumber >=
+        story.total_chapters;
 
-        const finalChapterInstruction =
-          isFinalChapter
-            ? `
+      const finalChapterInstruction =
+        isFinalChapter
+          ? `
 นี่คือบทสุดท้ายของนิยาย
 
 ข้อกำหนดเพิ่มเติมสำหรับบทสุดท้าย:
@@ -2572,7 +2573,7 @@ ${chapter.content || ''}
 - ปิดเรื่องอย่างเป็นธรรมชาติและเหมาะสมกับเรื่อง
 - ไม่ต้องเสนอทางเลือกหรือคำถามสำหรับบทถัดไป
 `
-            : `
+          : `
 นี่ไม่ใช่บทสุดท้ายของนิยาย
 
 ข้อกำหนด:
@@ -2592,7 +2593,7 @@ ${chapter.content || ''}
 - เริ่มเขียนเนื้อเรื่องทันที
 `;
 
-        const prompt = `
+      const prompt = `
 คุณคือ AI นักเขียนนิยายของ CozyTales
 
 ชื่อเรื่อง:
@@ -2663,432 +2664,430 @@ ${userChoice || 'ไม่มี'}
 ${finalChapterInstruction}
 `;
 
-        let generatedText = '';
-        let lastGeminiError = '';
+      let generatedText = '';
+      let lastGeminiError = '';
 
-        for (
-          let i = 0;
-          i < modelsToTry.length;
-          i++
-        ) {
-          try {
-            console.log(
-              `🤖 Trying Gemini model: ${modelsToTry[i]}`
-            );
-
-            const response =
-              await ai.models.generateContent({
-                model:
-                  modelsToTry[i],
-
-                contents:
-                  prompt,
-              });
-
-            generatedText =
-              response.text || '';
-
-            console.log(
-              `✅ Gemini response received from ${modelsToTry[i]}`
-            );
-
-            if (
-              generatedText.trim()
-            ) {
-              break;
-            }
-
-            lastGeminiError =
-              `${modelsToTry[i]} returned empty response`;
-          } catch (error) {
-            console.error(
-              `❌ Gemini error (${modelsToTry[i]}):`,
-              error
-            );
-
-            lastGeminiError =
-              error instanceof Error
-                ? error.message
-                : String(error);
-
-            if (
-              i <
-              modelsToTry.length - 1
-            ) {
-              await new Promise(
-                (resolve) =>
-                  setTimeout(
-                    resolve,
-                    1500
-                  )
-              );
-            }
-          }
-        }
-
-        if (
-          !generatedText.trim()
-        ) {
-          console.error(
-            '❌ ALL GEMINI MODELS FAILED:',
-            lastGeminiError
+      for (
+        let i = 0;
+        i < modelsToTry.length;
+        i++
+      ) {
+        try {
+          console.log(
+            `🤖 Trying Gemini model: ${modelsToTry[i]}`
           );
 
-          return NextResponse.json(
-            {
-              success: false,
-              error:
-                `AI ไม่สามารถสร้างบทต่อไปได้: ${lastGeminiError}`,
-            },
-            { status: 500 }
+          const response =
+            await ai.models.generateContent({
+              model:
+                modelsToTry[i],
+
+              contents:
+                prompt,
+            });
+
+          generatedText =
+            response.text || '';
+
+          console.log(
+            `✅ Gemini response received from ${modelsToTry[i]}`
           );
-        }
 
-        /* =====================================================
-           Save Next Chapter
-  
-           สำคัญ:
-           ใช้ session_chapters
-           ไม่ใช้ chapters
-        ===================================================== */
-
-        const {
-          data: chapter,
-          error:
-          chapterError,
-        } = await supabaseAdmin
-          .from('session_chapters')
-          .insert({
-            session_id:
-              session.id,
-
-            chapter_number:
-              nextChapterNumber,
-
-            title:
-              `บทที่ ${nextChapterNumber}`,
-
-            content:
-              generatedText.trim(),
-
-            user_choice:
-              userChoice &&
-                String(userChoice).trim()
-                ? String(userChoice).trim()
-                : null,
-          })
-          .select()
-          .single();
-
-        /* =====================================================
-           Duplicate Protection
-        ===================================================== */
-
-        if (
-          chapterError
-        ) {
           if (
-            chapterError.code ===
-            '23505'
+            generatedText.trim()
           ) {
-            const {
-              data:
-              duplicateChapter,
-            } = await supabaseAdmin
-              .from(
-                'session_chapters'
-              )
-              .select(
-                'id, session_id, chapter_number, title, content, user_choice, created_at'
-              )
-              .eq(
-                'session_id',
-                session.id
-              )
-              .eq(
-                'chapter_number',
-                nextChapterNumber
-              )
-              .maybeSingle();
-
-            if (
-              duplicateChapter
-            ) {
-              return NextResponse.json({
-                success: true,
-
-                storyId:
-                  story.id,
-
-                alreadyCreated:
-                  true,
-
-                chapter: {
-                  id:
-                    duplicateChapter.id,
-
-                  chapterNumber:
-                    duplicateChapter.chapter_number,
-
-                  title:
-                    duplicateChapter.title,
-
-                  content:
-                    duplicateChapter.content,
-
-                  userChoice:
-                    duplicateChapter.user_choice,
-
-                  createdAt:
-                    duplicateChapter.created_at,
-                },
-              });
-            }
+            break;
           }
 
+          lastGeminiError =
+            `${modelsToTry[i]} returned empty response`;
+        } catch (error) {
           console.error(
-            'Next Session Chapter Error:',
-            JSON.stringify(
-              chapterError,
-              null,
-              2
-            )
+            `❌ Gemini error (${modelsToTry[i]}):`,
+            error
           );
 
-          return NextResponse.json(
-            {
-              success: false,
+          lastGeminiError =
+            error instanceof Error
+              ? error.message
+              : String(error);
 
-              error:
-                chapterError.message ||
-                'ไม่สามารถบันทึกบทใหม่ได้',
-
-              code:
-                chapterError.code ||
-                null,
-
-              details:
-                chapterError.details ||
-                null,
-
-              hint:
-                chapterError.hint ||
-                null,
-            },
-            { status: 500 }
-          );
+          if (
+            i <
+            modelsToTry.length - 1
+          ) {
+            await new Promise(
+              (resolve) =>
+                setTimeout(
+                  resolve,
+                  1500
+                )
+            );
+          }
         }
+      }
 
-        if (!chapter) {
-          return NextResponse.json(
-            {
-              success: false,
-              error:
-                'สร้างบทสำเร็จแต่ไม่พบข้อมูลบท',
-            },
-            { status: 500 }
-          );
-        }
-
-        console.log(
-          '✅ Session Chapter created:',
-          chapter.id
+      if (
+        !generatedText.trim()
+      ) {
+        console.error(
+          '❌ ALL GEMINI MODELS FAILED:',
+          lastGeminiError
         );
 
-        /* =====================================================
-           Save User Choice to Chat Logs
-        ===================================================== */
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              `AI ไม่สามารถสร้างบทต่อไปได้: ${lastGeminiError}`,
+          },
+          { status: 500 }
+        );
+      }
 
-        if (
-          userChoice &&
-          String(userChoice).trim()
-        ) {
-          await saveChatLog(
+      /* =====================================================
+         Save Next Chapter
+ 
+         สำคัญ:
+         ใช้ session_chapters
+         ไม่ใช้ chapters
+      ===================================================== */
+
+      const {
+        data: chapter,
+        error:
+        chapterError,
+      } = await supabaseAdmin
+        .from('session_chapters')
+        .insert({
+          session_id:
             session.id,
+
+          chapter_number:
             nextChapterNumber,
-            'user',
-            String(userChoice)
-          );
+
+          title:
+            `บทที่ ${nextChapterNumber}`,
+
+          content:
+            generatedText.trim(),
+
+          user_choice:
+            userChoice &&
+              String(userChoice).trim()
+              ? String(userChoice).trim()
+              : null,
+        })
+        .select()
+        .single();
+
+      /* =====================================================
+         Duplicate Protection
+      ===================================================== */
+
+      if (
+        chapterError
+      ) {
+        if (
+          chapterError.code ===
+          '23505'
+        ) {
+          const {
+            data:
+            duplicateChapter,
+          } = await supabaseAdmin
+            .from(
+              'session_chapters'
+            )
+            .select(
+              'id, session_id, chapter_number, title, content, user_choice, created_at'
+            )
+            .eq(
+              'session_id',
+              session.id
+            )
+            .eq(
+              'chapter_number',
+              nextChapterNumber
+            )
+            .maybeSingle();
+
+          if (
+            duplicateChapter
+          ) {
+            return NextResponse.json({
+              success: true,
+
+              storyId:
+                story.id,
+
+              alreadyCreated:
+                true,
+
+              chapter: {
+                id:
+                  duplicateChapter.id,
+
+                chapterNumber:
+                  duplicateChapter.chapter_number,
+
+                title:
+                  duplicateChapter.title,
+
+                content:
+                  duplicateChapter.content,
+
+                userChoice:
+                  duplicateChapter.user_choice,
+
+                createdAt:
+                  duplicateChapter.created_at,
+              },
+            });
+          }
         }
 
-        /* =====================================================
-           Save AI Response to Chat Logs
-        ===================================================== */
+        console.error(
+          'Next Session Chapter Error:',
+          JSON.stringify(
+            chapterError,
+            null,
+            2
+          )
+        );
 
+        return NextResponse.json(
+          {
+            success: false,
+
+            error:
+              chapterError.message ||
+              'ไม่สามารถบันทึกบทใหม่ได้',
+
+            code:
+              chapterError.code ||
+              null,
+
+            details:
+              chapterError.details ||
+              null,
+
+            hint:
+              chapterError.hint ||
+              null,
+          },
+          { status: 500 }
+        );
+      }
+
+      if (!chapter) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'สร้างบทสำเร็จแต่ไม่พบข้อมูลบท',
+          },
+          { status: 500 }
+        );
+      }
+
+      console.log(
+        '✅ Session Chapter created:',
+        chapter.id
+      );
+
+      /* =====================================================
+         Save User Choice to Chat Logs
+      ===================================================== */
+
+      if (
+        userChoice &&
+        String(userChoice).trim()
+      ) {
         await saveChatLog(
           session.id,
           nextChapterNumber,
-          'model',
-          generatedText.trim()
+          'user',
+          String(userChoice)
         );
+      }
 
-        /* =====================================================
-           Update Game Session
-        ===================================================== */
+      /* =====================================================
+         Save AI Response to Chat Logs
+      ===================================================== */
 
-        const isCompleted =
-          nextChapterNumber >=
-          story.total_chapters;
+      await saveChatLog(
+        session.id,
+        nextChapterNumber,
+        'model',
+        generatedText.trim()
+      );
 
-        const {
-          error:
-          sessionError,
-        } = await supabaseAdmin
-          .from('game_sessions')
-          .update({
-            current_chapter:
-              nextChapterNumber,
+      /* =====================================================
+         Update Game Session
+      ===================================================== */
 
-            status:
-              isCompleted
-                ? 'completed'
-                : 'in_progress',
+      const isCompleted =
+        nextChapterNumber >=
+        story.total_chapters;
 
-            updated_at:
-              new Date().toISOString(),
-          })
-          .eq(
-            'id',
-            session.id
-          );
-
-        if (
-          sessionError
-        ) {
-          console.error(
-            'Game Session Update Error:',
-            JSON.stringify(
-              sessionError,
-              null,
-              2
-            )
-          );
-        }
-
-        /* =====================================================
-           Sync Character Relationships
-  
-           ตรวจจับเฉพาะ Relationship
-           ของตัวละครที่มีอยู่ใน Session แล้ว
-  
-           ไม่สร้าง Character ใหม่
-        ===================================================== */
-
-        await syncCharactersFromChapter({
-          ai,
-          storyId:
-            story.id,
-          sessionId:
-            session.id,
-          chapterNumber:
+      const {
+        error:
+        sessionError,
+      } = await supabaseAdmin
+        .from('game_sessions')
+        .update({
+          current_chapter:
             nextChapterNumber,
-          chapterContent:
-            generatedText.trim(),
-        });
 
-        /* =====================================================
-           Success
-        ===================================================== */
+          status:
+            isCompleted
+              ? 'completed'
+              : 'in_progress',
 
-        console.log(
-          '========================================'
-        );
-
-        console.log(
-          `✅ CHAPTER ${nextChapterNumber} SUCCESS`
-        );
-
-        console.log(
-          'Story ID:',
-          story.id
-        );
-
-        console.log(
-          'Session ID:',
+          updated_at:
+            new Date().toISOString(),
+        })
+        .eq(
+          'id',
           session.id
         );
 
-        console.log(
-          'User ID:',
-          userId
+      if (
+        sessionError
+      ) {
+        console.error(
+          'Game Session Update Error:',
+          JSON.stringify(
+            sessionError,
+            null,
+            2
+          )
         );
-
-        console.log(
-          'Saved To: session_chapters'
-        );
-
-        console.log(
-          '========================================'
-        );
-
-        return NextResponse.json({
-          success: true,
-
-          storyId:
-            story.id,
-
-          alreadyCreated:
-            false,
-
-          chapter: {
-            id:
-              chapter.id,
-
-            chapterNumber:
-              chapter.chapter_number,
-
-            title:
-              chapter.title,
-
-            content:
-              chapter.content,
-
-            userChoice:
-              chapter.user_choice,
-
-            createdAt:
-              chapter.created_at,
-          },
-        });
       }
 
-      /* =========================================================
-         Fallback
-      ========================================================= */
+      /* =====================================================
+         Sync Character Relationships
+ 
+         ตรวจจับเฉพาะ Relationship
+         ของตัวละครที่มีอยู่ใน Session แล้ว
+ 
+         ไม่สร้าง Character ใหม่
+      ===================================================== */
 
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            'ไม่พบ action ที่รองรับ',
-        },
-        { status: 400 }
-      );
-    } catch (error) {
-      console.error(
+      await syncCharactersFromChapter({
+        ai,
+        storyId:
+          story.id,
+        sessionId:
+          session.id,
+        chapterNumber:
+          nextChapterNumber,
+        chapterContent:
+          generatedText.trim(),
+      });
+
+      /* =====================================================
+         Success
+      ===================================================== */
+
+      console.log(
         '========================================'
       );
 
-      console.error(
-        '❌ GENERATE STORY API ERROR'
+      console.log(
+        `✅ CHAPTER ${nextChapterNumber} SUCCESS`
       );
 
-      console.error(error);
+      console.log(
+        'Story ID:',
+        story.id
+      );
 
-      console.error(
+      console.log(
+        'Session ID:',
+        session.id
+      );
+
+      console.log(
+        'User ID:',
+        userId
+      );
+
+      console.log(
+        'Saved To: session_chapters'
+      );
+
+      console.log(
         '========================================'
       );
 
-      return NextResponse.json(
-        {
-          success: false,
+      return NextResponse.json({
+        success: true,
 
-          error:
-            error instanceof Error
-              ? error.message
-              : 'เกิดข้อผิดพลาดภายในระบบ',
+        storyId:
+          story.id,
+
+        alreadyCreated:
+          false,
+
+        chapter: {
+          id:
+            chapter.id,
+
+          chapterNumber:
+            chapter.chapter_number,
+
+          title:
+            chapter.title,
+
+          content:
+            chapter.content,
+
+          userChoice:
+            chapter.user_choice,
+
+          createdAt:
+            chapter.created_at,
         },
-        { status: 500 }
-      );
+      });
     }
+
+    /* =========================================================
+       Fallback
+    ========================================================= */
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'ไม่พบ action ที่รองรับ',
+      },
+      { status: 400 }
+    );
+  } catch (error) {
+    console.error(
+      '========================================'
+    );
+
+    console.error(
+      '❌ GENERATE STORY API ERROR'
+    );
+
+    console.error(error);
+
+    console.error(
+      '========================================'
+    );
+
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'เกิดข้อผิดพลาดภายในระบบ',
+      },
+      { status: 500 }
+    );
   }
+}
