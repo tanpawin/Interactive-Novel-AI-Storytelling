@@ -12,6 +12,7 @@ import {
   Genre,
   NarrativeTone,
   StoryLength,
+  SupportingCharacter,
 } from '@/types/story';
 
 const DRAFT_KEY = 'cozytales_create_story_draft';
@@ -25,7 +26,6 @@ const genres: Genre[] = [
   'ประวัติศาสตร์',
   'สยองขวัญ',
   'ผจญภัย',
-  'วรรณกรรม',
 ];
 
 const tones: NarrativeTone[] = [
@@ -49,7 +49,13 @@ const emptyForm: CreateStoryFormData = {
   genre: 'แฟนตาซี',
   tone: 'สดใสและจินตนาการ',
   length: 'เรื่องสั้น',
+
   protagonist: '',
+  protagonistPersonality: '',
+  protagonistItems: '',
+
+  supportingCharacters: [],
+
   worldSetting: '',
 };
 
@@ -70,10 +76,6 @@ export default function CreateStoryPage() {
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
-  /*
-   * ป้องกัน Auto Save ทำงานก่อน
-   * Restore Draft เสร็จ
-   */
   const hasRestoredDraft = useRef(false);
 
   /* =====================================================
@@ -89,9 +91,50 @@ export default function CreateStoryPage() {
         const parsed = JSON.parse(savedDraft);
 
         if (parsed.formData) {
+          const savedFormData =
+            parsed.formData;
+
+          const restoredSupportingCharacters =
+            Array.isArray(
+              savedFormData.supportingCharacters
+            )
+              ? savedFormData.supportingCharacters
+                .filter(
+                  (
+                    character: SupportingCharacter
+                  ) =>
+                    character &&
+                    typeof character.name ===
+                    'string'
+                )
+                .map(
+                  (
+                    character: SupportingCharacter
+                  ) => ({
+                    name:
+                      typeof character.name ===
+                        'string'
+                        ? character.name
+                        : '',
+                    personality:
+                      typeof character.personality ===
+                        'string'
+                        ? character.personality
+                        : '',
+                    items:
+                      typeof character.items ===
+                        'string'
+                        ? character.items
+                        : '',
+                  })
+                )
+              : [];
+
           setFormData({
             ...emptyForm,
-            ...parsed.formData,
+            ...savedFormData,
+            supportingCharacters:
+              restoredSupportingCharacters,
           });
         }
 
@@ -111,10 +154,6 @@ export default function CreateStoryPage() {
         error
       );
     } finally {
-      /*
-       * ให้ Auto Save เริ่มทำงาน
-       * หลังจาก Restore เสร็จแล้วเท่านั้น
-       */
       hasRestoredDraft.current = true;
     }
   }, []);
@@ -124,10 +163,6 @@ export default function CreateStoryPage() {
   ===================================================== */
 
   useEffect(() => {
-    /*
-     * ป้องกันการบันทึก emptyForm
-     * ทับ Draft ก่อน Restore
-     */
     if (!hasRestoredDraft.current) {
       return;
     }
@@ -166,6 +201,59 @@ export default function CreateStoryPage() {
     setFormData((previous) => ({
       ...previous,
       [field]: value,
+    }));
+  };
+
+  /* =====================================================
+     Supporting Characters
+  ===================================================== */
+
+  const addSupportingCharacter = () => {
+    const newCharacter: SupportingCharacter = {
+      name: '',
+      personality: '',
+      items: '',
+    };
+
+    setFormData((previous) => ({
+      ...previous,
+      supportingCharacters: [
+        ...previous.supportingCharacters,
+        newCharacter,
+      ],
+    }));
+  };
+
+  const updateSupportingCharacter = (
+    index: number,
+    field: keyof SupportingCharacter,
+    value: string
+  ) => {
+    setFormData((previous) => ({
+      ...previous,
+      supportingCharacters:
+        previous.supportingCharacters.map(
+          (character, characterIndex) =>
+            characterIndex === index
+              ? {
+                ...character,
+                [field]: value,
+              }
+              : character
+        ),
+    }));
+  };
+
+  const removeSupportingCharacter = (
+    index: number
+  ) => {
+    setFormData((previous) => ({
+      ...previous,
+      supportingCharacters:
+        previous.supportingCharacters.filter(
+          (_, characterIndex) =>
+            characterIndex !== index
+        ),
     }));
   };
 
@@ -209,7 +297,7 @@ export default function CreateStoryPage() {
       if (!response.ok) {
         throw new Error(
           data.error ||
-            'อัปโหลดรูปไม่สำเร็จ'
+          'อัปโหลดรูปไม่สำเร็จ'
         );
       }
 
@@ -232,16 +320,36 @@ export default function CreateStoryPage() {
 
   const canNext = () => {
     if (step === 1) {
-      return (
-        formData.title.trim() !== '' &&
-        formData.corePremise.trim() !== ''
-      );
+      // ต้องกรอกชื่อเรื่อง + แก่นเรื่อง
+      if (formData.title.trim() === '') {
+        return false;
+      }
+
+      if (formData.corePremise.trim() === '') {
+        return false;
+      }
+
+      return true;
     }
 
     if (step === 2) {
-      return (
-        formData.protagonist.trim() !== ''
-      );
+      // ต้องมีชื่อตัวละครหลัก
+      if (formData.protagonist.trim() === '') {
+        return false;
+      }
+
+      // ถ้าเพิ่ม NPC แล้ว ต้องกรอกชื่อ NPC ทุกตัว
+      const hasEmptyNpcName =
+        formData.supportingCharacters.some(
+          (character) =>
+            character.name.trim() === ''
+        );
+
+      if (hasEmptyNpcName) {
+        return false;
+      }
+
+      return true;
     }
 
     return true;
@@ -263,11 +371,6 @@ export default function CreateStoryPage() {
 
   const handleBack = () => {
     if (step === 1) {
-      /*
-       * ออกจากหน้าสร้างนิยาย
-       * ให้ล้าง Draft เพื่อไม่ให้ข้อมูลเก่า
-       * ติดกลับมาเมื่อเริ่มเรื่องใหม่
-       */
       sessionStorage.removeItem(
         DRAFT_KEY
       );
@@ -290,17 +393,55 @@ export default function CreateStoryPage() {
       return;
     }
 
+    // ต้องมีชื่อเรื่อง
     if (!formData.title.trim()) {
       return;
     }
 
+    // ต้องมีแก่นเรื่อง
     if (!formData.corePremise.trim()) {
+      return;
+    }
+
+    // ต้องมีตัวละครหลัก
+    if (!formData.protagonist.trim()) {
+      return;
+    }
+
+    const hasEmptyNpcName =
+      formData.supportingCharacters.some(
+        (character) =>
+          character.name.trim() === ''
+      );
+
+    if (hasEmptyNpcName) {
       return;
     }
 
     setIsSubmitting(true);
 
-    const cleanFormData = {
+    const cleanSupportingCharacters =
+      formData.supportingCharacters
+        .filter(
+          (character) =>
+            character.name.trim() !== ''
+        )
+        .map(
+          (character) => ({
+            name:
+              character.name.trim(),
+
+            personality:
+              character.personality.trim(),
+
+            items:
+              character.items.trim(),
+          })
+        );
+
+    const cleanFormData: CreateStoryFormData & {
+      coverImageUrl: string;
+    } = {
       title:
         formData.title.trim(),
 
@@ -319,6 +460,15 @@ export default function CreateStoryPage() {
       protagonist:
         formData.protagonist.trim(),
 
+      protagonistPersonality:
+        formData.protagonistPersonality.trim(),
+
+      protagonistItems:
+        formData.protagonistItems.trim(),
+
+      supportingCharacters:
+        cleanSupportingCharacters,
+
       worldSetting:
         formData.worldSetting.trim(),
 
@@ -327,11 +477,6 @@ export default function CreateStoryPage() {
     };
 
     try {
-      /*
-       * Clear previous generation result
-       * เพื่อป้องกัน Generating Page
-       * หยิบ Story ID เก่ามาใช้
-       */
       sessionStorage.removeItem(
         'cozytales_generated_story'
       );
@@ -347,10 +492,6 @@ export default function CreateStoryPage() {
         )
       );
 
-      /*
-       * เมื่อกดสร้างเรื่องแล้ว
-       * Draft ไม่จำเป็นอีกต่อไป
-       */
       sessionStorage.removeItem(
         DRAFT_KEY
       );
@@ -395,6 +536,7 @@ export default function CreateStoryPage() {
             <p>
               เปลี่ยนจินตนาการของคุณให้กลายเป็นเรื่องราว
             </p>
+
           </div>
 
         </header>
@@ -409,12 +551,12 @@ export default function CreateStoryPage() {
             (item) => (
               <div
                 key={item}
-                className={`story-create-progress-item ${
-                  step >= item
-                    ? 'active'
-                    : ''
-                }`}
+                className={`story-create-progress-item ${step >= item
+                  ? 'active'
+                  : ''
+                  }`}
               >
+
                 <div className="story-create-progress-number">
                   {item}
                 </div>
@@ -429,6 +571,7 @@ export default function CreateStoryPage() {
                   {item === 3 &&
                     'รูปแบบเรื่อง'}
                 </span>
+
               </div>
             )
           )}
@@ -449,6 +592,7 @@ export default function CreateStoryPage() {
             <div className="story-create-step">
 
               <div className="story-create-step-heading">
+
                 <span>
                   ขั้นตอนที่ 1
                 </span>
@@ -460,13 +604,20 @@ export default function CreateStoryPage() {
                 <p>
                   กำหนดพื้นฐานของนิยายที่คุณอยากสร้าง
                 </p>
+
               </div>
 
               <div className="story-create-fields">
 
+                {/* ชื่อเรื่อง */}
+
                 <div className="story-create-field">
+
                   <label>
                     ชื่อเรื่อง
+                    <span className="story-create-required">
+                      {' '} *
+                    </span>
                   </label>
 
                   <input
@@ -482,11 +633,18 @@ export default function CreateStoryPage() {
                     }
                     placeholder="เช่น คืนที่ดวงจันทร์หายไป"
                   />
+
                 </div>
 
+                {/* แก่นเรื่อง */}
+
                 <div className="story-create-field">
+
                   <label>
                     เรื่องย่อ / แก่นเรื่อง
+                    <span className="story-create-required">
+                      {' '} *
+                    </span>
                   </label>
 
                   <textarea
@@ -502,14 +660,19 @@ export default function CreateStoryPage() {
                     placeholder="เล่าไอเดียหลักของเรื่องที่คุณอยากให้เกิดขึ้น..."
                     rows={6}
                   />
+
                 </div>
 
+                {/* แนวเรื่อง */}
+
                 <div className="story-create-field">
+
                   <label>
                     แนวเรื่อง
                   </label>
 
                   <div className="story-create-options">
+
                     {genres.map(
                       (genre) => (
                         <button
@@ -517,7 +680,7 @@ export default function CreateStoryPage() {
                           type="button"
                           className={
                             formData.genre ===
-                            genre
+                              genre
                               ? 'selected'
                               : ''
                           }
@@ -532,7 +695,9 @@ export default function CreateStoryPage() {
                         </button>
                       )
                     )}
+
                   </div>
+
                 </div>
 
               </div>
@@ -548,24 +713,48 @@ export default function CreateStoryPage() {
             <div className="story-create-step">
 
               <div className="story-create-step-heading">
+
                 <span>
                   ขั้นตอนที่ 2
                 </span>
 
                 <h2>
-                  ใครจะเป็นคนเดินทางในเรื่องนี้?
+                  ตัวละครและโลกของเรื่อง
                 </h2>
 
                 <p>
-                  กำหนดตัวละครเอกและโลกที่เรื่องราวจะเกิดขึ้น
+                  กำหนดตัวละครหลัก ตัวละครประกอบ ฉากหลัง และบรรยากาศของนิยาย
                 </p>
+
               </div>
 
               <div className="story-create-fields">
 
+                {/* =================================================
+                    ตัวละครหลัก
+                ================================================= */}
+
+                <div className="story-create-section-heading">
+
+                  <h3>
+                    ตัวละครหลัก
+                  </h3>
+
+                  <p>
+                    ข้อมูลนี้จะใช้เป็นตัวละครหลักของเรื่องตั้งแต่บทแรก
+                  </p>
+
+                </div>
+
+                {/* ชื่อตัวละครหลัก */}
+
                 <div className="story-create-field">
+
                   <label>
-                    ตัวละครเอก
+                    ชื่อตัวละครหลัก
+                    <span className="story-create-required">
+                      {' '} *
+                    </span>
                   </label>
 
                   <input
@@ -581,11 +770,267 @@ export default function CreateStoryPage() {
                     }
                     placeholder="เช่น อาร์เธอร์ เพนเดิลตัน"
                   />
+
+                </div>
+
+                {/* นิสัยและความสามารถ */}
+
+                <div className="story-create-field">
+
+                  <label>
+                    นิสัยและความสามารถตัวละครหลัก
+                    <span className="story-create-optional">
+                      {' '} (ไม่จำเป็น)
+                    </span>
+                  </label>
+
+                  <p>
+                    หากไม่ระบุ AI จะช่วยสร้างให้เหมาะสมกับเรื่อง
+                  </p>
+
+                  <textarea
+                    value={
+                      formData.protagonistPersonality
+                    }
+                    onChange={(e) =>
+                      updateField(
+                        'protagonistPersonality',
+                        e.target.value
+                      )
+                    }
+                    placeholder="เช่น สุขุม รอบคอบ ไม่ไว้ใจคนง่าย สามารถใช้เวทมนตร์ไฟได้..."
+                    rows={5}
+                  />
+
+                </div>
+
+                {/* ของที่พก */}
+
+                <div className="story-create-field">
+
+                  <label>
+                    ของที่พกติดตัว
+                    <span className="story-create-optional">
+                      {' '} (ไม่จำเป็น)
+                    </span>
+                  </label>
+
+                  <p>
+                    หากไม่ระบุ AI จะกำหนดสิ่งของให้เหมาะสมกับเรื่อง
+                  </p>
+
+                  <textarea
+                    value={
+                      formData.protagonistItems
+                    }
+                    onChange={(e) =>
+                      updateField(
+                        'protagonistItems',
+                        e.target.value
+                      )
+                    }
+                    placeholder="เช่น ดาบเก่า 1 เล่ม, หนังสือเวทมนตร์, เหรียญของแม่..."
+                    rows={4}
+                  />
+
+                </div>
+
+                {/* =================================================
+                    ตัวละครประกอบ
+                ================================================= */}
+
+                <div className="story-create-section-heading story-create-supporting-section-heading">
+
+                  <div className="story-create-supporting-header">
+
+                    <div>
+
+                      <h3>
+                        ตัวละครประกอบ (NPC)
+                      </h3>
+
+                      <p>
+                        เพิ่มตัวละครที่คุณต้องการให้มีอยู่ในเรื่องตั้งแต่เริ่มต้น
+                      </p>
+
+                    </div>
+
+                    <button
+                      type="button"
+                      className="story-create-secondary"
+                      onClick={
+                        addSupportingCharacter
+                      }
+                    >
+                      ＋ เพิ่มตัวละคร
+                    </button>
+
+                  </div>
+
+                </div>
+
+                {/* =================================================
+                    NPC List
+                ================================================= */}
+
+                {formData.supportingCharacters.length >
+                  0 && (
+                    <div className="story-create-supporting-list">
+
+                      {formData.supportingCharacters.map(
+                        (
+                          character,
+                          index
+                        ) => (
+                          <div
+                            key={index}
+                            className="story-create-supporting-character"
+                          >
+
+                            {/* NPC Header */}
+
+                            <div className="story-create-supporting-character-header">
+
+                              <strong>
+                                ตัวละครประกอบ #{index + 1}
+                              </strong>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  removeSupportingCharacter(
+                                    index
+                                  )
+                                }
+                                className="story-create-remove-character"
+                              >
+                                ลบตัวละคร
+                              </button>
+
+                            </div>
+
+                            {/* ชื่อ NPC */}
+
+                            <div className="story-create-field">
+
+                              <label>
+                                ชื่อตัวละคร
+                                <span className="story-create-required">
+                                  {' '} *
+                                </span>
+                              </label>
+
+                              <input
+                                type="text"
+                                value={
+                                  character.name
+                                }
+                                onChange={(e) =>
+                                  updateSupportingCharacter(
+                                    index,
+                                    'name',
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="เช่น ลีอา"
+                              />
+
+                            </div>
+
+                            {/* นิสัย / ความสามารถ */}
+
+                            <div className="story-create-field">
+
+                              <label>
+                                นิสัยและความสามารถ
+                                <span className="story-create-optional">
+                                  {' '} (ไม่จำเป็น)
+                                </span>
+                              </label>
+
+                              <p>
+                                หากไม่ระบุ AI จะช่วยสร้างให้เหมาะสมกับเรื่อง
+                              </p>
+
+                              <textarea
+                                value={
+                                  character.personality
+                                }
+                                onChange={(e) =>
+                                  updateSupportingCharacter(
+                                    index,
+                                    'personality',
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="เช่น ร่าเริง ช่างพูด เชี่ยวชาญการรักษาและสมุนไพร..."
+                                rows={4}
+                              />
+
+                            </div>
+
+                            {/* ของที่พก */}
+
+                            <div className="story-create-field">
+
+                              <label>
+                                ของที่พกติดตัว
+                                <span className="story-create-optional">
+                                  {' '} (ไม่จำเป็น)
+                                </span>
+                              </label>
+
+                              <p>
+                                หากไม่ระบุ AI จะกำหนดสิ่งของให้เหมาะสมกับเรื่อง
+                              </p>
+
+                              <textarea
+                                value={
+                                  character.items
+                                }
+                                onChange={(e) =>
+                                  updateSupportingCharacter(
+                                    index,
+                                    'items',
+                                    e.target.value
+                                  )
+                                }
+                                placeholder="เช่น กระเป๋าสมุนไพร, มีดสั้น, ยารักษา..."
+                                rows={3}
+                              />
+
+                            </div>
+
+                          </div>
+                        )
+                      )}
+
+                    </div>
+                  )}
+
+                {/* =================================================
+                    โลก / ฉากหลัง
+                ================================================= */}
+
+                <div className="story-create-section-heading">
+
+                  <h3>
+                    โลก / ฉากหลัง
+                  </h3>
+
+                  <p>
+                    กำหนดสถานที่ ยุคสมัย หรือสภาพแวดล้อมของเรื่อง
+                  </p>
+
                 </div>
 
                 <div className="story-create-field">
+
                   <label>
                     โลก / สถานที่
+                    <span className="story-create-optional">
+                      {' '} (ไม่จำเป็น)
+                    </span>
                   </label>
 
                   <textarea
@@ -598,17 +1043,24 @@ export default function CreateStoryPage() {
                         e.target.value
                       )
                     }
-                    placeholder="เช่น เมืองเล็ก ๆ ที่ซ่อนอยู่ท่ามกลางป่า..."
+                    placeholder="เช่น เมืองเล็ก ๆ ที่ซ่อนอยู่ท่ามกลางป่า ผู้คนในเมืองใช้เวทมนตร์เป็นเรื่องปกติ..."
                     rows={5}
                   />
+
                 </div>
 
+                {/* =================================================
+                    โทนของเรื่อง
+                ================================================= */}
+
                 <div className="story-create-field">
+
                   <label>
                     โทนของเรื่อง
                   </label>
 
                   <div className="story-create-options">
+
                     {tones.map(
                       (tone) => (
                         <button
@@ -616,7 +1068,7 @@ export default function CreateStoryPage() {
                           type="button"
                           className={
                             formData.tone ===
-                            tone
+                              tone
                               ? 'selected'
                               : ''
                           }
@@ -631,7 +1083,9 @@ export default function CreateStoryPage() {
                         </button>
                       )
                     )}
+
                   </div>
+
                 </div>
 
               </div>
@@ -647,6 +1101,7 @@ export default function CreateStoryPage() {
             <div className="story-create-step">
 
               <div className="story-create-step-heading">
+
                 <span>
                   ขั้นตอนที่ 3
                 </span>
@@ -656,18 +1111,25 @@ export default function CreateStoryPage() {
                 </h2>
 
                 <p>
-                  เลือกความยาวและเพิ่มภาพปกให้เรื่องของคุณ
+                  เลือกความยาว เพิ่มภาพปก และตรวจสอบข้อมูลก่อนสร้าง
                 </p>
+
               </div>
 
               <div className="story-create-fields">
 
+                {/* =================================================
+                    ความยาว
+                ================================================= */}
+
                 <div className="story-create-field">
+
                   <label>
                     ความยาวของนิยาย
                   </label>
 
                   <div className="story-create-length-options">
+
                     {lengths.map(
                       (length) => (
                         <button
@@ -675,7 +1137,7 @@ export default function CreateStoryPage() {
                           type="button"
                           className={
                             formData.length ===
-                            length
+                              length
                               ? 'selected'
                               : ''
                           }
@@ -686,6 +1148,7 @@ export default function CreateStoryPage() {
                             )
                           }
                         >
+
                           <strong>
                             {length}
                           </strong>
@@ -703,15 +1166,26 @@ export default function CreateStoryPage() {
                               'นวนิยายยาว' &&
                               '30 บท'}
                           </span>
+
                         </button>
                       )
                     )}
+
                   </div>
+
                 </div>
 
+                {/* =================================================
+                    Cover
+                ================================================= */}
+
                 <div className="story-create-field">
+
                   <label>
                     ภาพปก
+                    <span className="story-create-optional">
+                      {' '} (ไม่จำเป็น)
+                    </span>
                   </label>
 
                   <div className="story-create-cover">
@@ -732,6 +1206,7 @@ export default function CreateStoryPage() {
                   </div>
 
                   <label className="story-create-upload">
+
                     {isUploading
                       ? 'กำลังอัปโหลด...'
                       : 'เลือกภาพปก'}
@@ -743,10 +1218,14 @@ export default function CreateStoryPage() {
                         handleCoverUpload
                       }
                     />
+
                   </label>
+
                 </div>
 
-                {/* Summary */}
+                {/* =================================================
+                    Summary
+                ================================================= */}
 
                 <div className="story-create-summary">
 
@@ -773,6 +1252,16 @@ export default function CreateStoryPage() {
 
                   <div>
                     <span>
+                      โทน
+                    </span>
+
+                    <strong>
+                      {formData.tone}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
                       ความยาว
                     </span>
 
@@ -783,11 +1272,62 @@ export default function CreateStoryPage() {
 
                   <div>
                     <span>
-                      ตัวละครเอก
+                      ตัวละครหลัก
                     </span>
 
                     <strong>
                       {formData.protagonist ||
+                        '-'}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      ตัวละครประกอบ
+                    </span>
+
+                    <strong>
+                      {formData.supportingCharacters.filter(
+                        (character) =>
+                          character.name.trim() !==
+                          ''
+                      ).length}{' '}
+                      ตัว
+                    </strong>
+                  </div>
+
+                  {formData.supportingCharacters
+                    .filter(
+                      (character) =>
+                        character.name.trim() !==
+                        ''
+                    )
+                    .map(
+                      (
+                        character,
+                        index
+                      ) => (
+                        <div
+                          key={index}
+                        >
+                          <span>
+                            NPC #{index + 1}
+                          </span>
+
+                          <strong>
+                            {character.name}
+                          </strong>
+                        </div>
+                      )
+                    )}
+
+                  <div>
+                    <span>
+                      โลก / ฉากหลัง
+                    </span>
+
+                    <strong>
+                      {formData.worldSetting ||
                         '-'}
                     </strong>
                   </div>
@@ -833,7 +1373,7 @@ export default function CreateStoryPage() {
               >
                 {isSubmitting
                   ? 'กำลังเตรียมเรื่อง...'
-                  : '✨ สร้างนิยาย'}
+                  : 'สร้างนิยาย'}
               </button>
             )}
 

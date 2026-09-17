@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+import { auth } from '@clerk/nextjs/server';
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export async function GET(
@@ -29,6 +31,8 @@ export async function GET(
         { status: 400 }
       );
     }
+
+    const { userId } = await auth();
 
     // ==================================================
     // 1. ตรวจสอบ Story
@@ -66,6 +70,7 @@ export async function GET(
 
     // ==================================================
     // 2. โหลด Username ของเจ้าของ Story
+    //
     // stories.user_id
     //        ↓
     // profiles.user_id
@@ -122,6 +127,7 @@ export async function GET(
         story_id,
         current_chapter,
         status,
+        is_public,
         created_at,
         updated_at
         `
@@ -144,7 +150,32 @@ export async function GET(
     }
 
     // ==================================================
-    // 4. โหลด Username ของเจ้าของ Branch
+    // 4. ตรวจสอบ Public / Private
+    // ==================================================
+
+    // เจ้าของ Session สามารถเข้าดูได้เสมอ
+    const isOwner =
+      userId === session.user_id;
+
+    // ถ้าไม่ใช่เจ้าของ
+    // ต้องเป็น Public เท่านั้นจึงจะเข้าดูได้
+    if (
+      !isOwner &&
+      !session.is_public
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'เส้นเรื่องนี้เป็น Private และไม่เปิดให้ผู้เล่นอื่นเข้าชม',
+        },
+        { status: 403 }
+      );
+    }
+
+    // ==================================================
+    // 5. โหลด Username ของเจ้าของ Branch
+    //
     // game_sessions.user_id
     //        ↓
     // profiles.user_id
@@ -186,7 +217,7 @@ export async function GET(
     }
 
     // ==================================================
-    // 5. โหลด Chapter กลางของ Story
+    // 6. โหลด Chapter กลางของ Story
     // ==================================================
 
     const {
@@ -225,7 +256,7 @@ export async function GET(
     }
 
     // ==================================================
-    // 6. โหลด Chapter ของ Branch
+    // 7. โหลด Chapter ของ Branch
     // ==================================================
 
     const {
@@ -269,7 +300,7 @@ export async function GET(
     }
 
     // ==================================================
-    // 7. รวม Chapter กลาง + Branch
+    // 8. รวม Chapter กลาง + Branch
     // ==================================================
 
     const chapterMap = new Map<
@@ -287,7 +318,7 @@ export async function GET(
     // Shared Chapters
     for (
       const chapter of
-        sharedChapters ?? []
+      sharedChapters ?? []
     ) {
       chapterMap.set(
         chapter.chapter_number,
@@ -315,7 +346,7 @@ export async function GET(
     // Branch จะทับ Shared Chapter
     for (
       const chapter of
-        sessionChapters ?? []
+      sessionChapters ?? []
     ) {
       chapterMap.set(
         chapter.chapter_number,
@@ -352,7 +383,7 @@ export async function GET(
       );
 
     // ==================================================
-    // 8. Response
+    // 9. Response
     // ==================================================
 
     return NextResponse.json({
@@ -389,12 +420,14 @@ export async function GET(
         userId:
           session.user_id,
 
-        // Username ของเจ้าของ Branch
         userName,
 
-        currentChapter:
-          session.current_chapter ??
-          1,
+        isPublic:
+          session.is_public,
+
+        isOwner,
+
+        currentChapter: 1,
 
         status:
           session.status,
@@ -405,7 +438,7 @@ export async function GET(
         updatedAt:
           session.updated_at,
       },
-
+      
       chapters,
     });
   } catch (error) {

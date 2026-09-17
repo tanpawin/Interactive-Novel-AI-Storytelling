@@ -1,22 +1,24 @@
-export type Genre = 
-  | 'แฟนตาซี' 
-  | 'โรแมนติก' 
-  | 'สืบสวนสอบสวน' 
-  | 'ไซไฟ' 
-  | 'ประวัติศาสตร์' 
-  | 'สยองขวัญ' 
-  | 'ผจญภัย' 
-  | 'วรรณกรรม';
+export type Genre =
+  | 'แฟนตาซี'
+  | 'โรแมนติก'
+  | 'สืบสวนสอบสวน'
+  | 'ไซไฟ'
+  | 'ประวัติศาสตร์'
+  | 'สยองขวัญ'
+  | 'ผจญภัย';
 
-export type NarrativeTone = 
-  | 'มืดมนและสมจริง' 
-  | 'สดใสและจินตนาการ' 
-  | 'โรแมนติก' 
-  | 'ปรัชญา' 
-  | 'ตลกขบขัน' 
+export type NarrativeTone =
+  | 'มืดมนและสมจริง'
+  | 'สดใสและจินตนาการ'
+  | 'โรแมนติก'
+  | 'ปรัชญา'
+  | 'ตลกขบขัน'
   | 'ระทึกขวัญ';
 
-export type StoryLength = 'เรื่องสั้น' | 'นวนิยายขนาดกลาง' | 'นวนิยายยาว';
+export type StoryLength =
+  | 'เรื่องสั้น'
+  | 'นวนิยายขนาดกลาง'
+  | 'นวนิยายยาว';
 
 export interface Chapter {
   id: string;
@@ -27,6 +29,23 @@ export interface Chapter {
   createdAt: string;
 }
 
+/* =========================================================
+   ตัวละครประกอบ (NPC)
+   
+   ตัวละครเหล่านี้เป็น NPC ที่ผู้สร้างนิยายกำหนดไว้
+   ตั้งแต่ตอนสร้าง Story
+========================================================= */
+
+export interface SupportingCharacter {
+  name: string;
+  personality: string;
+  items: string;
+}
+
+/* =========================================================
+   Story
+========================================================= */
+
 export interface Story {
   id: string;
   title: string;
@@ -34,25 +53,72 @@ export interface Story {
   genre: Genre;
   tone: NarrativeTone;
   length: StoryLength;
+
   protagonist?: string;
   worldSetting?: string;
+
   coverUrl: string;
   author: string;
+
   totalChapters: number;
   currentChapter: number;
   wordCount: number;
+
   isFavorite?: boolean;
   isTrending?: boolean;
   isFresh?: boolean;
+
   chapters: Chapter[];
 }
+
+/* =========================================================
+   Create Story Form Data
+========================================================= */
 
 export interface CreateStoryFormData {
   title: string;
   corePremise: string;
+
   genre: Genre;
   tone: NarrativeTone;
   length: StoryLength;
+
+  /* -------------------------------------------------------
+     ตัวละครหลัก
+  ------------------------------------------------------- */
+
   protagonist: string;
+
+  protagonistPersonality: string;
+
+  protagonistItems: string;
+
+  /* -------------------------------------------------------
+     ตัวละครประกอบ (NPC)
+     
+     สามารถเพิ่มได้หลายตัว
+     
+     ตัวอย่าง:
+     
+     supportingCharacters: [
+       {
+         name: 'แทน',
+         personality: 'ใจเย็น ฉลาด...',
+         items: 'ดาบสั้น, ยา'
+       },
+       {
+         name: 'ทิว',
+         personality: 'ร่าเริง...',
+         items: 'ธนู, มีด'
+       }
+     ]
+  ------------------------------------------------------- */
+
+  supportingCharacters: SupportingCharacter[];
+
+  /* -------------------------------------------------------
+     โลก / ฉากหลัง
+  ------------------------------------------------------- */
+
   worldSetting: string;
 }

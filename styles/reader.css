@@ -124,34 +124,264 @@
 ========================= */
 
 .font-size-controls {
-  display: flex;
-  gap: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
 
-  background-color: var(--bg-card);
-  padding: 3px;
+  background-color: rgba(255, 255, 255, 0.78);
 
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
+  padding: 0.15rem;
+
+  border-radius: 0.6rem;
+
+  border: 1px solid rgba(140, 90, 65, 0.18);
+
+  box-shadow:
+    0 2px 8px rgba(80, 50, 35, 0.05);
+
+  backdrop-filter: blur(8px);
 
   flex-shrink: 0;
 }
 
 .font-size-controls button {
-  background: none;
+  min-width: 1.75rem;
+  height: 1.5rem;
 
-  padding: 2px 8px;
+  padding: 0 0.25rem;
 
-  font-size: 0.8rem;
+  background: transparent;
+  border: none;
 
-  border-radius: 4px;
+  border-radius: 0.45rem;
 
   color: var(--text-secondary);
+
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.15s ease;
+}
+
+.font-size-controls button:hover {
+  background-color: rgba(146, 91, 67, 0.08);
+
+  color: var(--accent-color);
+}
+
+.font-size-controls button:active {
+  transform: scale(0.95);
 }
 
 .font-size-controls button.active {
   background-color: var(--accent-color);
+
   color: #ffffff;
+
+  box-shadow:
+    0 2px 6px rgba(146, 91, 67, 0.2);
 }
+
+.font-size-controls button:focus-visible {
+  outline: 2px solid rgba(146, 91, 67, 0.35);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================
+   Public / Private Toggle
+========================= */
+
+.visibility-toggle {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 0.4rem;
+
+  height: 2rem;
+
+  padding: 0.2rem 0.55rem 0.2rem 0.3rem;
+
+  border: 1px solid rgba(140, 90, 65, 0.18);
+
+  border-radius: 999px;
+
+  background-color: rgba(255, 255, 255, 0.8);
+
+  color: var(--text-secondary);
+
+  font-family: inherit;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 2px 8px rgba(80, 50, 35, 0.05);
+
+  backdrop-filter: blur(8px);
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+
+  flex-shrink: 0;
+}
+
+.visibility-toggle:hover {
+  border-color: rgba(146, 91, 67, 0.4);
+
+  box-shadow:
+    0 4px 12px rgba(80, 50, 35, 0.09);
+}
+
+.visibility-toggle:active {
+  transform: scale(0.97);
+}
+
+.visibility-toggle:focus-visible {
+  outline: 2px solid rgba(146, 91, 67, 0.35);
+
+  outline-offset: 2px;
+}
+
+
+/* =========================
+   Toggle Track
+========================= */
+
+.visibility-toggle-track {
+  position: relative;
+
+  width: 1.8rem;
+  height: 1rem;
+
+  flex-shrink: 0;
+
+  border-radius: 999px;
+
+  background-color: #c8beb9;
+
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.08);
+
+  transition:
+    background-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+
+/* =========================
+   Toggle Thumb
+========================= */
+
+.visibility-toggle-thumb {
+  position: absolute;
+
+  top: 0.125rem;
+  left: 0.125rem;
+
+  width: 0.75rem;
+  height: 0.75rem;
+
+  border-radius: 50%;
+
+  background-color: #ffffff;
+
+  box-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.18);
+
+  transition:
+    transform 0.22s ease;
+}
+
+
+/* =========================
+   Private State
+========================= */
+
+.visibility-toggle.is-private {
+  color: #6f625d;
+
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.visibility-toggle.is-private .visibility-toggle-track {
+  background-color: #bdb3ae;
+}
+
+.visibility-toggle.is-private .visibility-toggle-thumb {
+  transform: translateX(0);
+}
+
+
+/* =========================
+   Public State
+========================= */
+
+.visibility-toggle.is-public {
+  color: var(--accent-color);
+
+  background-color: rgba(146, 91, 67, 0.06);
+
+  border-color: rgba(146, 91, 67, 0.28);
+}
+
+.visibility-toggle.is-public .visibility-toggle-track {
+  background-color: var(--accent-color);
+
+  box-shadow:
+    0 0 0 3px rgba(146, 91, 67, 0.08);
+}
+
+.visibility-toggle.is-public .visibility-toggle-thumb {
+  transform: translateX(0.8rem);
+}
+
+
+/* =========================
+   Updating State
+========================= */
+
+.visibility-toggle.is-updating {
+  opacity: 0.6;
+
+  cursor: wait;
+}
+
+.visibility-toggle.is-updating .visibility-toggle-track {
+  opacity: 0.75;
+}
+
+
+/* =========================
+   Visibility Label
+========================= */
+
+.visibility-toggle-label {
+  min-width: 3rem;
+
+  text-align: left;
+
+  font-size: 0.68rem;
+
+  font-weight: 600;
+
+  line-height: 1;
+
+  letter-spacing: 0.01em;
+
+  white-space: nowrap;
+}
+
 
 /* =========================
    Reader Content
@@ -848,6 +1078,63 @@
 
     font-size: 0.85rem;
   }
+
+  /* Branch Header Controls */
+  .branches-header-inner>div {
+    gap: 0.3rem;
+  }
+
+  .visibility-toggle {
+    height: 1.65rem;
+
+    padding: 0.15rem 0.4rem 0.15rem 0.25rem;
+
+    gap: 0.25rem;
+
+    border-radius: 999px;
+  }
+
+  .visibility-toggle-track {
+    width: 1.5rem;
+    height: 0.85rem;
+  }
+
+  .visibility-toggle-thumb {
+    width: 0.6rem;
+    height: 0.6rem;
+
+    top: 0.125rem;
+    left: 0.125rem;
+  }
+
+  .visibility-toggle.is-public .visibility-toggle-thumb {
+    transform: translateX(0.65rem);
+  }
+
+  .visibility-toggle-label {
+    min-width: 2.4rem;
+
+    font-size: 0.6rem;
+  }
+
+  .font-size-controls {
+    padding: 0.1rem;
+
+    gap: 0.1rem;
+
+    border-radius: 0.5rem;
+  }
+
+  .font-size-controls button {
+    min-width: 1.55rem;
+    height: 1.4rem;
+
+    padding: 0 0.15rem;
+
+    font-size: 0.6rem;
+
+    border-radius: 0.35rem;
+  }
 }
 
 /* =========================
@@ -916,28 +1203,92 @@
     padding-left: 0.35rem;
     padding-right: 0.35rem;
   }
+
+  /* Branch Header Controls */
+  .branches-header-inner>div {
+    gap: 0.25rem;
+  }
+
+  .visibility-toggle {
+    height: 1.5rem;
+
+    padding: 0.1rem 0.3rem 0.1rem 0.2rem;
+
+    gap: 0.2rem;
+  }
+
+  .visibility-toggle-track {
+    width: 1.35rem;
+    height: 0.75rem;
+  }
+
+  .visibility-toggle-thumb {
+    width: 0.55rem;
+    height: 0.55rem;
+
+    top: 0.1rem;
+    left: 0.1rem;
+  }
+
+  .visibility-toggle.is-public .visibility-toggle-thumb {
+    transform: translateX(0.6rem);
+  }
+
+  .visibility-toggle-label {
+    min-width: 2.2rem;
+
+    font-size: 0.55rem;
+  }
+
+  .font-size-controls {
+    padding: 0.08rem;
+
+    gap: 0.08rem;
+
+    border-radius: 0.45rem;
+  }
+
+  .font-size-controls button {
+    min-width: 1.45rem;
+
+    height: 1.3rem;
+
+    padding: 0 0.1rem;
+
+    font-size: 0.55rem;
+  }
+
 }
 
 /* =========================
-   Branches Header
+   Branches Reader Header
+   ให้เหมือนหน้า /story/[id]
 ========================= */
 
 .branches-reader-header {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+
+  background-color: rgba(249, 246, 240, 0.95);
+  backdrop-filter: blur(8px);
+
   border-bottom: none !important;
+
+  border-bottom: 1px solid var(--border-color);
+
+  padding: 1.15rem 1.5rem;
+
+  box-sizing: border-box;
 }
 
-/*
-  ใช้ความกว้างและตำแหน่งเดียวกับ reader-content
-  และเพิ่ม 1rem ให้ตรงกับตัวหนังสือใน .chapter-heading
-*/
-.branches-reader-header .branches-header-inner {
+.branches-header-inner {
   width: 720px;
   max-width: 100%;
 
   margin: 0 auto;
 
-  padding-left: 1rem;
-  padding-right: 0;
+  padding: 0 1.5rem;
 
   box-sizing: border-box;
 
@@ -946,24 +1297,39 @@
   justify-content: space-between;
 }
 
+/* =========================
+   Branch Header Controls
+========================= */
+
+.branches-header-inner>div {
+  display: flex;
+
+  align-items: center;
+
+  gap: 0.65rem;
+
+  flex-shrink: 0;
+}
+
 .branches-reader-header .btn-back {
+  background: none !important;
+  border: none !important;
+  text-decoration: none !important;
+
+  color: var(--accent-color);
+
+  font-weight: 600;
+  font-size: 0.9rem;
+
+  line-height: 1.4;
+
+  white-space: nowrap;
+
   position: static !important;
 
   margin: 0 !important;
 
   padding: 0.4rem 0 !important;
-
-  background: transparent !important;
-  border: none !important;
-
-  color: var(--accent-color);
-
-  font-size: 0.9rem;
-  font-weight: 600;
-
-  line-height: 1.4;
-
-  text-decoration: none !important;
 
   box-shadow: none !important;
   outline: none !important;
@@ -980,57 +1346,157 @@
   text-decoration: none !important;
 }
 
+
 /* =========================
-   Branches Header Mobile
+   Branches Reader Header Mobile
 ========================= */
 
 @media (max-width: 640px) {
   .branches-reader-header {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding: 1rem 0.85rem;
 
-    padding-top: 0.95rem;
-    padding-bottom: 0.95rem;
+    gap: 0.5rem;
   }
 
-  .branches-reader-header .branches-header-inner {
+  .branches-header-inner {
     width: 100%;
     max-width: none;
 
-    padding-left: 0.75rem;
-    padding-right: 0;
+    padding: 0;
 
     box-sizing: border-box;
   }
 
   .branches-reader-header .btn-back {
-    font-size: 0.8rem;
+    position: static !important;
+
+    margin: 0 !important;
 
     padding: 0.35rem 0 !important;
+
+    font-size: 0.8rem;
+
+    flex-shrink: 0;
   }
 }
 
+
 /* =========================
-   Branches Header Small Mobile
+   Branches Reader Header Small Mobile
 ========================= */
 
 @media (max-width: 380px) {
   .branches-reader-header {
-    padding-left: 0.85rem;
-    padding-right: 0.85rem;
-
-    padding-top: 0.9rem;
-    padding-bottom: 0.9rem;
+    padding: 1rem 0.7rem;
   }
 
-  .branches-reader-header .branches-header-inner {
-    padding-left: 0.6rem;
-    padding-right: 0;
+  .branches-header-inner {
+    padding: 0;
   }
 
   .branches-reader-header .btn-back {
-    font-size: 0.75rem;
+    position: static !important;
+
+    margin: 0 !important;
 
     padding: 0.3rem 0 !important;
+
+    font-size: 0.75rem;
   }
 }
+
+/* =========================
+   Branch Settings Button
+========================= */
+
+/* =========================
+   Branch Settings Button
+========================= */
+
+.branch-settings-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+
+  height: 2rem;
+  padding: 0 0.75rem;
+
+  border: 1px solid var(--accent-color);
+  border-radius: 0.65rem;
+
+  background: var(--accent-color);
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+
+  white-space: nowrap;
+  cursor: pointer;
+
+  box-shadow:
+    0 2px 8px rgba(140, 83, 62, 0.15);
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+.branch-settings-button:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+
+  box-shadow:
+    0 4px 12px rgba(140, 83, 62, 0.2);
+
+  transform: translateY(-1px);
+}
+
+.branch-settings-button:active {
+  transform: translateY(0);
+
+  box-shadow:
+    0 2px 6px rgba(140, 83, 62, 0.12);
+}
+
+.branch-settings-button:focus-visible {
+  outline: 2px solid rgba(140, 83, 62, 0.3);
+  outline-offset: 2px;
+}
+
+
+/* =========================
+   Mobile
+========================= */
+
+@media (max-width: 640px) {
+  .branch-settings-button {
+    height: 1.75rem;
+    padding: 0 0.6rem;
+
+    gap: 0.25rem;
+
+    border-radius: 0.55rem;
+
+    font-size: 0.65rem;
+  }
+}
+
+
+/* =========================
+   Small Mobile
+========================= */
+
+@media (max-width: 380px) {
+  .branch-settings-button {
+    height: 1.65rem;
+    padding: 0 0.5rem;
+
+    font-size: 0.6rem;
+  }
+}
+

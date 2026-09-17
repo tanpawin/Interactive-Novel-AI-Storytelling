@@ -15,6 +15,7 @@ type Branch = {
     userName: string;
     currentChapter: number;
     status: string;
+    isPublic: boolean;
     generatedChapters: number;
     createdAt: string;
     updatedAt: string;

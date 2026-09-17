@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export async function GET(
@@ -18,18 +19,26 @@ export async function GET(
       );
     }
 
-    // ตรวจสอบว่า Story มีอยู่จริง
-    const { data: story, error: storyError } =
-      await supabaseAdmin
-        .from('stories')
-        .select(
-          'id, title, cover_image_url, genre, tone, synopsis'
-        )
-        .eq('id', storyId)
-        .single();
+    // ==================================================
+    // 1. ตรวจสอบว่า Story มีอยู่จริง
+    // ==================================================
+
+    const {
+      data: story,
+      error: storyError,
+    } = await supabaseAdmin
+      .from('stories')
+      .select(
+        'id, title, cover_image_url, genre, tone, synopsis'
+      )
+      .eq('id', storyId)
+      .single();
 
     if (storyError || !story) {
-      console.error('Story error:', storyError);
+      console.error(
+        'Story error:',
+        storyError
+      );
 
       return NextResponse.json(
         {
@@ -40,24 +49,31 @@ export async function GET(
       );
     }
 
-    // ดึงทุก session ของ Story นี้
-    const { data: sessions, error: sessionError } =
-      await supabaseAdmin
-        .from('game_sessions')
-        .select(
-          `
-          id,
-          user_id,
-          current_chapter,
-          status,
-          created_at,
-          updated_at
+    // ==================================================
+    // 2. ดึงเฉพาะ Session ที่เป็น Public
+    // ==================================================
+
+    const {
+      data: sessions,
+      error: sessionError,
+    } = await supabaseAdmin
+      .from('game_sessions')
+      .select(
         `
-        )
-        .eq('story_id', storyId)
-        .order('created_at', {
-          ascending: true,
-        });
+        id,
+        user_id,
+        current_chapter,
+        status,
+        is_public,
+        created_at,
+        updated_at
+        `
+      )
+      .eq('story_id', storyId)
+      .eq('is_public', true)
+      .order('created_at', {
+        ascending: true,
+      });
 
     if (sessionError) {
       console.error(
@@ -74,12 +90,17 @@ export async function GET(
       );
     }
 
-    // ดึงจำนวน chapter ของแต่ละ branch
-    const sessionIds = (sessions ?? []).map(
-      (session) => session.id
-    );
+    // ==================================================
+    // 3. ดึงจำนวน Chapter ของแต่ละ Branch
+    // ==================================================
 
-    const chapterCounts: Record<string, number> = {};
+    const sessionIds =
+      (sessions ?? []).map(
+        (session) => session.id
+      );
+
+    const chapterCounts:
+      Record<string, number> = {};
 
     if (sessionIds.length > 0) {
       const {
@@ -87,8 +108,13 @@ export async function GET(
         error: chapterError,
       } = await supabaseAdmin
         .from('session_chapters')
-        .select('session_id, chapter_number')
-        .in('session_id', sessionIds);
+        .select(
+          'session_id, chapter_number'
+        )
+        .in(
+          'session_id',
+          sessionIds
+        );
 
       if (chapterError) {
         console.error(
@@ -96,31 +122,55 @@ export async function GET(
           chapterError
         );
       } else {
-        for (const chapter of sessionChapters ?? []) {
-          chapterCounts[chapter.session_id] =
-            (chapterCounts[chapter.session_id] ?? 0) + 1;
+        for (
+          const chapter of
+          sessionChapters ?? []
+        ) {
+          chapterCounts[
+            chapter.session_id
+          ] =
+            (
+              chapterCounts[
+                chapter.session_id
+              ] ?? 0
+            ) + 1;
         }
       }
     }
 
-    // -----------------------------------------
-    // ดึง "นามสมมุติ" จาก profiles
-    // -----------------------------------------
+    // ==================================================
+    // 4. ดึงชื่อผู้เล่นจาก profiles
+    // ==================================================
 
-    const playerNames: Record<string, string> = {};
+    const playerNames:
+      Record<string, string> = {};
 
-    const userIds = (sessions ?? [])
-      .map((session) => session.user_id)
-      .filter(
-        (userId): userId is string => Boolean(userId)
-      );
+    const userIds =
+      (sessions ?? [])
+        .map(
+          (session) =>
+            session.user_id
+        )
+        .filter(
+          (
+            userId
+          ): userId is string =>
+            Boolean(userId)
+        );
 
     if (userIds.length > 0) {
-      const { data: profiles, error: profileError } =
-        await supabaseAdmin
-          .from('profiles')
-          .select('user_id, display_name')
-          .in('user_id', userIds);
+      const {
+        data: profiles,
+        error: profileError,
+      } = await supabaseAdmin
+        .from('profiles')
+        .select(
+          'user_id, display_name'
+        )
+        .in(
+          'user_id',
+          userIds
+        );
 
       if (profileError) {
         console.error(
@@ -128,39 +178,63 @@ export async function GET(
           profileError
         );
       } else {
-        for (const profile of profiles ?? []) {
-          playerNames[profile.user_id] =
-            profile.display_name || 'ผู้เล่น';
+        for (
+          const profile of
+          profiles ?? []
+        ) {
+          playerNames[
+            profile.user_id
+          ] =
+            profile.display_name ||
+            'ผู้เล่น';
         }
       }
     }
 
-    // -----------------------------------------
-    // สร้างข้อมูล branches
-    // -----------------------------------------
+    // ==================================================
+    // 5. สร้างข้อมูล Branches
+    // ==================================================
 
-    const branches = (sessions ?? []).map(
-      (session) => ({
-        sessionId: session.id,
+    const branches =
+      (sessions ?? []).map(
+        (session) => ({
+          sessionId:
+            session.id,
 
-        userId: session.user_id,
+          userId:
+            session.user_id,
 
-        userName:
-          playerNames[session.user_id] ?? 'ผู้เล่น',
+          userName:
+            playerNames[
+              session.user_id
+            ] ?? 'ผู้เล่น',
 
-        currentChapter:
-          session.current_chapter ?? 1,
+          currentChapter:
+            session.current_chapter ??
+            1,
 
-        status: session.status,
+          status:
+            session.status,
 
-        generatedChapters:
-          chapterCounts[session.id] ?? 0,
+          isPublic:
+            session.is_public,
 
-        createdAt: session.created_at,
+          generatedChapters:
+            chapterCounts[
+              session.id
+            ] ?? 0,
 
-        updatedAt: session.updated_at,
-      })
-    );
+          createdAt:
+            session.created_at,
+
+          updatedAt:
+            session.updated_at,
+        })
+      );
+
+    // ==================================================
+    // 6. Response
+    // ==================================================
 
     return NextResponse.json({
       success: true,
@@ -168,10 +242,12 @@ export async function GET(
       story: {
         id: story.id,
 
-        title: story.title,
+        title:
+          story.title,
 
         coverImageUrl:
-          story.cover_image_url ?? '',
+          story.cover_image_url ??
+          '',
 
         genre:
           story.genre ?? '',
@@ -194,7 +270,8 @@ export async function GET(
     return NextResponse.json(
       {
         success: false,
-        error: 'Internal server error',
+        error:
+          'Internal server error',
       },
       { status: 500 }
     );

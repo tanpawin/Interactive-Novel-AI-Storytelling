@@ -28,6 +28,8 @@ interface Branch {
   userName?: string;
   currentChapter: number;
   status: string;
+  isPublic: boolean;
+  isOwner: boolean;
 }
 
 interface BranchResponse {
@@ -64,15 +66,9 @@ export default function BranchReaderPage() {
   const from =
     searchParams.get('from');
 
-  // แก้ตรงนี้:
-  // Branch Reader → กลับไปหน้า Branches ของเรื่องนี้ก่อนเสมอ
-  const handleBack = () => {
-    router.push(
-      `/story/${storyId}/branches${
-        from ? `?from=${from}` : ''
-      }`
-    );
-  };
+  /* =========================
+     State
+  ========================= */
 
   const [storyTitle, setStoryTitle] =
     useState('');
@@ -101,6 +97,17 @@ export default function BranchReaderPage() {
     setPlayerName,
   ] = useState('');
 
+  const [isPublic, setIsPublic] =
+    useState(false);
+
+  const [isOwner, setIsOwner] =
+    useState(false);
+
+  const [
+    updatingVisibility,
+    setUpdatingVisibility,
+  ] = useState(false);
+
   const [chapters, setChapters] =
     useState<Chapter[]>([]);
 
@@ -109,6 +116,7 @@ export default function BranchReaderPage() {
       'sm' | 'md' | 'lg'
     >('md');
 
+  // เปิด Branch มาเริ่มที่บท 1
   const [
     selectedChapter,
     setSelectedChapter,
@@ -119,6 +127,96 @@ export default function BranchReaderPage() {
 
   const [error, setError] =
     useState('');
+
+  /* =========================
+     Back
+  ========================= */
+
+  const handleBack = () => {
+    router.push(
+      `/story/${storyId}/branches${from
+        ? `?from=${from}`
+        : ''
+      }`
+    );
+  };
+
+  /* =========================
+     Toggle Public / Private
+  ========================= */
+
+  const handleToggleVisibility =
+    async () => {
+      if (
+        updatingVisibility ||
+        !isOwner
+      ) {
+        return;
+      }
+
+      try {
+        setUpdatingVisibility(
+          true
+        );
+
+        const nextValue =
+          !isPublic;
+
+        const response =
+          await fetch(
+            `/api/game-sessions/${sessionId}`,
+            {
+              method: 'PATCH',
+
+              headers: {
+                'Content-Type':
+                  'application/json',
+              },
+
+              body: JSON.stringify({
+                is_public:
+                  nextValue,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !data.success
+        ) {
+          throw new Error(
+            data.error ||
+            'ไม่สามารถเปลี่ยนสถานะเส้นเรื่องได้'
+          );
+        }
+
+        setIsPublic(
+          nextValue
+        );
+      } catch (err) {
+        console.error(
+          'Error updating visibility:',
+          err
+        );
+
+        alert(
+          err instanceof Error
+            ? err.message
+            : 'ไม่สามารถเปลี่ยนสถานะเส้นเรื่องได้'
+        );
+      } finally {
+        setUpdatingVisibility(
+          false
+        );
+      }
+    };
+
+  /* =========================
+     Load Branch
+  ========================= */
 
   useEffect(() => {
     if (
@@ -133,9 +231,13 @@ export default function BranchReaderPage() {
         setLoading(true);
         setError('');
 
-        const res = await fetch(
-          `/api/stories/${storyId}/branches/${sessionId}`
-        );
+        const res =
+          await fetch(
+            `/api/stories/${storyId}/branches/${sessionId}`,
+            {
+              cache: 'no-store',
+            }
+          );
 
         const data: BranchResponse =
           await res.json();
@@ -146,9 +248,13 @@ export default function BranchReaderPage() {
         ) {
           throw new Error(
             data.error ||
-              'ไม่สามารถโหลดเส้นเรื่องได้'
+            'ไม่สามารถโหลดเส้นเรื่องได้'
           );
         }
+
+        /* =========================
+           Story
+        ========================= */
 
         setStoryTitle(
           data.story?.title ?? ''
@@ -174,13 +280,33 @@ export default function BranchReaderPage() {
         setCreatorName(
           data.story
             ?.creatorName ??
-            'ไม่ระบุชื่อ'
+          'ไม่ระบุชื่อ'
         );
+
+        /* =========================
+           Branch
+        ========================= */
 
         setPlayerName(
           data.branch?.userName ??
-            'ผู้เล่น'
+          'ผู้เล่น'
         );
+
+        setIsPublic(
+          data.branch
+            ?.isPublic ??
+          false
+        );
+
+        setIsOwner(
+          data.branch
+            ?.isOwner ??
+          false
+        );
+
+        /* =========================
+           Chapters
+        ========================= */
 
         const loadedChapters =
           data.chapters ?? [];
@@ -189,20 +315,11 @@ export default function BranchReaderPage() {
           loadedChapters
         );
 
-        const latestChapter =
-          loadedChapters.length >
-          0
-            ? Math.max(
-                ...loadedChapters.map(
-                  (chapter) =>
-                    chapter.chapterNumber
-                )
-              )
-            : 1;
+        // สำคัญ:
+        // คนที่เข้ามาดู Branch
+        // จะเริ่มอ่านจากบทที่ 1
+        setSelectedChapter(1);
 
-        setSelectedChapter(
-          latestChapter
-        );
       } catch (err) {
         console.error(
           'Error loading branch:',
@@ -225,6 +342,10 @@ export default function BranchReaderPage() {
     sessionId,
   ]);
 
+  /* =========================
+     Current Chapter
+  ========================= */
+
   const currentChapter =
     chapters.find(
       (chapter) =>
@@ -232,8 +353,12 @@ export default function BranchReaderPage() {
         selectedChapter
     ) ||
     chapters[
-      chapters.length - 1
+    chapters.length - 1
     ];
+
+  /* =========================
+     Scroll
+  ========================= */
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -243,64 +368,132 @@ export default function BranchReaderPage() {
   };
 
   /* =========================
+     Font Controls
+  ========================= */
+
+  const FontSizeControls = () => (
+    <div className="font-size-controls">
+      <button
+        type="button"
+        onClick={() => setFontSize('sm')}
+        className={
+          fontSize === 'sm'
+            ? 'active'
+            : ''
+        }
+        aria-label="ลดขนาดตัวอักษร"
+      >
+        A-
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setFontSize('md')}
+        className={
+          fontSize === 'md'
+            ? 'active'
+            : ''
+        }
+        aria-label="ขนาดตัวอักษรปกติ"
+      >
+        A
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setFontSize('lg')}
+        className={
+          fontSize === 'lg'
+            ? 'active'
+            : ''
+        }
+        aria-label="เพิ่มขนาดตัวอักษร"
+      >
+        A+
+      </button>
+    </div>
+  );
+
+  /* =========================
+     Visibility Button
+  ========================= */
+
+  const VisibilityButton = () => {
+    if (!isOwner) {
+      return null;
+    }
+
+    return (
+      <button
+        type="button"
+        className={`visibility-toggle ${isPublic
+          ? 'is-public'
+          : 'is-private'
+          } ${updatingVisibility
+            ? 'is-updating'
+            : ''
+          }`}
+        onClick={handleToggleVisibility}
+        disabled={updatingVisibility}
+        aria-label={
+          isPublic
+            ? 'เปลี่ยนเป็น Private'
+            : 'เปลี่ยนเป็น Public'
+        }
+      >
+        <span className="visibility-toggle-track">
+          <span className="visibility-toggle-thumb" />
+        </span>
+
+        <span className="visibility-toggle-label">
+          {updatingVisibility
+            ? 'กำลังเปลี่ยน...'
+            : isPublic
+              ? 'Public'
+              : 'Private'}
+        </span>
+      </button>
+    );
+  };
+
+  /* =========================
      Loading
   ========================= */
 
   if (loading) {
     return (
       <div className="reader-wrapper">
-        <header className="reader-header">
-          <button
-            className="btn-back"
-            onClick={handleBack}
-          >
-            ‹ ย้อนกลับ
-          </button>
 
-          <div className="font-size-controls">
-            <button
-              onClick={() =>
-                setFontSize('sm')
-              }
-              className={
-                fontSize === 'sm'
-                  ? 'active'
-                  : ''
-              }
-            >
-              A-
-            </button>
+        <header className="branches-reader-header">
+          <div className="branches-header-inner">
 
             <button
-              onClick={() =>
-                setFontSize('md')
-              }
-              className={
-                fontSize === 'md'
-                  ? 'active'
-                  : ''
-              }
+              className="btn-back"
+              onClick={handleBack}
             >
-              A
+              ‹ ย้อนกลับ
             </button>
 
-            <button
-              onClick={() =>
-                setFontSize('lg')
-              }
-              className={
-                fontSize === 'lg'
-                  ? 'active'
-                  : ''
-              }
+            <div
+              style={{
+                display:
+                  'flex',
+                alignItems:
+                  'center',
+              }}
             >
-              A+
-            </button>
+              <VisibilityButton />
+
+              <FontSizeControls />
+            </div>
+
           </div>
         </header>
 
         <main className="reader-empty">
+
           <div>
+
             <span>📖</span>
 
             <h2>
@@ -310,8 +503,11 @@ export default function BranchReaderPage() {
             <p>
               กำลังเปิดเรื่องราวของผู้เล่น
             </p>
+
           </div>
+
         </main>
+
       </div>
     );
   }
@@ -323,65 +519,48 @@ export default function BranchReaderPage() {
   if (error) {
     return (
       <div className="reader-wrapper">
-        <header className="reader-header">
-          <button
-            className="btn-back"
-            onClick={handleBack}
-          >
-            ‹ ย้อนกลับ
-          </button>
 
-          <div className="font-size-controls">
-            <button
-              onClick={() =>
-                setFontSize('sm')
-              }
-              className={
-                fontSize === 'sm'
-                  ? 'active'
-                  : ''
-              }
-            >
-              A-
-            </button>
+        <header className="reader-header branches-reader-header">
+
+          <div className="branches-header-inner">
 
             <button
-              onClick={() =>
-                setFontSize('md')
-              }
-              className={
-                fontSize === 'md'
-                  ? 'active'
-                  : ''
-              }
+              className="btn-back"
+              onClick={handleBack}
             >
-              A
+              ‹ ย้อนกลับ
             </button>
 
-            <button
-              onClick={() =>
-                setFontSize('lg')
-              }
-              className={
-                fontSize === 'lg'
-                  ? 'active'
-                  : ''
-              }
+            <div
+              style={{
+                display:
+                  'flex',
+                alignItems:
+                  'center',
+              }}
             >
-              A+
-            </button>
+              <VisibilityButton />
+
+              <FontSizeControls />
+            </div>
+
           </div>
+
         </header>
 
         <main className="reader-empty">
+
           <div>
+
             <span>⚠️</span>
 
             <h2>
               ไม่สามารถโหลดเส้นเรื่องได้
             </h2>
 
-            <p>{error}</p>
+            <p>
+              {error}
+            </p>
 
             <button
               className="chapter-nav-button"
@@ -389,13 +568,17 @@ export default function BranchReaderPage() {
                 window.location.reload()
               }
               style={{
-                marginTop: '1rem',
+                marginTop:
+                  '1rem',
               }}
             >
               ลองอีกครั้ง
             </button>
+
           </div>
+
         </main>
+
       </div>
     );
   }
@@ -407,63 +590,45 @@ export default function BranchReaderPage() {
   if (!currentChapter) {
     return (
       <div className="reader-wrapper">
-        <header className="reader-header">
-          <button
-            className="btn-back"
-            onClick={handleBack}
-          >
-            ‹ ย้อนกลับ
-          </button>
 
-          <div className="font-size-controls">
-            <button
-              onClick={() =>
-                setFontSize('sm')
-              }
-              className={
-                fontSize === 'sm'
-                  ? 'active'
-                  : ''
-              }
-            >
-              A-
-            </button>
+        <header className="reader-header branches-reader-header">
+
+          <div className="branches-header-inner">
 
             <button
-              onClick={() =>
-                setFontSize('md')
-              }
-              className={
-                fontSize === 'md'
-                  ? 'active'
-                  : ''
-              }
+              className="btn-back"
+              onClick={handleBack}
             >
-              A
+              ‹ ย้อนกลับ
             </button>
 
-            <button
-              onClick={() =>
-                setFontSize('lg')
-              }
-              className={
-                fontSize === 'lg'
-                  ? 'active'
-                  : ''
-              }
+            <div
+              style={{
+                display:
+                  'flex',
+                alignItems:
+                  'center',
+              }}
             >
-              A+
-            </button>
+              <VisibilityButton />
+
+              <FontSizeControls />
+            </div>
+
           </div>
+
         </header>
 
         <main className="reader-content">
+
           <div className="story-meta-banner">
+
             <h1 className="story-main-title">
               {storyTitle}
             </h1>
 
             <div className="story-badges">
+
               {genre && (
                 <span className="badge">
                   {genre}
@@ -475,6 +640,7 @@ export default function BranchReaderPage() {
                   {tone}
                 </span>
               )}
+
             </div>
 
             {synopsis && (
@@ -496,10 +662,13 @@ export default function BranchReaderPage() {
                 "{playerName}"
               </strong>
             </div>
+
           </div>
 
-          <main className="reader-empty">
+          <div className="reader-empty">
+
             <div>
+
               <span>📖</span>
 
               <h2>
@@ -509,69 +678,58 @@ export default function BranchReaderPage() {
               <p>
                 ไม่พบเนื้อหาในเส้นเรื่องนี้
               </p>
+
             </div>
-          </main>
+
+          </div>
+
         </main>
+
       </div>
     );
   }
+
+  /* =========================
+     Main Reader
+  ========================= */
 
   return (
     <div
       className={`reader-wrapper font-size-${fontSize}`}
     >
+
       {/* =========================
           Header
       ========================= */}
 
-      <header className="reader-header">
-        <button
-          className="btn-back"
-          onClick={handleBack}
-        >
-          ‹ ย้อนกลับ
-        </button>
+      <header className="reader-header branches-reader-header">
 
-        <div className="font-size-controls">
-          <button
-            onClick={() =>
-              setFontSize('sm')
-            }
-            className={
-              fontSize === 'sm'
-                ? 'active'
-                : ''
-            }
-          >
-            A-
-          </button>
+        <div className="branches-header-inner">
 
           <button
-            onClick={() =>
-              setFontSize('md')
-            }
-            className={
-              fontSize === 'md'
-                ? 'active'
-                : ''
-            }
+            className="btn-back"
+            onClick={handleBack}
           >
-            A
+            ‹ ย้อนกลับ
           </button>
 
-          <button
-            onClick={() =>
-              setFontSize('lg')
-            }
-            className={
-              fontSize === 'lg'
-                ? 'active'
-                : ''
-            }
+          <div
+            style={{
+              display:
+                'flex',
+              alignItems:
+                'center',
+            }}
           >
-            A+
-          </button>
+
+            <VisibilityButton />
+
+            <FontSizeControls />
+
+          </div>
+
         </div>
+
       </header>
 
       {/* =========================
@@ -591,6 +749,7 @@ export default function BranchReaderPage() {
           </h1>
 
           <div className="story-badges">
+
             {genre && (
               <span className="badge">
                 {genre}
@@ -602,6 +761,7 @@ export default function BranchReaderPage() {
                 {tone}
               </span>
             )}
+
           </div>
 
           {synopsis && (
@@ -609,8 +769,6 @@ export default function BranchReaderPage() {
               "{synopsis}"
             </p>
           )}
-
-          {/* เจ้าของเรื่อง */}
 
           <div className="chapter-counter">
             ผู้เขียน{' '}
@@ -620,8 +778,6 @@ export default function BranchReaderPage() {
             ร่วมกับ AI
           </div>
 
-          {/* ผู้เล่น Branch */}
-
           <div className="chapter-counter">
             เส้นเรื่องของ{' '}
             <strong>
@@ -629,14 +785,15 @@ export default function BranchReaderPage() {
             </strong>
           </div>
 
-          {/* Chapter */}
-
           <div className="chapter-counter">
             บทที่{' '}
-            {currentChapter.chapterNumber}
+            {
+              currentChapter.chapterNumber
+            }
             {' / '}
             {totalChapters}
           </div>
+
         </div>
 
         {/* =========================
@@ -647,9 +804,12 @@ export default function BranchReaderPage() {
           className="chapter-block"
           key={currentChapter.id}
         >
+
           {currentChapter.userPromptChoice && (
             <div className="user-choice-badge">
+
               🎯 การตัดสินใจของคุณ:{' '}
+
               <span>
                 "
                 {
@@ -657,21 +817,27 @@ export default function BranchReaderPage() {
                 }
                 "
               </span>
+
             </div>
           )}
 
           <div className="chapter-heading">
+
             <span>
               บทที่{' '}
-              {currentChapter.chapterNumber}
+              {
+                currentChapter.chapterNumber
+              }
             </span>
 
             <h1 className="chapter-title">
               {currentChapter.title}
             </h1>
+
           </div>
 
           <div className="chapter-text font-serif">
+
             {currentChapter.content
               .split('\n')
               .map(
@@ -685,7 +851,9 @@ export default function BranchReaderPage() {
                     </p>
                   ) : null
               )}
+
           </div>
+
         </article>
 
         {/* =========================
@@ -693,17 +861,20 @@ export default function BranchReaderPage() {
         ========================= */}
 
         <div className="chapter-navigation">
+
           <button
             className="chapter-nav-button"
             disabled={
               selectedChapter <= 1
             }
             onClick={() => {
+
               setSelectedChapter(
                 selectedChapter - 1
               );
 
               scrollToTop();
+
             }}
           >
             ‹ บทก่อนหน้า
@@ -721,17 +892,22 @@ export default function BranchReaderPage() {
               chapters.length
             }
             onClick={() => {
+
               setSelectedChapter(
                 selectedChapter + 1
               );
 
               scrollToTop();
+
             }}
           >
             บทถัดไป ›
           </button>
+
         </div>
+
       </main>
+
     </div>
   );
 }

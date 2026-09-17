@@ -25,8 +25,24 @@ export default function StoryDetailPage() {
     ? rawId[0]
     : rawId;
 
-  const [story, setStory] = useState<Story | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [story, setStory] =
+    useState<Story | null>(null);
+
+  const [sessionId, setSessionId] =
+    useState<string | null>(null);
+
+  const [
+    sessionCharacters,
+    setSessionCharacters,
+  ] = useState<any[]>([]);
+
+  const [
+    sessionRelationships,
+    setSessionRelationships,
+  ] = useState<any[]>([]);
+
+  const [isLoading, setIsLoading] =
+    useState(true);
 
   useEffect(() => {
     if (!isLoaded) {
@@ -39,7 +55,10 @@ export default function StoryDetailPage() {
     }
 
     if (!storyId) {
-      console.error('Story ID is missing');
+      console.error(
+        'Story ID is missing'
+      );
+
       setIsLoading(false);
       return;
     }
@@ -64,27 +83,33 @@ export default function StoryDetailPage() {
             'Error loading story:',
             storyError
           );
+
           return;
         }
 
         if (!storyData) {
-          console.error('Story not found');
+          console.error(
+            'Story not found'
+          );
+
           return;
         }
 
         /* =========================
-   Load Creator Username
-========================= */
+           Load Creator Username
+        ========================= */
 
-        let creatorName = 'ไม่ระบุชื่อ';
+        let creatorName =
+          'ไม่ระบุชื่อ';
 
         try {
-          const creatorResponse = await fetch(
-            `/api/stories/${storyId}/creator`,
-            {
-              cache: 'no-store',
-            }
-          );
+          const creatorResponse =
+            await fetch(
+              `/api/stories/${storyId}/creator`,
+              {
+                cache: 'no-store',
+              }
+            );
 
           const creatorData =
             await creatorResponse.json();
@@ -93,7 +118,7 @@ export default function StoryDetailPage() {
             creatorResponse.ok &&
             creatorData.success &&
             typeof creatorData.creatorName ===
-            'string' &&
+              'string' &&
             creatorData.creatorName.trim()
           ) {
             creatorName =
@@ -121,48 +146,65 @@ export default function StoryDetailPage() {
         } = await supabase
           .from('chapters')
           .select(
-            'id, story_id, chapter_number, title, content, created_at'
+            `
+            id,
+            story_id,
+            chapter_number,
+            title,
+            content,
+            created_at
+            `
           )
-          .eq('story_id', storyId)
-          .order('chapter_number', {
-            ascending: true,
-          });
+          .eq(
+            'story_id',
+            storyId
+          )
+          .order(
+            'chapter_number',
+            {
+              ascending: true,
+            }
+          );
 
         if (chapterError) {
           console.error(
             'Error loading chapters:',
             chapterError
           );
+
           return;
         }
 
-        const sharedChapters: Chapter[] = (
-          chapterData || []
-        ).map((chapter) => ({
-          id: chapter.id,
+        const sharedChapters: Chapter[] =
+          (
+            chapterData || []
+          ).map(
+            (chapter) => ({
+              id: chapter.id,
 
-          chapterNumber:
-            chapter.chapter_number,
+              chapterNumber:
+                chapter.chapter_number,
 
-          title:
-            chapter.title ||
-            `บทที่ ${chapter.chapter_number}`,
+              title:
+                chapter.title ||
+                `บทที่ ${chapter.chapter_number}`,
 
-          content:
-            chapter.content,
+              content:
+                chapter.content,
 
-          createdAt:
-            chapter.created_at,
-        }));
+              createdAt:
+                chapter.created_at,
+            })
+          );
 
         const latestSharedChapter =
           sharedChapters.length > 0
             ? Math.max(
-              ...sharedChapters.map(
-                (chapter) =>
-                  chapter.chapterNumber
+                ...sharedChapters.map(
+                  (chapter) =>
+                    chapter.chapterNumber
+                )
               )
-            )
             : 1;
 
         /* =========================
@@ -175,10 +217,24 @@ export default function StoryDetailPage() {
         } = await supabase
           .from('game_sessions')
           .select(
-            'id, user_id, story_id, current_chapter, status, current_inventory'
+            `
+            id,
+            user_id,
+            story_id,
+            current_chapter,
+            status,
+            current_inventory,
+            is_public
+            `
           )
-          .eq('user_id', user.id)
-          .eq('story_id', storyId)
+          .eq(
+            'user_id',
+            user.id
+          )
+          .eq(
+            'story_id',
+            storyId
+          )
           .maybeSingle();
 
         if (sessionError) {
@@ -186,32 +242,61 @@ export default function StoryDetailPage() {
             'Error loading game session:',
             sessionError
           );
+
           return;
         }
 
         let currentSession =
           existingSession;
 
+        /* =========================
+           Create New Session
+        ========================= */
+
         if (!currentSession) {
           const {
             data: newSession,
-            error: createSessionError,
+            error:
+              createSessionError,
           } = await supabase
             .from('game_sessions')
             .insert({
-              user_id: user.id,
-              story_id: storyId,
+              user_id:
+                user.id,
+
+              story_id:
+                storyId,
+
               current_chapter:
                 latestSharedChapter,
-              status: 'in_progress',
-              current_inventory: [],
+
+              status:
+                'in_progress',
+
+              current_inventory:
+                [],
+
+              // Session ใหม่
+              // เริ่มเป็น Private
+              is_public:
+                false,
             })
             .select(
-              'id, user_id, story_id, current_chapter, status, current_inventory'
+              `
+              id,
+              user_id,
+              story_id,
+              current_chapter,
+              status,
+              current_inventory,
+              is_public
+              `
             )
             .single();
 
-          if (createSessionError) {
+          if (
+            createSessionError
+          ) {
             if (
               createSessionError.code ===
               '23505'
@@ -222,23 +307,42 @@ export default function StoryDetailPage() {
 
               const {
                 data:
-                existingSessionAfterConflict,
+                  existingSessionAfterConflict,
                 error:
-                reloadSessionError,
+                  reloadSessionError,
               } = await supabase
-                .from('game_sessions')
-                .select(
-                  'id, user_id, story_id, current_chapter, status, current_inventory'
+                .from(
+                  'game_sessions'
                 )
-                .eq('user_id', user.id)
-                .eq('story_id', storyId)
+                .select(
+                  `
+                  id,
+                  user_id,
+                  story_id,
+                  current_chapter,
+                  status,
+                  current_inventory,
+                  is_public
+                  `
+                )
+                .eq(
+                  'user_id',
+                  user.id
+                )
+                .eq(
+                  'story_id',
+                  storyId
+                )
                 .maybeSingle();
 
-              if (reloadSessionError) {
+              if (
+                reloadSessionError
+              ) {
                 console.error(
                   'Error reloading existing game session:',
                   reloadSessionError
                 );
+
                 return;
               }
 
@@ -248,6 +352,7 @@ export default function StoryDetailPage() {
                 console.error(
                   'Game session conflict occurred but existing session was not found'
                 );
+
                 return;
               }
 
@@ -263,6 +368,7 @@ export default function StoryDetailPage() {
                 'Error creating game session:',
                 createSessionError
               );
+
               return;
             }
           } else {
@@ -270,10 +376,12 @@ export default function StoryDetailPage() {
               console.error(
                 'Game session was not created'
               );
+
               return;
             }
 
-            currentSession = newSession;
+            currentSession =
+              newSession;
 
             console.log(
               'Game session created:',
@@ -281,6 +389,14 @@ export default function StoryDetailPage() {
             );
           }
         }
+
+        /* =========================
+           Save Session ID
+        ========================= */
+
+        setSessionId(
+          currentSession.id
+        );
 
         console.log(
           'Using game session:',
@@ -292,104 +408,199 @@ export default function StoryDetailPage() {
           currentSession.current_chapter
         );
 
+        console.log(
+          'Session is public:',
+          currentSession.is_public
+        );
+
+        /* =========================
+           Load Session Characters
+        ========================= */
+
+        try {
+          const charactersResponse =
+            await fetch(
+              `/api/session-characters?storyId=${encodeURIComponent(
+                storyId
+              )}`,
+              {
+                cache: 'no-store',
+              }
+            );
+
+          const charactersData =
+            await charactersResponse.json();
+
+          if (
+            charactersResponse.ok &&
+            charactersData.success
+          ) {
+            const loadedCharacters =
+              charactersData.characters ||
+              [];
+
+            const loadedRelationships =
+              charactersData.relationships ||
+              [];
+
+            setSessionCharacters(
+              loadedCharacters
+            );
+
+            setSessionRelationships(
+              loadedRelationships
+            );
+
+            console.log(
+              'Session Characters:',
+              loadedCharacters.length
+            );
+
+            console.log(
+              'Session Relationships:',
+              loadedRelationships.length
+            );
+          } else {
+            console.error(
+              'Error loading session characters:',
+              charactersData.error
+            );
+          }
+        } catch (error) {
+          console.error(
+            'Error fetching session characters:',
+            error
+          );
+        }
+
         /* =========================
            Load Session Chapters
         ========================= */
 
         const {
-          data: sessionChapterData,
-          error: sessionChapterError,
+          data:
+            sessionChapterData,
+          error:
+            sessionChapterError,
         } = await supabase
-          .from('session_chapters')
+          .from(
+            'session_chapters'
+          )
           .select(
-            'id, session_id, chapter_number, title, content, user_choice, created_at'
+            `
+            id,
+            session_id,
+            chapter_number,
+            title,
+            content,
+            user_choice,
+            created_at
+            `
           )
           .eq(
             'session_id',
             currentSession.id
           )
-          .order('chapter_number', {
-            ascending: true,
-          });
+          .order(
+            'chapter_number',
+            {
+              ascending: true,
+            }
+          );
 
         if (sessionChapterError) {
           console.error(
             'Error loading session chapters:',
             sessionChapterError
           );
+
           return;
         }
 
-        const sessionChapters: Chapter[] = (
-          sessionChapterData || []
-        ).map((chapter) => ({
-          id: chapter.id,
+        const sessionChapters: Chapter[] =
+          (
+            sessionChapterData ||
+            []
+          ).map(
+            (chapter) => ({
+              id: chapter.id,
 
-          chapterNumber:
-            chapter.chapter_number,
+              chapterNumber:
+                chapter.chapter_number,
 
-          title:
-            chapter.title ||
-            `บทที่ ${chapter.chapter_number}`,
+              title:
+                chapter.title ||
+                `บทที่ ${chapter.chapter_number}`,
 
-          content:
-            chapter.content,
+              content:
+                chapter.content,
 
-          userPromptChoice:
-            chapter.user_choice ||
-            undefined,
+              userPromptChoice:
+                chapter.user_choice ||
+                undefined,
 
-          createdAt:
-            chapter.created_at,
-        }));
+              createdAt:
+                chapter.created_at,
+            })
+          );
 
         /* =========================
            Merge Chapters
         ========================= */
 
-        const chapterMap = new Map<
-          number,
-          Chapter
-        >();
+        const chapterMap =
+          new Map<
+            number,
+            Chapter
+          >();
 
-        for (const chapter of sharedChapters) {
+        for (
+          const chapter of
+          sharedChapters
+        ) {
           chapterMap.set(
             chapter.chapterNumber,
             chapter
           );
         }
 
-        for (const chapter of sessionChapters) {
+        for (
+          const chapter of
+          sessionChapters
+        ) {
           chapterMap.set(
             chapter.chapterNumber,
             chapter
           );
         }
 
-        const chapters = Array.from(
-          chapterMap.values()
-        ).sort(
-          (a, b) =>
-            a.chapterNumber -
-            b.chapterNumber
-        );
+        const chapters =
+          Array.from(
+            chapterMap.values()
+          ).sort(
+            (a, b) =>
+              a.chapterNumber -
+              b.chapterNumber
+          );
 
         const latestLoadedChapter =
           chapters.length > 0
             ? chapters[
-              chapters.length - 1
-            ].chapterNumber
+                chapters.length - 1
+              ].chapterNumber
             : 1;
 
         const sessionCurrentChapter =
           Number(
-            currentSession.current_chapter || 1
+            currentSession.current_chapter ||
+              1
           );
 
-        const currentChapter = Math.max(
-          sessionCurrentChapter,
-          latestLoadedChapter
-        );
+        const currentChapter =
+          Math.max(
+            sessionCurrentChapter,
+            latestLoadedChapter
+          );
 
         console.log(
           'Session current chapter:',
@@ -415,9 +626,12 @@ export default function StoryDetailPage() {
           sessionCurrentChapter
         ) {
           const {
-            error: updateSessionError,
+            error:
+              updateSessionError,
           } = await supabase
-            .from('game_sessions')
+            .from(
+              'game_sessions'
+            )
             .update({
               current_chapter:
                 currentChapter,
@@ -443,16 +657,19 @@ export default function StoryDetailPage() {
         ========================= */
 
         const totalChapters =
-          storyData.total_chapters || 5;
+          storyData.total_chapters ||
+          5;
 
         const loadedStory: Story = {
-          id: storyData.id,
+          id:
+            storyData.id,
 
           title:
             storyData.title ||
             'นิยายไม่มีชื่อ',
 
-          author: creatorName,
+          author:
+            creatorName,
 
           genre: (
             storyData.genre ||
@@ -472,14 +689,18 @@ export default function StoryDetailPage() {
                 : 'นวนิยายยาว',
 
           corePremise:
-            storyData.synopsis || '',
+            storyData.synopsis ||
+            '',
 
-          protagonist: '',
+          protagonist:
+            '',
 
-          worldSetting: '',
+          worldSetting:
+            '',
 
           coverUrl:
-            storyData.cover_image_url || '',
+            storyData.cover_image_url ||
+            '',
 
           totalChapters,
 
@@ -487,17 +708,25 @@ export default function StoryDetailPage() {
 
           wordCount:
             chapters.reduce(
-              (total, chapter) =>
+              (
+                total,
+                chapter
+              ) =>
                 total +
                 chapter.content.length,
               0
             ),
 
           isFavorite:
-            storyData.is_favorite || false,
+            storyData.is_favorite ||
+            false,
 
           chapters,
         };
+
+        /* =========================
+           Debug Information
+        ========================= */
 
         console.log(
           '========================================'
@@ -533,6 +762,11 @@ export default function StoryDetailPage() {
         );
 
         console.log(
+          'Session Public:',
+          currentSession.is_public
+        );
+
+        console.log(
           'Session Current Chapter:',
           sessionCurrentChapter
         );
@@ -563,10 +797,22 @@ export default function StoryDetailPage() {
         );
 
         console.log(
+          'Session Characters:',
+          sessionCharacters.length
+        );
+
+        console.log(
+          'Session Relationships:',
+          sessionRelationships.length
+        );
+
+        console.log(
           '========================================'
         );
 
-        setStory(loadedStory);
+        setStory(
+          loadedStory
+        );
       } catch (error) {
         console.error(
           'Unexpected error loading story:',
@@ -588,46 +834,69 @@ export default function StoryDetailPage() {
     };
 
     loadStory();
-  }, [storyId, user, isLoaded]);
+  }, [
+    storyId,
+    user,
+    isLoaded,
+  ]);
 
-  const handleUpdateStory = async (
-    updatedStory: Story
-  ) => {
-    setStory(updatedStory);
+  /* =========================
+     Update Story
+  ========================= */
 
-    if (!user || !storyId) {
-      return;
-    }
-
-    const {
-      error,
-    } = await supabase
-      .from('game_sessions')
-      .update({
-        current_chapter:
-          updatedStory.currentChapter,
-
-        updated_at:
-          new Date().toISOString(),
-      })
-      .eq(
-        'user_id',
-        user.id
-      )
-      .eq(
-        'story_id',
-        storyId
+  const handleUpdateStory =
+    async (
+      updatedStory: Story
+    ) => {
+      setStory(
+        updatedStory
       );
 
-    if (error) {
-      console.error(
-        'Error updating game session:',
-        error
-      );
-    }
-  };
+      if (
+        !user ||
+        !storyId
+      ) {
+        return;
+      }
 
-  if (!isLoaded || isLoading) {
+      const {
+        error,
+      } = await supabase
+        .from(
+          'game_sessions'
+        )
+        .update({
+          current_chapter:
+            updatedStory.currentChapter,
+
+          updated_at:
+            new Date().toISOString(),
+        })
+        .eq(
+          'user_id',
+          user.id
+        )
+        .eq(
+          'story_id',
+          storyId
+        );
+
+      if (error) {
+        console.error(
+          'Error updating game session:',
+          error
+        );
+      }
+    };
+
+  /* =========================
+     Loading
+  ========================= */
+
+  if (
+    !isLoaded ||
+    isLoading
+  ) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-lg">
@@ -636,6 +905,10 @@ export default function StoryDetailPage() {
       </div>
     );
   }
+
+  /* =========================
+     Not Logged In
+  ========================= */
 
   if (!user) {
     return (
@@ -647,13 +920,19 @@ export default function StoryDetailPage() {
         <button
           type="button"
           className="px-4 py-2 bg-amber-700 text-white rounded hover:bg-amber-800"
-          onClick={() => router.push('/')}
+          onClick={() =>
+            router.push('/')
+          }
         >
           กลับหน้าหลัก
         </button>
       </div>
     );
   }
+
+  /* =========================
+     Story Not Found
+  ========================= */
 
   if (!story) {
     return (
@@ -669,7 +948,9 @@ export default function StoryDetailPage() {
         <button
           type="button"
           className="px-4 py-2 bg-amber-700 text-white rounded hover:bg-amber-800"
-          onClick={() => router.push('/')}
+          onClick={() =>
+            router.push('/')
+          }
         >
           ย้อนกลับหน้าหลัก
         </button>
@@ -677,11 +958,20 @@ export default function StoryDetailPage() {
     );
   }
 
+  /* =========================
+     Reader
+  ========================= */
+
   return (
     <ReaderView
       story={story}
-      onBack={() => router.push('/')}
-      onUpdateStory={handleUpdateStory}
+      sessionId={sessionId ?? ''}
+      onBack={() =>
+        router.push('/')
+      }
+      onUpdateStory={
+        handleUpdateStory
+      }
     />
   );
 }

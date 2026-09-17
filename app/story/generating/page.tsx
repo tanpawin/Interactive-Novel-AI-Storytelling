@@ -26,6 +26,9 @@ const RESULT_KEY =
 const STORY_ID_KEY =
   'cozytales_generating_story_id';
 
+const DRAFT_KEY =
+  'cozytales_create_story_draft';
+
 export default function GeneratingStoryPage() {
   const router = useRouter();
 
@@ -212,7 +215,7 @@ export default function GeneratingStoryPage() {
         ) {
           throw new Error(
             data.error ||
-              'ไม่สามารถสร้างนิยายได้'
+            'ไม่สามารถสร้างนิยายได้'
           );
         }
 
@@ -258,6 +261,10 @@ export default function GeneratingStoryPage() {
 
         sessionStorage.removeItem(
           CREATE_KEY
+        );
+
+        sessionStorage.removeItem(
+          DRAFT_KEY
         );
 
         sessionStorage.removeItem(

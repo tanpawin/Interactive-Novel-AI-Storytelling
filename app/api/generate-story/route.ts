@@ -5,25 +5,11 @@ import { GoogleGenAI } from '@google/genai';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 const modelsToTry = [
+  'gemini-3.8-flash',
+  'gemini-3.7-flash',
   'gemini-3.6-flash',
-  'gemini-3.5-flash-lite',
+  'gemini-3.5-flash',
 ];
-
-type ExistingCharacter = {
-  id: string;
-  name: string;
-  role: 'player' | 'npc';
-  appearance: string | null;
-  personality: string;
-  initial_items: string[];
-};
-
-type ExtractedCharacter = {
-  name: string;
-  appearance: string | null;
-  personality: string;
-  initial_items: string[];
-};
 
 type ExtractedRelationship = {
   from: string;
@@ -45,7 +31,7 @@ async function getOrCreateGameSession(
     await supabaseAdmin
       .from('game_sessions')
       .select(
-        'id, user_id, story_id, current_chapter, status, current_inventory'
+        'id, user_id, story_id, current_chapter, status, current_inventory, is_public'
       )
       .eq('user_id', userId)
       .eq('story_id', storyId)
@@ -71,18 +57,12 @@ async function getOrCreateGameSession(
         current_chapter: currentChapter,
         status: 'in_progress',
         current_inventory: [],
+        is_public: false,
       })
       .select()
       .single();
 
   if (createError) {
-    /* =====================================================
-       Duplicate Session
-       
-       เกิดจาก Request สองตัวสร้าง Session พร้อมกัน
-       ให้โหลด Session เดิมกลับมาใช้
-    ===================================================== */
-
     if (createError.code === '23505') {
       console.log(
         '⚠️ Session already exists, loading existing session...'
@@ -94,7 +74,7 @@ async function getOrCreateGameSession(
       } = await supabaseAdmin
         .from('game_sessions')
         .select(
-          'id, user_id, story_id, current_chapter, status, current_inventory'
+          'id, user_id, story_id, current_chapter, status, current_inventory, is_public'
         )
         .eq('user_id', userId)
         .eq('story_id', storyId)
@@ -177,10 +157,6 @@ async function saveChatLog(
     );
   }
 }
-
-/* =========================================================
-   Helper: Extract Characters / Relationships
-========================================================= */
 
 /* =========================================================
    Helper: Initialize Session Characters
@@ -314,7 +290,104 @@ async function initializeSessionCharacters(
 }
 
 /* =========================================================
-   Helper: Extract Characters / Relationships
+   Helper: Load Session Characters / Relationships
+========================================================= */
+
+async function loadSessionCharacterContext(
+  sessionId: string
+) {
+  try {
+    const {
+      data: characters,
+      error: characterError,
+    } = await supabaseAdmin
+      .from('session_characters')
+      .select(`
+        id,
+        name,
+        role,
+        appearance,
+        personality,
+        initial_items
+      `)
+      .eq('session_id', sessionId)
+      .order('created_at', {
+        ascending: true,
+      });
+
+    if (characterError) {
+      console.error(
+        '❌ Load Session Characters Context Error:',
+        JSON.stringify(
+          characterError,
+          null,
+          2
+        )
+      );
+
+      return {
+        characters: [],
+        relationships: [],
+      };
+    }
+
+    const {
+      data: relationships,
+      error: relationshipError,
+    } = await supabaseAdmin
+      .from('session_character_relationships')
+      .select(`
+        id,
+        from_character_id,
+        to_character_id,
+        relationship_type,
+        description
+      `)
+      .eq('session_id', sessionId)
+      .order('created_at', {
+        ascending: true,
+      });
+
+    if (relationshipError) {
+      console.error(
+        '❌ Load Session Relationships Context Error:',
+        JSON.stringify(
+          relationshipError,
+          null,
+          2
+        )
+      );
+
+      return {
+        characters: characters || [],
+        relationships: [],
+      };
+    }
+
+    return {
+      characters: characters || [],
+      relationships: relationships || [],
+    };
+  } catch (error) {
+    console.error(
+      '❌ Load Session Character Context Exception:',
+      error
+    );
+
+    return {
+      characters: [],
+      relationships: [],
+    };
+  }
+}
+
+/* =========================================================
+   Helper: Sync Character Relationships From Chapter
+
+   สำคัญ:
+   - ไม่สร้าง Character ใหม่
+   - Character สำคัญต้องมาจาก Story ตอนสร้างเท่านั้น
+   - ตรวจจับเฉพาะ Relationship ของตัวละครที่มีอยู่แล้ว
 ========================================================= */
 
 async function syncCharactersFromChapter({
@@ -332,7 +405,7 @@ async function syncCharactersFromChapter({
 }) {
   try {
     console.log(
-      `========================================`
+      '========================================'
     );
 
     console.log(
@@ -351,9 +424,9 @@ async function syncCharactersFromChapter({
 
     /* =====================================================
        1. Initialize Session Characters
-       
-       Base characters จาก Story
-       จะถูก copy เข้า Session ก่อน
+
+       Character ทั้งหมดต้องมาจาก Base Characters
+       ที่เจ้าของกำหนดตอนสร้างเรื่อง
     ===================================================== */
 
     await initializeSessionCharacters(
@@ -373,7 +446,10 @@ async function syncCharactersFromChapter({
       .select(
         'id, base_character_id, name, role, appearance, personality, initial_items'
       )
-      .eq('session_id', sessionId);
+      .eq(
+        'session_id',
+        sessionId
+      );
 
     if (existingCharacterError) {
       console.error(
@@ -419,6 +495,10 @@ async function syncCharactersFromChapter({
 
     /* =====================================================
        4. Create Character List For AI
+
+       สำคัญ:
+       ส่งเฉพาะตัวละครที่มีอยู่แล้ว
+       เพื่อให้ AI ตรวจจับ Relationship เท่านั้น
     ===================================================== */
 
     const characterList =
@@ -432,19 +512,22 @@ async function syncCharactersFromChapter({
         : 'ยังไม่มีตัวละคร';
 
     /* =====================================================
-       5. Character Extraction Prompt
-       
-       AI PROMPT เดิม
-       ไม่เปลี่ยน logic
+       5. Relationship Extraction Prompt
+
+       ห้ามสร้าง Character ใหม่
     ===================================================== */
 
     const extractionPrompt = `
-คุณคือระบบวิเคราะห์ข้อมูลตัวละครของเกม Interactive Novel
+คุณคือระบบวิเคราะห์ความสัมพันธ์ของตัวละคร
+สำหรับเกม Interactive Novel ของ CozyTales
 
 หน้าที่ของคุณคืออ่านข้อความบทที่ ${chapterNumber}
-แล้วค้นหาข้อมูลเกี่ยวกับ "ตัวละคร" และ "ความสัมพันธ์ระหว่างตัวละคร"
+แล้วตรวจจับ "ความสัมพันธ์ระหว่างตัวละคร"
+จากเหตุการณ์ที่เกิดขึ้นจริงในบทนี้
 
-ตัวละครที่มีอยู่ใน Database แล้ว:
+==================================================
+ตัวละครที่มีอยู่ใน Database
+==================================================
 
 ${characterList}
 
@@ -453,37 +536,67 @@ ${characterList}
 ${protagonistName || 'ไม่ทราบ'}
 
 ==================================================
-กฎการตรวจจับตัวละคร
+กฎสำคัญมาก
 ==================================================
 
-1. ถ้าตัวละครมีอยู่ใน Database แล้ว
-   ห้ามสร้างซ้ำใน newCharacters
+1. ห้ามสร้างตัวละครใหม่โดยเด็ดขาด
 
-2. ตัวละครใหม่ต้องเป็นบุคคลที่มีตัวตนจริงในเนื้อเรื่อง
+2. ห้ามสร้างหรือเพิ่มตัวละครใหม่ใด ๆ
 
-3. ห้ามสร้างตัวละครจากคำทั่วไป เช่น
-   - ผู้คน
+3. ตัวละครที่สามารถใช้ใน relationships
+   ต้องเป็นตัวละครที่มีอยู่ใน Database ด้านบนเท่านั้น
+
+4. หากบทพูดถึงบุคคลที่ไม่มีอยู่ใน Database
+   เช่น
    - ชาวบ้าน
+   - ทหาร
+   - คนขายของ
+   - หญิงสาวนิรนาม
+   - ชายแปลกหน้า
    - ฝูงชน
-   - คนทั่วไป
-   เว้นแต่บุคคลนั้นมีตัวตนชัดเจนและมีบทบาทเฉพาะ
+   - ผู้คนทั่วไป
 
-4. ถ้าตัวละครใหม่ไม่มีชื่อจริง
-   แต่เนื้อเรื่องระบุว่าเป็นบุคคลเฉพาะ
-   สามารถใช้ชื่อเรียกที่ปรากฏในเรื่องได้
+   ให้ถือว่าเป็นบุคคลทั่วไป
+   และห้ามสร้างเป็น Character
 
-5. ตัวละครใหม่ทั้งหมดใช้ role = npc
+5. หากมีบุคคลใหม่ที่มีบทบาทสำคัญในเรื่อง
+   แต่ไม่มีอยู่ใน Database
+   ให้ "ไม่ต้องสร้างตัวละคร"
+   และไม่ต้องสร้าง Relationship กับบุคคลนั้น
+
+6. ห้ามเดาชื่อตัวละครใหม่จากเนื้อเรื่อง
 
 ==================================================
-กฎการตรวจจับความสัมพันธ์
+กฎการตรวจจับ Relationship
 ==================================================
 
-ต้องตรวจจับความสัมพันธ์ที่เนื้อเรื่องระบุหรือสื่ออย่างชัดเจน
+ให้ตรวจจับเฉพาะความสัมพันธ์ที่เนื้อเรื่อง
+ระบุหรือสื่ออย่างชัดเจน
 
 ตัวอย่าง:
 
 "เธอเป็นแฟนของอาร์เธอร์"
-→ relationship_type = "แฟน"
+
+ถ้า "เธอ" ไม่มีอยู่ใน Database
+→ ห้ามสร้าง Relationship
+
+ถ้ามี:
+
+มีนา
+อาร์เธอร์
+
+ให้สร้าง:
+
+{
+  "from": "มีนา",
+  "to": "อาร์เธอร์",
+  "relationship_type": "แฟน",
+  "description": "มีนาเป็นแฟนของอาร์เธอร์"
+}
+
+==================================================
+ตัวอย่าง Relationship
+==================================================
 
 "เขาเป็นเพื่อนสนิทของอาร์เธอร์"
 → relationship_type = "เพื่อน"
@@ -497,27 +610,49 @@ ${protagonistName || 'ไม่ทราบ'}
 "เขาเป็นศัตรูกับอาร์เธอร์"
 → relationship_type = "ศัตรู"
 
-สำคัญมาก:
+==================================================
+กฎเกี่ยวกับตัวเอก
+==================================================
 
-ถ้าเนื้อเรื่องใช้คำว่า
+ถ้าเนื้อเรื่องใช้คำว่า:
 
 "ตัวเอก"
 "พระเอก"
 "นางเอก"
 "ผู้เล่น"
 
-ให้ตีความว่าเป็นตัวละครเอก:
+ให้ตีความว่าเป็น:
 
 ${protagonistName || 'ไม่ทราบ'}
 
-ถ้าเนื้อเรื่องใช้ชื่อเล่นหรือชื่อบางส่วน
-ให้จับคู่กับชื่อเต็มใน Database ที่มีอยู่
+ห้ามใช้คำเหล่านี้ใน from หรือ to
+ถ้ามีตัวละครเอกอยู่ใน Database
 
-เช่น Database:
+ตัวอย่าง:
+
+ผิด:
+
+{
+  "from": "มีนา",
+  "to": "ตัวเอก"
+}
+
+ถูก:
+
+{
+  "from": "มีนา",
+  "to": "${protagonistName || 'ชื่อตัวเอก'}"
+}
+
+==================================================
+กฎการจับคู่ชื่อ
+==================================================
+
+ถ้า Database มี:
 
 "อาร์เธอร์ เพนเดิลตัน"
 
-ในเนื้อเรื่อง:
+และเนื้อเรื่องเขียน:
 
 "อาร์เธอร์"
 
@@ -525,72 +660,19 @@ ${protagonistName || 'ไม่ทราบ'}
 
 "อาร์เธอร์ เพนเดิลตัน"
 
-ใน relationships
+ใน Relationship
 
 ==================================================
-กฎสำคัญมากเกี่ยวกับ relationships
+สำคัญที่สุด
 ==================================================
 
-from และ to ต้องใช้ชื่อเต็มของตัวละครจาก Database
-หรือชื่อของตัวละครใหม่ที่คุณกำลังสร้าง
+หากตัวละครไม่มีอยู่ใน Database:
 
-ห้ามใช้คำว่า:
+ห้ามสร้าง Character
+ห้ามเพิ่ม Character
+ห้ามสร้าง Relationship กับตัวละครนั้น
 
-"ตัวเอก"
-
-"พระเอก"
-
-"นางเอก"
-
-"ผู้เล่น"
-
-ถ้ามีตัวละครเอกอยู่ใน Database แล้ว
-
-ให้เปลี่ยนเป็นชื่อจริงของตัวละครเอก:
-
-${protagonistName || 'ไม่ทราบ'}
-
-ตัวอย่าง:
-
-ผิด:
-
-{
-  "from": "แฟนสาว",
-  "to": "ตัวเอก"
-}
-
-ถูก:
-
-{
-  "from": "จูเลียน แวนซ์",
-  "to": "${protagonistName || 'ชื่อตัวเอก'}"
-}
-
-==================================================
-กรณี "แฟนของตัวเอก"
-==================================================
-
-ถ้าเนื้อเรื่องระบุว่าตัวละครใหม่เป็นแฟนของตัวเอก
-ต้องสร้าง relationship อย่างแน่นอน
-
-เช่น:
-
-ตัวละคร:
-"มีนา"
-
-ตัวเอก:
-"อาร์เธอร์"
-
-ผลลัพธ์:
-
-{
-  "from": "มีนา",
-  "to": "อาร์เธอร์",
-  "relationship_type": "แฟน",
-  "description": "มีนาเป็นแฟนของอาร์เธอร์"
-}
-
-ห้ามปล่อย relationships เป็น [] หากในเนื้อเรื่องระบุความสัมพันธ์อย่างชัดเจน
+ให้สนใจเฉพาะตัวละครที่มีอยู่แล้วเท่านั้น
 
 ==================================================
 รูปแบบ JSON
@@ -599,31 +681,21 @@ ${protagonistName || 'ไม่ทราบ'}
 ตอบ JSON เท่านั้น
 
 {
-  "newCharacters": [
-    {
-      "name": "ชื่อเต็ม",
-      "appearance": "รูปลักษณ์",
-      "personality": "บุคลิก",
-      "initial_items": []
-    }
-  ],
   "relationships": [
     {
-      "from": "ชื่อตัวละคร",
-      "to": "ชื่อตัวละคร",
+      "from": "ชื่อตัวละครที่มีอยู่ใน Database",
+      "to": "ชื่อตัวละครที่มีอยู่ใน Database",
       "relationship_type": "ประเภทความสัมพันธ์",
       "description": "รายละเอียด"
     }
   ]
 }
 
-ถ้าไม่มีตัวละครใหม่:
-
-"newCharacters": []
-
 ถ้าไม่มีความสัมพันธ์ใหม่:
 
-"relationships": []
+{
+  "relationships": []
+}
 
 ==================================================
 บทนิยาย
@@ -668,20 +740,13 @@ ${chapterContent}
         }
       } catch (error) {
         console.error(
-          `Character extraction error (${modelsToTry[i]}):`,
+          `Relationship extraction error (${modelsToTry[i]}):`,
           error
         );
 
-        if (
-          i <
-          modelsToTry.length - 1
-        ) {
-          await new Promise(
-            (resolve) =>
-              setTimeout(
-                resolve,
-                1000
-              )
+        if (i < modelsToTry.length - 1) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, 3000)
           );
         }
       }
@@ -691,14 +756,14 @@ ${chapterContent}
       !extractionText.trim()
     ) {
       console.error(
-        '❌ Character extraction returned empty result'
+        '❌ Relationship extraction returned empty result'
       );
 
       return;
     }
 
     console.log(
-      'RAW CHARACTER EXTRACTION:',
+      'RAW RELATIONSHIP EXTRACTION:',
       extractionText
     );
 
@@ -707,7 +772,6 @@ ${chapterContent}
     ===================================================== */
 
     let extracted: {
-      newCharacters?: ExtractedCharacter[];
       relationships?: ExtractedRelationship[];
     };
 
@@ -718,19 +782,12 @@ ${chapterContent}
         );
     } catch (error) {
       console.error(
-        '❌ Character JSON Parse Error:',
+        '❌ Relationship JSON Parse Error:',
         error
       );
 
       return;
     }
-
-    const newCharacters =
-      Array.isArray(
-        extracted.newCharacters
-      )
-        ? extracted.newCharacters
-        : [];
 
     const relationships =
       Array.isArray(
@@ -740,156 +797,16 @@ ${chapterContent}
         : [];
 
     console.log(
-      'New Characters:',
-      newCharacters
-    );
-
-    console.log(
       'Detected Relationships:',
       relationships
     );
 
     /* =====================================================
-       8. Insert New Characters Into Session
-       
-       สำคัญ:
-       ห้าม insert ลง characters
-    ===================================================== */
-
-    for (
-      const character of
-      newCharacters
-    ) {
-      if (
-        !character ||
-        !character.name ||
-        !character.name.trim()
-      ) {
-        continue;
-      }
-
-      const characterName =
-        character.name.trim();
-
-      /* -----------------------------------------------
-         Check duplicate inside THIS SESSION
-      ------------------------------------------------ */
-
-      const alreadyExists =
-        characters.some(
-          (existing) =>
-            existing.name
-              .trim()
-              .toLowerCase() ===
-            characterName.toLowerCase()
-        );
-
-      if (alreadyExists) {
-        console.log(
-          'Character already exists in session:',
-          characterName
-        );
-
-        continue;
-      }
-
-      /* -----------------------------------------------
-         Insert Session Character
-      ------------------------------------------------ */
-
-      const {
-        error:
-        insertCharacterError,
-      } = await supabaseAdmin
-        .from('session_characters')
-        .insert({
-          session_id:
-            sessionId,
-
-          base_character_id:
-            null,
-
-          name:
-            characterName,
-
-          role: 'npc',
-
-          appearance:
-            character.appearance
-              ?.trim() || null,
-
-          personality:
-            character.personality
-              ?.trim() ||
-            'ยังไม่มีข้อมูลบุคลิก',
-
-          initial_items:
-            Array.isArray(
-              character.initial_items
-            )
-              ? character.initial_items
-              : [],
-        });
-
-      if (
-        insertCharacterError
-      ) {
-        console.error(
-          `❌ Session Character Insert Error (${characterName}):`,
-          JSON.stringify(
-            insertCharacterError,
-            null,
-            2
-          )
-        );
-      } else {
-        console.log(
-          `✅ New Session Character Created: ${characterName}`
-        );
-      }
-    }
-
-    /* =====================================================
-       9. Reload Session Characters
-       
-       เพื่อให้ได้ UUID ของ NPC ที่เพิ่งสร้าง
-    ===================================================== */
-
-    const {
-      data: allCharacters,
-      error:
-      reloadCharacterError,
-    } = await supabaseAdmin
-      .from('session_characters')
-      .select(
-        'id, base_character_id, name, role, appearance, personality, initial_items'
-      )
-      .eq(
-        'session_id',
-        sessionId
-      );
-
-    if (
-      reloadCharacterError
-    ) {
-      console.error(
-        '❌ Reload Session Characters Error:',
-        JSON.stringify(
-          reloadCharacterError,
-          null,
-          2
-        )
-      );
-
-      return;
-    }
-
-    /* =====================================================
-       10. Build Character Resolver
+       8. Build Character Resolver
     ===================================================== */
 
     const currentCharacters =
-      allCharacters || [];
+      characters;
 
     const currentProtagonist =
       currentCharacters.find(
@@ -984,11 +901,11 @@ ${chapterContent}
     }
 
     /* =====================================================
-       11. Save Relationships
-       
+       9. Save Relationships
+
        สำคัญ:
-       ใช้ session_character_relationships
-       ไม่ใช่ character_relationships
+       Relationship ต้องอ้างอิง Character
+       ที่มีอยู่ใน Session เท่านั้น
     ===================================================== */
 
     for (
@@ -1036,12 +953,19 @@ ${chapterContent}
         }
       );
 
+      /* -----------------------------------------------
+         Character ไม่พบ
+
+         ไม่สร้าง Character ใหม่
+         และไม่บันทึก Relationship
+      ------------------------------------------------ */
+
       if (
         !fromCharacter ||
         !toCharacter
       ) {
         console.warn(
-          '⚠️ Session relationship skipped - character not found:',
+          '⚠️ Relationship skipped - character not found:',
           {
             from:
               relationship.from,
@@ -1169,6 +1093,19 @@ ${chapterContent}
 }
 
 /* =========================================================
+   Helper: Parse Initial Items
+========================================================= */
+
+function parseInitialItems(value: unknown): string[] {
+  if (typeof value !== 'string') return [];
+
+  return value
+    .split(/[\n,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+/* =========================================================
    POST
 ========================================================= */
 
@@ -1266,6 +1203,36 @@ export async function POST(req: Request) {
         );
       }
 
+      if (!formData.title?.trim()) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'กรุณาระบุชื่อเรื่อง',
+          },
+          { status: 400 }
+        );
+      }
+
+      if (!formData.corePremise?.trim()) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'กรุณาระบุเรื่องย่อ / แก่นเรื่อง',
+          },
+          { status: 400 }
+        );
+      }
+
+      if (!formData.protagonist?.trim()) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'กรุณาระบุชื่อตัวละครหลัก',
+          },
+          { status: 400 }
+        );
+      }
+
       /* =====================================================
          Story ID
       ===================================================== */
@@ -1349,6 +1316,46 @@ export async function POST(req: Request) {
        * ไม่เปลี่ยน logic การเขียนเรื่อง
        */
 
+      const supportingCharacters = Array.isArray(
+        formData.supportingCharacters
+      )
+        ? formData.supportingCharacters
+          .filter(
+            (character: any) =>
+              character &&
+              typeof character.name === 'string' &&
+              character.name.trim()
+          )
+          .map((character: any) => ({
+            name: character.name.trim(),
+            personality:
+              typeof character.personality === 'string' &&
+                character.personality.trim()
+                ? character.personality.trim()
+                : 'ตัวละครประกอบของเรื่อง',
+            initial_items: parseInitialItems(character.items),
+          }))
+        : [];
+
+      const supportingCharacterPrompt =
+        supportingCharacters.length > 0
+          ? supportingCharacters
+            .map(
+              (character: {
+                name: string;
+                personality: string;
+                initial_items: string[];
+              }, index: number) => `NPC ${index + 1}:
+ชื่อ: ${character.name}
+นิสัยและความสามารถ: ${character.personality}
+ของที่พกติดตัว: ${character.initial_items.length > 0
+                  ? character.initial_items.join(', ')
+                  : 'ไม่มี'
+                }`
+            )
+            .join('\n\n')
+          : 'ไม่มี NPC ที่ผู้สร้างกำหนดไว้ล่วงหน้า';
+
       const systemPrompt = `
 คุณคือ AI นักเขียนนิยายสำหรับแอป CozyTales
 
@@ -1372,8 +1379,22 @@ ${formData.corePremise || ''}
 ตัวละครเอก:
 ${formData.protagonist || 'ไม่ระบุ'}
 
+นิสัยและความสามารถของตัวละครเอก:
+${formData.protagonistPersonality || 'ไม่ระบุ'}
+
+ของที่ตัวละครเอกพกติดตัว:
+${formData.protagonistItems || 'ไม่มี'}
+
+ตัวละครประกอบ (NPC) ที่ผู้สร้างกำหนด:
+${supportingCharacterPrompt}
+
 โลกหรือสถานที่:
 ${formData.worldSetting || 'ไม่ระบุ'}
+
+- หากมีข้อมูลนิสัย ความสามารถ หรือสิ่งของของตัวละครเอกที่ผู้สร้างกำหนดไว้ ต้องนำข้อมูลเหล่านั้นไปใช้ในเรื่องอย่างสอดคล้อง
+- ห้ามเปลี่ยนนิสัยหรือความสามารถหลักของตัวละครเอกโดยไม่มีเหตุผลจากเนื้อเรื่อง
+- สิ่งของที่ตัวละครเอกพกติดตัวสามารถถูกนำมาใช้ในเหตุการณ์ของเรื่องได้
+- หากมี NPC ที่ผู้สร้างกำหนดไว้ ต้องรักษาชื่อ บุคลิก ความสามารถ และสิ่งของของ NPC ให้สอดคล้องกับข้อมูลที่กำหนด
 
 เขียนบทที่ 1 ของนิยาย
 
@@ -1387,6 +1408,40 @@ ${formData.worldSetting || 'ไม่ระบุ'}
 - สร้างบรรยากาศตามแนวและโทนที่กำหนด
 - จบบทด้วยเหตุการณ์ใหม่หรือสถานการณ์ที่เปิดโอกาสให้ผู้เล่นตัดสินใจว่าจะทำอะไรต่อ
 - ผู้เล่นสามารถพิมพ์การตัดสินใจของตัวเองเพื่อดำเนินเรื่องต่อได้
+- ตอนจบบท ให้เสนอแนวทางการตัดสินใจ 2–3 แนวทางที่สอดคล้องกับสถานการณ์ในเรื่อง
+- ก่อนส่วนคำถามให้ผู้เล่นตัดสินใจ ต้องแสดง "สถานะปัจจุบัน" ของผู้เล่น
+- สถานะปัจจุบันต้องสรุปจากเหตุการณ์ที่เกิดขึ้นจริงในบทนี้
+- ต้องแสดงข้อมูล 4 อย่าง:
+  1. สถานที่ปัจจุบัน
+  2. สภาพร่างกายของผู้เล่น
+  3. ของติ ดตัวของผู้เล่น
+  4. สถานการณ์สำคัญที่กำลังเกิดขึ้น (ถ้ามี)
+- หากไม่มีการเปลี่ยนแปลงจากข้อมูลเดิม ให้คงสถานะเดิมไว้
+- หากผู้เล่นได้รับบาดเจ็บ ให้แสดงอาการบาดเจ็บ
+- หากผู้เล่นได้รับ ใช้ สูญหาย หรือทำลายสิ่งของ ให้ปรับรายการของติดตัวให้ตรงกับเหตุการณ์
+- หากผู้เล่นเปลี่ยนสถานที่ ให้แสดงสถานที่ใหม่
+- ห้ามเพิ่มสิ่งของที่ผู้เล่นไม่ได้มีหรือไม่ได้รับในเรื่อง
+- ห้ามสร้างสถานะที่ขัดแย้งกับเหตุการณ์ก่อนหน้า
+- สถานะต้องสั้น กระชับ และอ่านง่าย
+
+ใช้รูปแบบดังนี้:
+
+สถานะปัจจุบัน
+
+- สถานที่: ...
+- สภาพร่างกาย: ...
+- ของติดตัว: ...
+- สถานการณ์สำคัญ: ...
+
+จากนั้นจึงแสดงส่วนการตัดสินใจของผู้เล่นตามรูปแบบเดิม
+- แนวทางการตัดสินใจต้องเป็นเพียงคำแนะนำให้ผู้เล่นนำไปคิดต่อ ไม่ใช่ปุ่มตัวเลือก
+- ผู้เล่นสามารถเลือกทำตามแนวทางที่เสนอ หรือพิมพ์การตัดสินใจของตัวเองได้
+- เขียนแนวทางในรูปแบบข้อความธรรมดา เช่น:
+  ควรตัดสินใจอย่างไร?
+  1. เดินตามเสียงที่ได้ยินจากในป่า
+  2. กลับไปที่หมู่บ้านเพื่อขอความช่วยเหลือ
+  3. ซ่อนตัวและรอดูสถานการณ์
+- ห้ามเขียนว่าเป็นตัวเลือกที่ระบบบังคับให้เลือก
 - ความยาวเหมาะสมสำหรับบทแรก
 `;
 
@@ -1439,7 +1494,10 @@ ${formData.worldSetting || 'ไม่ระบุ'}
           ) {
             await new Promise(
               (resolve) =>
-                setTimeout(resolve, 1500)
+                setTimeout(
+                  resolve,
+                  1500
+                )
             );
           }
         }
@@ -1488,9 +1546,7 @@ ${formData.worldSetting || 'ไม่ระบุ'}
 
           user_id: userId,
 
-          title:
-            formData.title ||
-            'นิยายไม่มีชื่อ',
+          title: formData.title.trim(),
 
           synopsis:
             formData.corePremise ||
@@ -1620,9 +1676,13 @@ ${formData.worldSetting || 'ไม่ระบุ'}
             appearance: null,
 
             personality:
+              formData.protagonistPersonality?.trim() ||
               'ตัวละครเอกของเรื่อง',
 
-            initial_items: [],
+            initial_items:
+              parseInitialItems(
+                formData.protagonistItems
+              ),
           });
 
         if (
@@ -1639,6 +1699,51 @@ ${formData.worldSetting || 'ไม่ระบุ'}
         } else {
           console.log(
             '✅ Protagonist created'
+          );
+        }
+      }
+
+      /* =====================================================
+         Create Supporting Characters (NPC)
+
+         NPC ที่ผู้สร้างกำหนดจะอยู่ใน Base Characters
+         และจะถูก copy เข้า Session ของผู้เล่นแต่ละคน
+      ===================================================== */
+
+      if (supportingCharacters.length > 0) {
+        const {
+          error: supportingCharacterError,
+        } = await supabaseAdmin
+          .from('characters')
+          .insert(
+            supportingCharacters.map(
+              (character: {
+                name: string;
+                personality: string;
+                initial_items: string[];
+              }) => ({
+                story_id: story.id,
+                name: character.name,
+                role: 'npc',
+                appearance: null,
+                personality: character.personality,
+                initial_items: character.initial_items,
+              })
+            )
+          );
+
+        if (supportingCharacterError) {
+          console.error(
+            '❌ Supporting Characters Error:',
+            JSON.stringify(
+              supportingCharacterError,
+              null,
+              2
+            )
+          );
+        } else {
+          console.log(
+            `✅ ${supportingCharacters.length} supporting character(s) created`
           );
         }
       }
@@ -1761,7 +1866,7 @@ ${formData.worldSetting || 'ไม่ระบุ'}
       }
 
       /* =====================================================
-         Sync Characters From Chapter 1
+         Sync Character Relationships From Chapter 1
       ===================================================== */
 
       if (session) {
@@ -1774,6 +1879,7 @@ ${formData.worldSetting || 'ไม่ระบุ'}
             generatedText.trim(),
         });
       }
+
       /* =====================================================
          Success
       ===================================================== */
@@ -1803,8 +1909,8 @@ ${formData.worldSetting || 'ไม่ระบุ'}
     }
 
     /* =========================================================
-   NEXT CHAPTER
-========================================================= */
+       NEXT CHAPTER
+    ========================================================= */
 
     if (
       actionType ===
@@ -1823,7 +1929,7 @@ ${formData.worldSetting || 'ไม่ระบุ'}
 
       /* =====================================================
          Get Story
-         
+
          เจ้าของเล่นได้เสมอ
          ผู้ใช้อื่นเล่นได้ถ้า Story ถูก publish
       ===================================================== */
@@ -1870,9 +1976,19 @@ ${formData.worldSetting || 'ไม่ระบุ'}
       const isPublished =
         story.is_published === true;
 
+      if (!isOwner && !isPublished) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'นิยายเรื่องนี้ยังไม่ได้เผยแพร่',
+          },
+          { status: 403 }
+        );
+      }
+
       /* =====================================================
          Get / Create Game Session
-         
+
          สำคัญ:
          Session เป็นของ user + story
          ทำให้ผู้เล่นแต่ละคนมีเส้นเรื่องของตัวเอง
@@ -1884,7 +2000,7 @@ ${formData.worldSetting || 'ไม่ระบุ'}
       } = await supabaseAdmin
         .from('game_sessions')
         .select(
-          'id, user_id, story_id, current_chapter, status, current_inventory'
+          'id, user_id, story_id, current_chapter, status, current_inventory, is_public'
         )
         .eq(
           'user_id',
@@ -1923,7 +2039,7 @@ ${formData.worldSetting || 'ไม่ระบุ'}
 
       /* =====================================================
          Get Shared Chapters
-         
+
          chapters = เนื้อเรื่องต้นฉบับ / shared content
       ===================================================== */
 
@@ -1973,13 +2089,13 @@ ${formData.worldSetting || 'ไม่ระบุ'}
 
       /* =====================================================
          If Session Does Not Exist
-         
+
          เริ่มต้นจากบทล่าสุดของเนื้อเรื่องต้นฉบับ
-         
+
          สำหรับ Story ใหม่:
          shared chapter = 1
          → session current chapter = 1
-         
+
          สำหรับ Story เก่า:
          ถ้ามี shared chapter ถึง 4
          → session current chapter = 4
@@ -2015,9 +2131,14 @@ ${formData.worldSetting || 'ไม่ระบุ'}
         }
       }
 
+      await initializeSessionCharacters(
+        session.id,
+        story.id
+      );
+
       /* =====================================================
          Get Session Chapters
-         
+
          session_chapters = บทเฉพาะของผู้เล่นคนนี้
       ===================================================== */
 
@@ -2067,7 +2188,7 @@ ${formData.worldSetting || 'ไม่ระบุ'}
 
       /* =====================================================
          Calculate Latest Chapter
-         
+
          ใช้ค่าที่มากที่สุดจาก:
          - shared chapters
          - session chapters
@@ -2145,6 +2266,35 @@ ${formData.worldSetting || 'ไม่ระบุ'}
       );
 
       /* =====================================================
+         Load Session Character Context
+
+         สำคัญ:
+         โหลดจาก session.id โดยตรง
+         เพื่อให้ผู้เล่นแต่ละคนมีข้อมูลตัวละครของตัวเอง
+      ===================================================== */
+
+      const {
+        characters: sessionCharacters,
+        relationships: sessionRelationships,
+      } =
+        await loadSessionCharacterContext(
+          session.id
+        );
+
+      console.log(
+        'Session Characters:',
+        sessionCharacters.map(
+          (character) =>
+            `${character.name} (${character.role})`
+        )
+      );
+
+      console.log(
+        'Session Relationships:',
+        sessionRelationships.length
+      );
+
+      /* =====================================================
          Check Completed
       ===================================================== */
 
@@ -2171,7 +2321,7 @@ ${formData.worldSetting || 'ไม่ระบุ'}
 
       /* =====================================================
          Check Existing Session Chapter
-         
+
          สำคัญมาก:
          ตรวจใน session_chapters
          ไม่ใช่ chapters
@@ -2288,10 +2438,10 @@ ${formData.worldSetting || 'ไม่ระบุ'}
 
       /* =====================================================
          Prepare Previous Chapters
-         
+
          ใช้ previousChapters จาก ReaderView
          ซึ่งภายหลังเราจะทำให้ประกอบด้วย:
-         
+
          shared chapters
          +
          session chapters ของผู้เล่นคนนี้
@@ -2320,8 +2470,76 @@ ${chapter.content || ''}
           .join('\n');
 
       /* =====================================================
+         Character Context
+      ===================================================== */
+
+      const characterContext =
+        sessionCharacters.length > 0
+          ? sessionCharacters
+            .map(
+              (character) => `
+- ชื่อ: ${character.name}
+  บทบาท: ${character.role}
+  รูปลักษณ์: ${character.appearance || 'ไม่ระบุ'
+                }
+  บุคลิก: ${character.personality || 'ไม่ระบุ'
+                }
+  สิ่งของเริ่มต้น: ${Array.isArray(character.initial_items)
+                  ? character.initial_items.join(', ') || 'ไม่มี'
+                  : 'ไม่มี'
+                }
+`
+            )
+            .join('\n')
+          : 'ยังไม่มีข้อมูลตัวละครใน Session';
+
+      /* =====================================================
+         Relationship Context
+      ===================================================== */
+
+      const characterMap =
+        new Map(
+          sessionCharacters.map(
+            (character) => [
+              character.id,
+              character.name,
+            ]
+          )
+        );
+
+      const relationshipContext =
+        sessionRelationships.length > 0
+          ? sessionRelationships
+            .map(
+              (relationship) => {
+                const fromName =
+                  characterMap.get(
+                    relationship.from_character_id
+                  ) ||
+                  'ไม่ทราบ';
+
+                const toName =
+                  characterMap.get(
+                    relationship.to_character_id
+                  ) ||
+                  'ไม่ทราบ';
+
+                return `
+- ${fromName} → ${toName}
+  ความสัมพันธ์: ${relationship.relationship_type
+                  }
+  รายละเอียด: ${relationship.description ||
+                  'ไม่ระบุ'
+                  }
+`;
+              }
+            )
+            .join('\n')
+          : 'ยังไม่มีข้อมูลความสัมพันธ์';
+
+      /* =====================================================
          Gemini
-         
+
          ไม่เปลี่ยน logic หลักของ AI
       ===================================================== */
 
@@ -2363,6 +2581,15 @@ ${chapter.content || ''}
 - การตัดสินใจของผู้เล่นต้องมีผลต่อเหตุการณ์ในบทนี้
 - ดำเนินเรื่องต่ออย่างสมเหตุสมผล
 - จบบทด้วยเหตุการณ์ใหม่หรือสถานการณ์ใหม่ที่เปิดโอกาสให้ผู้เล่นตัดสินใจต่อ
+- ตอนจบบท ให้เสนอแนวทางการตัดสินใจ 2–3 แนวทางที่สอดคล้องกับสถานการณ์ในเรื่อง
+- แนวทางการตัดสินใจต้องเป็นเพียงคำแนะนำให้ผู้เล่นนำไปคิดต่อ ไม่ใช่ปุ่มตัวเลือก
+- ผู้เล่นสามารถเลือกทำตามแนวทางที่เสนอ หรือพิมพ์การตัดสินใจของตัวเองได้
+- ใช้รูปแบบ:
+  ควรตัดสินใจอย่างไร?
+  1. แนวทางที่หนึ่ง
+  2. แนวทางที่สอง
+  3. แนวทางที่สาม
+- ห้ามเขียนว่าเป็นตัวเลือกที่ระบบบังคับให้เลือก
 - เริ่มเขียนเนื้อเรื่องทันที
 `;
 
@@ -2381,11 +2608,47 @@ ${tone || story.tone || ''}
 เรื่องย่อ:
 ${story.synopsis || ''}
 
-บทก่อนหน้า:
+==================================================
+ข้อมูลตัวละครปัจจุบันของผู้เล่น
+==================================================
+
+${characterContext}
+
+==================================================
+ความสัมพันธ์ของตัวละครปัจจุบัน
+==================================================
+
+${relationshipContext}
+
+==================================================
+บทก่อนหน้า
+==================================================
+
 ${chapterContext}
 
-การตัดสินใจล่าสุดของผู้เล่น:
+==================================================
+การตัดสินใจล่าสุดของผู้เล่น
+==================================================
+
 ${userChoice || 'ไม่มี'}
+
+==================================================
+กฎความต่อเนื่องของตัวละคร
+==================================================
+
+- ต้องรักษาชื่อตัวละครให้ตรงกับข้อมูล Session
+- ต้องรักษาบุคลิกของตัวละครให้ต่อเนื่อง
+- ต้องรักษาความสัมพันธ์ระหว่างตัวละครให้ต่อเนื่อง
+- ห้ามเปลี่ยนความสัมพันธ์โดยไม่มีเหตุการณ์ในเรื่องรองรับ
+- ห้ามสร้างตัวละครสำคัญใหม่ที่ไม่ได้อยู่ในข้อมูลตัวละครปัจจุบัน
+- ตัวละครสำคัญที่มีชื่อและมีบทบาทต่อเนื่อง ต้องเป็นตัวละครที่อยู่ใน Session เท่านั้น
+- หากจำเป็นต้องกล่าวถึงบุคคลทั่วไป เช่น ชาวบ้าน ทหาร คนขายของ หรือฝูงชน สามารถกล่าวถึงได้
+  แต่บุคคลเหล่านี้ไม่ถือเป็นตัวละครสำคัญและห้ามสร้างเป็น Character
+- ห้ามเพิ่มตัวละครสำคัญใหม่ระหว่างการดำเนินเรื่อง
+- ตัวละครสำคัญทั้งหมดต้องมาจากตัวละครที่ผู้สร้างกำหนดไว้ตั้งแต่ตอนสร้างเรื่อง
+- การตัดสินใจของผู้เล่นต้องส่งผลต่อเรื่องราวอย่างสมเหตุสมผล
+- ห้ามนำข้อมูลตัวละครหรือความสัมพันธ์จากผู้เล่นคนอื่นมาใช้
+- ข้อมูล Session นี้เป็นข้อมูลเฉพาะของผู้เล่นคนปัจจุบัน
 
 เขียนบทที่ ${nextChapterNumber}
 
@@ -2484,7 +2747,7 @@ ${finalChapterInstruction}
 
       /* =====================================================
          Save Next Chapter
-         
+
          สำคัญ:
          ใช้ session_chapters
          ไม่ใช้ chapters
@@ -2704,9 +2967,12 @@ ${finalChapterInstruction}
       }
 
       /* =====================================================
-         Sync New Characters
-         
-         ส่วนนี้ยังใช้ logic เดิม
+         Sync Character Relationships
+
+         ตรวจจับเฉพาะ Relationship
+         ของตัวละครที่มีอยู่ใน Session แล้ว
+
+         ไม่สร้าง Character ใหม่
       ===================================================== */
 
       await syncCharactersFromChapter({
