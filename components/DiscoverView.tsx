@@ -18,7 +18,6 @@ const CATEGORIES: ('ทั้งหมด' | Genre)[] = [
   'ประวัติศาสตร์',
   'สยองขวัญ',
   'ผจญภัย',
-  'วรรณกรรม',
 ];
 
 export const DiscoverView: React.FC<DiscoverViewProps> = ({
