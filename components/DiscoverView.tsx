@@ -3,9 +3,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Story, Genre } from '../types/story';
 import { StoryCard } from './StoryCard';
+import DiscoverSkeleton from '@/components/DiscoverSkeleton';
 
 interface DiscoverViewProps {
   stories: Story[];
+  isLoading?: boolean;
   onSelectStory: (id: string) => void;
 }
 
@@ -22,6 +24,7 @@ const CATEGORIES: ('ทั้งหมด' | Genre)[] = [
 
 export const DiscoverView: React.FC<DiscoverViewProps> = ({
   stories,
+  isLoading = false,
   onSelectStory,
 }) => {
   const [selectedCategory, setSelectedCategory] =
@@ -59,24 +62,32 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
     };
   }, []);
 
-  const filteredStories = stories.filter((story) => {
-    const matchesCategory =
-      selectedCategory === 'ทั้งหมด' ||
-      story.genre === selectedCategory;
+const filteredStories = stories.filter((story) => {
+  const matchesCategory =
+    selectedCategory === 'ทั้งหมด' ||
+    story.genre === selectedCategory;
 
-    const matchesSearch =
-      story.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      story.corePremise
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+  const matchesSearch =
+    story.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase()) ||
+    story.corePremise
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
 
-    return matchesCategory && matchesSearch;
-  });
+  return matchesCategory && matchesSearch;
+});
 
-  return (
-    <div className="view-container">
+// ==========================================
+// FULL PAGE LOADING
+// ==========================================
+
+if (isLoading) {
+  return <DiscoverSkeleton />;
+}
+
+return (
+  <div className="view-container">
 
       {/* Title & Search Bar */}
       <div className="discover-header">

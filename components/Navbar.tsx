@@ -52,7 +52,7 @@ export const Navbar: React.FC = () => {
           <span className="logo-icon">📖</span>
 
           <span className="logo-text">
-            CozyTales
+            GonnaTales
           </span>
         </Link>
 

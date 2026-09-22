@@ -166,14 +166,23 @@ export const EditStoryModal: React.FC<EditStoryModalProps> = ({
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.error ||
-            'ไม่สามารถแก้ไขนิยายได้'
-        );
-      }
+  throw new Error(
+    data.error ||
+      'ไม่สามารถแก้ไขนิยายได้'
+  );
+}
 
-      onSaved(data.story);
-      onClose();
+onSaved({
+  ...story,
+  ...data.story,
+  coverUrl:
+    data.story.coverUrl ??
+    data.story.cover_image_url ??
+    coverUrl ??
+    story.coverUrl,
+});
+
+onClose();
     } catch (saveError) {
       console.error(
         'Save Story Error:',

@@ -1,3 +1,7 @@
+/* =========================================================
+   STORY CARD
+========================================================= */
+
 .story-card {
   background-color: var(--bg-card);
 
@@ -24,9 +28,9 @@
 }
 
 
-/* =========================
-   Cover
-========================= */
+/* =========================================================
+   COVER
+========================================================= */
 
 .card-cover-wrapper {
   position: relative;
@@ -38,31 +42,170 @@
   background-color: var(--bg-subtle);
 
   overflow: hidden;
+
+  border-radius: inherit;
 }
 
+
+/* =========================================================
+   COVER IMAGE
+========================================================= */
+
 .card-cover-img {
+  position: relative;
+
+  z-index: 2;
+
+  display: block;
+
   width: 100%;
   height: 100%;
 
   object-fit: cover;
 
-  transition: transform 0.3s ease;
+  /*
+   * ใช้สำหรับ
+   * Fade-in
+   * Blur → Sharp
+   * Zoom → Normal
+   */
+  transition:
+    opacity 0.65s ease,
+    transform 0.65s ease,
+    filter 0.65s ease;
 }
 
-.story-card:hover .card-cover-img {
+
+/* =========================================================
+   COVER กำลังโหลด
+========================================================= */
+
+.card-cover-loading {
+  opacity: 0;
+
+  transform: scale(1.04);
+
+  filter: blur(10px);
+}
+
+
+/* =========================================================
+   COVER โหลดเสร็จ
+========================================================= */
+
+.card-cover-loaded {
+  opacity: 1;
+
+  transform: scale(1);
+
+  filter: blur(0);
+}
+
+
+/* =========================================================
+   COVER HOVER
+========================================================= */
+
+.story-card:hover
+.card-cover-loaded {
   transform: scale(1.03);
 }
 
 
-/* =========================
-   Genre
-========================= */
+/* =========================================================
+   COVER SKELETON
+========================================================= */
+
+.card-cover-skeleton {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 1;
+
+  overflow: hidden;
+
+  background: #d6e0ea;
+}
+
+
+/* =========================================================
+   SHIMMER
+========================================================= */
+
+.card-cover-shimmer {
+  position: absolute;
+
+  inset: 0;
+
+  background: linear-gradient(
+    90deg,
+    #d6e0ea 0%,
+    #d6e0ea 30%,
+    #edf2f7 50%,
+    #d6e0ea 70%,
+    #d6e0ea 100%
+  );
+
+  background-size: 200% 100%;
+
+  animation:
+    storyShimmer
+    1.5s
+    ease-in-out
+    infinite;
+}
+
+
+@keyframes storyShimmer {
+
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+
+}
+
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.card-cover-placeholder {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background-color: var(--bg-subtle);
+
+  color: var(--text-muted);
+
+  font-size: 2rem;
+
+  opacity: 1;
+
+  transform: none;
+
+  filter: none;
+}
+
+
+/* =========================================================
+   GENRE
+========================================================= */
 
 .genre-badge {
   position: absolute;
 
   top: 10px;
   left: 10px;
+
+  z-index: 4;
 
   background-color:
     rgba(44, 34, 30, 0.75);
@@ -79,9 +222,9 @@
 }
 
 
-/* =========================
-   Favorite
-========================= */
+/* =========================================================
+   FAVORITE
+========================================================= */
 
 .favorite-button {
   position: absolute;
@@ -107,6 +250,7 @@
   cursor: pointer;
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
@@ -123,6 +267,8 @@
 
 .favorite-button:disabled {
   cursor: wait;
+
+  opacity: 0.7;
 }
 
 .favorite-active {
@@ -130,20 +276,26 @@
 }
 
 
-/* =========================
-   Card Info
-========================= */
+/* =========================================================
+   CARD INFO
+========================================================= */
 
 .card-info {
   padding: 0.85rem;
 
   display: flex;
+
   flex-direction: column;
 
   gap: 0.3rem;
 
   flex-grow: 1;
 }
+
+
+/* =========================================================
+   TITLE
+========================================================= */
 
 .card-title {
   font-family: var(--font-serif);
@@ -165,11 +317,21 @@
   overflow: hidden;
 }
 
+
+/* =========================================================
+   AUTHOR
+========================================================= */
+
 .card-author {
   font-size: 0.8rem;
 
   color: var(--text-muted);
 }
+
+
+/* =========================================================
+   STATS
+========================================================= */
 
 .card-stats {
   font-size: 0.75rem;
@@ -186,15 +348,16 @@
 }
 
 
-/* =========================
-   Progress
-========================= */
+/* =========================================================
+   PROGRESS
+========================================================= */
 
 .card-progress {
   margin-top: auto;
 
   padding-top: 0.5rem;
 }
+
 
 .progress-text {
   font-size: 0.75rem;
@@ -203,6 +366,7 @@
 
   margin-bottom: 0.25rem;
 }
+
 
 .progress-bar-bg {
   width: 100%;
@@ -216,24 +380,29 @@
   overflow: hidden;
 }
 
+
 .progress-bar-fill {
   height: 100%;
 
   background-color: var(--accent-color);
 
   border-radius: 2px;
+
+  transition: width 0.4s ease;
 }
 
 
-/* =========================
-   View Branches
-========================= */
+/* =========================================================
+   VIEW BRANCHES
+========================================================= */
 
 .view-branches-button {
   width: 100%;
 
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
 
   margin-top: 12px;
@@ -254,10 +423,13 @@
 
   text-align: left;
 
+  cursor: pointer;
+
   transition:
     color 0.2s ease,
     padding-left 0.2s ease;
 }
+
 
 .view-branches-button:hover {
   color: var(--accent-color);
@@ -265,40 +437,118 @@
   padding-left: 3px;
 }
 
+
 .view-branches-arrow {
   font-size: 0.95rem;
 
-  transition: transform 0.2s ease;
+  transition:
+    transform 0.2s ease;
 }
 
+
 .view-branches-button:hover
-  .view-branches-arrow {
+.view-branches-arrow {
   transform: translateX(3px);
 }
 
 
-/* =========================
-   Mobile
-========================= */
+/* =========================================================
+   FULL CARD SKELETON
+========================================================= */
+
+.skeleton-story-card {
+  pointer-events: none;
+
+  cursor: default;
+}
+
+
+/* =========================================================
+   SKELETON TEXT
+========================================================= */
+
+.skeleton-line {
+  height: 14px;
+
+  border-radius: 6px;
+
+  background: #d6e0ea;
+
+  animation:
+    storySkeletonPulse
+    1.5s
+    ease-in-out
+    infinite;
+}
+
+
+.skeleton-title {
+  width: 85%;
+
+  height: 18px;
+
+  margin-top: 2px;
+}
+
+
+.skeleton-author {
+  width: 55%;
+
+  margin-top: 10px;
+}
+
+
+.skeleton-stats {
+  width: 70%;
+
+  margin-top: 12px;
+}
+
+
+@keyframes storySkeletonPulse {
+
+  0% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.55;
+  }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
 
 @media (max-width: 650px) {
+
   .card-info {
     padding: 0.7rem;
   }
+
 
   .card-title {
     font-size: 0.88rem;
   }
 
+
   .card-author {
     font-size: 0.7rem;
   }
+
 
   .card-stats {
     font-size: 0.68rem;
 
     gap: 0.3rem;
   }
+
 
   .view-branches-button {
     margin-top: 9px;
@@ -308,9 +558,11 @@
     font-size: 0.68rem;
   }
 
+
   .view-branches-arrow {
     font-size: 0.82rem;
   }
+
 
   .favorite-button {
     width: 32px;
@@ -322,6 +574,7 @@
     font-size: 18px;
   }
 
+
   .genre-badge {
     top: 8px;
     left: 8px;
@@ -330,31 +583,105 @@
 
     font-size: 0.65rem;
   }
+
 }
 
 
-/* =========================
-   Small Mobile
-========================= */
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
 
 @media (max-width: 420px) {
+
   .card-info {
     padding: 0.62rem;
   }
+
 
   .card-title {
     font-size: 0.84rem;
   }
 
+
   .card-author {
     font-size: 0.67rem;
   }
+
 
   .card-stats {
     font-size: 0.64rem;
   }
 
+
   .view-branches-button {
     font-size: 0.65rem;
   }
+
+}
+
+/* =========================================================
+   STORY COVER
+========================================================= */
+
+.card-cover-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  background: #eee7dd;
+}
+
+.card-cover-img {
+  position: relative;
+  z-index: 2;
+
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  /* เริ่มต้น = เบลอ */
+  filter: blur(18px);
+  opacity: 0.85;
+  transform: scale(1.08);
+
+  transition:
+    filter 1.8s ease,
+    opacity 1.4s ease,
+    transform 1.8s ease;
+}
+
+/* กำลังโหลด */
+.card-cover-loading {
+  filter: blur(18px);
+  opacity: 0.85;
+  transform: scale(1.08);
+}
+
+/* โหลดเสร็จ */
+.card-cover-loaded {
+  filter: blur(0);
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Hover */
+.story-card:hover .card-cover-loaded {
+  transform: scale(1.03);
+}
+
+/* ไม่มีรูป / รูปเสีย */
+.card-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #eee7dd;
+  color: #9b8f82;
+  font-size: 38px;
+
+  filter: none;
+  opacity: 1;
+  transform: none;
 }

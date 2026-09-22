@@ -6,7 +6,10 @@ import React, {
   useState,
 } from 'react';
 import { useRouter } from 'next/navigation';
-
+import {
+  useUser,
+  SignInButton,
+} from '@clerk/nextjs';
 import {
   CreateStoryFormData,
   Genre,
@@ -62,6 +65,14 @@ const emptyForm: CreateStoryFormData = {
 export default function CreateStoryPage() {
   const router = useRouter();
 
+  // ==========================================
+  // AUTHENTICATION
+  // ==========================================
+  const {
+    user,
+    isLoaded,
+  } = useUser();
+
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] =
@@ -78,11 +89,23 @@ export default function CreateStoryPage() {
 
   const hasRestoredDraft = useRef(false);
 
+
+
   /* =====================================================
      Restore Draft
   ===================================================== */
 
   useEffect(() => {
+    // ยังไม่รู้สถานะ Login
+    if (!isLoaded) {
+      return;
+    }
+
+    // ยังไม่ได้ Login
+    if (!user) {
+      return;
+    }
+
     try {
       const savedDraft =
         sessionStorage.getItem(DRAFT_KEY);
@@ -116,11 +139,13 @@ export default function CreateStoryPage() {
                         'string'
                         ? character.name
                         : '',
+
                     personality:
                       typeof character.personality ===
                         'string'
                         ? character.personality
                         : '',
+
                     items:
                       typeof character.items ===
                         'string'
@@ -156,13 +181,22 @@ export default function CreateStoryPage() {
     } finally {
       hasRestoredDraft.current = true;
     }
-  }, []);
+  }, [
+    isLoaded,
+    user,
+  ]);
 
   /* =====================================================
      Auto Save Draft
   ===================================================== */
 
   useEffect(() => {
+    // ยังไม่ได้ Login ไม่ต้องบันทึก Draft
+    if (!isLoaded || !user) {
+      return;
+    }
+
+    // ยัง Restore Draft ไม่เสร็จ
     if (!hasRestoredDraft.current) {
       return;
     }
@@ -183,6 +217,8 @@ export default function CreateStoryPage() {
       );
     }
   }, [
+    isLoaded,
+    user,
     formData,
     coverImageUrl,
     step,
@@ -385,10 +421,17 @@ export default function CreateStoryPage() {
   };
 
   /* =====================================================
-     Submit
-  ===================================================== */
+   Submit
+===================================================== */
 
   const handleSubmit = () => {
+    // ==========================================
+    // ต้อง Login ก่อนสร้างนิยาย
+    // ==========================================
+if (!isLoaded || !user) {
+  return;
+}
+
     if (isSubmitting) {
       return;
     }
@@ -508,6 +551,95 @@ export default function CreateStoryPage() {
       setIsSubmitting(false);
     }
   };
+
+  /* =====================================================
+   AUTH LOADING
+===================================================== */
+
+  if (!isLoaded) {
+    return (
+      <main className="story-create-page">
+        <div className="story-create-auth-loading">
+          <div className="story-create-auth-spinner" />
+
+          <h2>
+            กำลังตรวจสอบการเข้าสู่ระบบ...
+          </h2>
+
+          <p>
+            กรุณารอสักครู่
+          </p>
+        </div>
+      </main>
+    );
+  }
+/* =========================
+     Not Logged In
+  ========================= */
+
+  if (!user) {
+    return (
+      <main className="login-required-page">
+        <div className="login-required-card">
+
+          {/* Icon */}
+          <div className="login-required-icon">
+            <span>🔐</span>
+          </div>
+
+          {/* Text */}
+          <div className="login-required-content">
+            <p className="login-required-label">
+              GonnaTales
+            </p>
+
+            <h1>
+              กรุณาเข้าสู่ระบบ
+            </h1>
+
+            <p className="login-required-description">
+              เข้าสู่ระบบเพื่อเริ่มอ่านนิยาย
+              <br />
+              และบันทึกความคืบหน้าของคุณ
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="login-required-actions">
+
+            <SignInButton mode="modal">
+              <button
+                type="button"
+                className="login-required-primary"
+              >
+                <span>เข้าสู่ระบบ</span>
+                <span className="button-arrow">→</span>
+              </button>
+            </SignInButton>
+
+            <button
+              type="button"
+              className="login-required-secondary"
+              onClick={() => router.push('/')}
+            >
+              ← กลับหน้าหลัก
+            </button>
+
+          </div>
+
+          {/* Footer */}
+          <p className="login-required-footer">
+            Your stories, your journey.
+          </p>
+
+        </div>
+      </main>
+    );
+  }
+
+  /* =====================================================
+     CREATE STORY PAGE
+  ===================================================== */
 
   return (
     <main className="story-create-page">

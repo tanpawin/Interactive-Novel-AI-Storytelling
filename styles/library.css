@@ -489,3 +489,317 @@
         gap: 0.55rem;
     }
 }
+
+/* =========================================================
+   LIBRARY FULL PAGE LOADING
+   Navbar จะไม่ถูก Skeleton
+========================================================= */
+
+.library-loading-page {
+  width: 100%;
+  max-width: 1340px;
+
+  margin: 0 auto;
+
+  padding: 30px 32px 80px;
+}
+
+
+/* =========================================================
+   SHARED SKELETON
+========================================================= */
+
+.library-skeleton-line {
+  position: relative;
+
+  overflow: hidden;
+
+  background: #e8e0d5;
+
+  border-radius: 8px;
+}
+
+.library-skeleton-line::after {
+  content: '';
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.55) 50%,
+      transparent 100%
+    );
+
+  transform: translateX(-100%);
+
+  animation:
+    librarySkeletonShimmer
+    1.5s
+    infinite;
+}
+
+@keyframes librarySkeletonShimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.library-skeleton-hero {
+  width: 100%;
+
+  min-height: 310px;
+
+  padding: 48px;
+
+  display: flex;
+  align-items: center;
+
+  border: 1px solid #eadcca;
+
+  border-radius: 24px;
+
+  background: #fffdf9;
+
+  margin-bottom: 58px;
+}
+
+.library-skeleton-hero-content {
+  width: 100%;
+  max-width: 700px;
+}
+
+.library-skeleton-line.hero-small {
+  width: 190px;
+  height: 18px;
+
+  margin-bottom: 24px;
+}
+
+.library-skeleton-line.hero-title {
+  width: 520px;
+  max-width: 80%;
+
+  height: 48px;
+
+  margin-bottom: 22px;
+
+  border-radius: 10px;
+}
+
+.library-skeleton-line.hero-description {
+  width: 620px;
+  max-width: 90%;
+
+  height: 20px;
+
+  margin-bottom: 30px;
+}
+
+.library-skeleton-buttons {
+  display: flex;
+
+  gap: 16px;
+}
+
+.library-skeleton-line.hero-button {
+  width: 150px;
+  height: 48px;
+
+  border-radius: 999px;
+}
+
+.library-skeleton-line.hero-button.secondary {
+  width: 140px;
+}
+
+
+/* =========================================================
+   SECTION
+========================================================= */
+
+.library-skeleton-section {
+  margin-bottom: 58px;
+}
+
+.library-skeleton-section-header {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: space-between;
+
+  margin-bottom: 24px;
+}
+
+.library-skeleton-line.section-small {
+  width: 150px;
+  height: 15px;
+
+  margin-bottom: 12px;
+}
+
+.library-skeleton-line.section-title {
+  width: 310px;
+  height: 30px;
+
+  border-radius: 8px;
+}
+
+.library-skeleton-line.section-title.medium {
+  width: 270px;
+}
+
+.library-skeleton-line.section-link {
+  width: 85px;
+  height: 18px;
+
+  border-radius: 6px;
+}
+
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.library-skeleton-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 24px;
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.library-skeleton-card {
+  overflow: hidden;
+
+  min-width: 0;
+
+  border-radius: 16px;
+
+  background: #fffdf9;
+
+  border: 1px solid #eadcca;
+}
+
+.library-skeleton-cover {
+  position: relative;
+
+  width: 100%;
+
+  aspect-ratio: 2 / 3;
+
+  overflow: hidden;
+
+  background: #e2d9cd;
+}
+
+.library-skeleton-shimmer {
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 100%
+    );
+
+  transform: translateX(-100%);
+
+  animation:
+    librarySkeletonShimmer
+    1.5s
+    infinite;
+}
+
+.library-skeleton-card-content {
+  padding: 16px;
+}
+
+.library-skeleton-line.library-skeleton-title {
+  width: 80%;
+  height: 20px;
+
+  margin-bottom: 12px;
+}
+
+.library-skeleton-line.library-skeleton-author {
+  width: 55%;
+  height: 14px;
+
+  margin-bottom: 12px;
+}
+
+.library-skeleton-line.library-skeleton-meta {
+  width: 70%;
+  height: 12px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+  .library-skeleton-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .library-loading-page {
+    padding: 20px 16px 60px;
+  }
+
+  .library-skeleton-hero {
+    min-height: 260px;
+
+    padding: 30px 24px;
+
+    margin-bottom: 40px;
+  }
+
+  .library-skeleton-line.hero-title {
+    width: 80%;
+    height: 38px;
+  }
+
+  .library-skeleton-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .library-skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .library-skeleton-buttons {
+    flex-direction: column;
+  }
+
+  .library-skeleton-line.hero-button,
+  .library-skeleton-line.hero-button.secondary {
+    width: 150px;
+  }
+}

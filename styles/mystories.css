@@ -473,3 +473,718 @@
         font-size: 0.64rem;
     }
 }
+
+/* =========================================
+   MY STORIES LOADING
+========================================= */
+
+.my-stories-loading-page {
+  width: 100%;
+  max-width: 1340px;
+  margin: 0 auto;
+  padding: 45px 32px 80px;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.my-stories-loading-header {
+  position: relative;
+  min-height: 190px;
+
+  padding: 34px 40px;
+
+  background: #fffdf8;
+
+  border: 1px solid #eadfce;
+  border-radius: 24px;
+
+  overflow: hidden;
+
+  margin-bottom: 45px;
+}
+
+
+/* Title */
+
+.my-stories-loading-title {
+  width: 280px;
+  height: 38px;
+
+  border-radius: 10px;
+
+  background: #e7dfd3;
+
+  animation: myStoriesPulse 1.5s ease-in-out infinite;
+}
+
+
+/* Description */
+
+.my-stories-loading-description {
+  width: 430px;
+  height: 16px;
+
+  margin-top: 18px;
+
+  border-radius: 8px;
+
+  background: #e7dfd3;
+
+  animation: myStoriesPulse 1.5s ease-in-out infinite;
+}
+
+
+/* Create button */
+
+.my-stories-loading-create-button {
+  width: 150px;
+  height: 44px;
+
+  margin-top: 28px;
+
+  border-radius: 22px;
+
+  background: #e0d5c5;
+
+  animation: myStoriesPulse 1.5s ease-in-out infinite;
+}
+
+
+/* =========================================
+   SECTION
+========================================= */
+
+.my-stories-loading-section {
+  margin-top: 10px;
+}
+
+
+/* Section title */
+
+.my-stories-loading-section-title {
+  width: 230px;
+  height: 26px;
+
+  margin-bottom: 24px;
+
+  border-radius: 8px;
+
+  background: #e7dfd3;
+
+  animation: myStoriesPulse 1.5s ease-in-out infinite;
+}
+
+
+/* =========================================
+   GRID
+========================================= */
+
+.my-stories-loading-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 24px;
+}
+
+
+/* =========================================
+   CARD
+========================================= */
+
+.my-stories-skeleton-card {
+  overflow: hidden;
+
+  background: #fffdf8;
+
+  border: 1px solid #eadfce;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 4px 14px rgba(60, 40, 20, 0.04);
+}
+
+
+/* =========================================
+   COVER
+========================================= */
+
+.my-stories-skeleton-cover {
+  position: relative;
+
+  width: 100%;
+
+  aspect-ratio: 2 / 3;
+
+  overflow: hidden;
+
+  background: #ddd5c9;
+}
+
+
+.my-stories-skeleton-shimmer {
+  position: absolute;
+
+  inset: 0;
+
+  background: linear-gradient(
+    90deg,
+    #ddd5c9 0%,
+    #ddd5c9 35%,
+    #f1ece5 50%,
+    #ddd5c9 65%,
+    #ddd5c9 100%
+  );
+
+  background-size: 200% 100%;
+
+  animation:
+    myStoriesShimmer 1.5s
+    ease-in-out
+    infinite;
+}
+
+
+/* =========================================
+   CARD CONTENT
+========================================= */
+
+.my-stories-skeleton-content {
+  padding: 18px;
+}
+
+
+/* Title */
+
+.my-stories-skeleton-line {
+  height: 14px;
+
+  border-radius: 7px;
+
+  background: #ded5c9;
+
+  animation:
+    myStoriesPulse 1.5s
+    ease-in-out
+    infinite;
+}
+
+
+.my-stories-skeleton-line.title {
+  width: 85%;
+  height: 19px;
+}
+
+
+/* Author */
+
+.my-stories-skeleton-line.author {
+  width: 52%;
+
+  margin-top: 12px;
+}
+
+
+/* Stats */
+
+.my-stories-skeleton-line.stats {
+  width: 68%;
+
+  margin-top: 13px;
+}
+
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.my-stories-skeleton-actions {
+  display: flex;
+
+  gap: 10px;
+
+  margin-top: 18px;
+}
+
+
+.my-stories-skeleton-button {
+  width: 90px;
+  height: 34px;
+
+  border-radius: 17px;
+
+  background: #e3d9cc;
+
+  animation:
+    myStoriesPulse 1.5s
+    ease-in-out
+    infinite;
+}
+
+
+.my-stories-skeleton-button.small {
+  width: 65px;
+}
+
+
+/* =========================================
+   ANIMATION
+========================================= */
+
+@keyframes myStoriesShimmer {
+
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+
+}
+
+
+@keyframes myStoriesPulse {
+
+  0% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.55;
+  }
+
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1100px) {
+
+  .my-stories-loading-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+}
+
+
+@media (max-width: 800px) {
+
+  .my-stories-loading-page {
+    padding: 30px 20px 60px;
+  }
+
+  .my-stories-loading-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 18px;
+  }
+
+  .my-stories-loading-header {
+    padding: 28px;
+  }
+
+}
+
+
+@media (max-width: 500px) {
+
+  .my-stories-loading-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .my-stories-loading-description {
+    width: 75%;
+  }
+
+}
+
+/* =========================================================
+   MY STORIES SKELETON
+   Designed to match MyStoriesView exactly
+========================================================= */
+
+.my-stories-skeleton-page {
+  animation: myStoriesSkeletonFadeIn 0.2s ease;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.my-story-skeleton-subtitle {
+  width: 120px;
+  height: 18px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  background: #e7dfd3;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.my-story-skeleton-main-title {
+  width: 250px;
+  height: 48px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background: #ddd4c7;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.my-story-skeleton-description {
+  width: 410px;
+  max-width: 100%;
+  height: 20px;
+  border-radius: 6px;
+  background: #e7dfd3;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.my-story-skeleton-create-button {
+  width: 190px;
+  height: 52px;
+  border-radius: 28px;
+  background: #ded4c7;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+
+/* =========================================================
+   STATS
+========================================================= */
+
+.my-story-skeleton-stats {
+  min-height: 150px;
+}
+
+.my-story-skeleton-stat-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  margin-bottom: 9px;
+  background: #e2d9cc;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.my-story-skeleton-stat-value {
+  width: 80px;
+  height: 34px;
+  border-radius: 7px;
+  margin-bottom: 9px;
+  background: #dcd2c4;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.my-story-skeleton-stat-value.short {
+  width: 45px;
+}
+
+.my-story-skeleton-stat-label {
+  width: 95px;
+  height: 15px;
+  border-radius: 5px;
+  background: #e8e0d6;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+
+/* =========================================================
+   STORY ITEM
+========================================================= */
+
+.my-story-skeleton-item {
+  pointer-events: none;
+}
+
+
+/* =========================================================
+   COVER
+========================================================= */
+
+.my-story-skeleton-item .my-story-cover-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.my-story-cover-skeleton {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #ded5c8;
+}
+
+.my-story-cover-shimmer {
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
+  );
+
+  animation: myStoryCoverShimmer 1.6s infinite;
+}
+
+
+/* =========================================================
+   TITLE + GENRE
+========================================================= */
+
+.my-story-skeleton-title {
+  width: 220px;
+  height: 25px;
+  border-radius: 6px;
+  background: #ddd4c7;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.my-story-skeleton-genre {
+  width: 75px;
+  height: 28px;
+  border-radius: 18px;
+  background: #e8ded2;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+
+/* =========================================================
+   PREMISE
+========================================================= */
+
+.my-story-skeleton-premise {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.my-story-skeleton-premise span {
+  display: block;
+  width: 360px;
+  max-width: 90%;
+  height: 15px;
+  border-radius: 5px;
+  background: #e7dfd4;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.my-story-skeleton-premise span:last-child {
+  width: 270px;
+}
+
+
+/* =========================================================
+   META
+========================================================= */
+
+.my-story-skeleton-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.my-story-skeleton-meta span {
+  width: 70px;
+  height: 14px;
+  border-radius: 5px;
+  background: #e6ddd2;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.my-story-skeleton-meta span:nth-child(2) {
+  width: 8px;
+}
+
+.my-story-skeleton-meta span:nth-child(3) {
+  width: 90px;
+}
+
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+.my-story-skeleton-progress {
+  margin-top: 12px;
+}
+
+.my-story-skeleton-progress-text {
+  width: 120px;
+  height: 15px;
+  border-radius: 5px;
+  margin-bottom: 7px;
+  background: #e5dcd1;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.my-story-skeleton-progress-bg {
+  width: 260px;
+  max-width: 100%;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7ded3;
+}
+
+.my-story-skeleton-progress-fill {
+  width: 35%;
+  height: 100%;
+  border-radius: inherit;
+  background: #d8ccbd;
+}
+
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+
+.my-story-skeleton-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.my-story-skeleton-action {
+  height: 44px;
+  border-radius: 11px;
+  background: #e2d8cb;
+  animation: myStoriesSkeletonPulse 1.5s ease-in-out infinite;
+}
+
+.my-story-skeleton-action.continue {
+  width: 105px;
+}
+
+.my-story-skeleton-action.edit {
+  width: 95px;
+}
+
+.my-story-skeleton-action.delete {
+  width: 85px;
+}
+
+
+/* =========================================================
+   ANIMATION
+========================================================= */
+
+@keyframes myStoriesSkeletonPulse {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes myStoryCoverShimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes myStoriesSkeletonFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .my-story-skeleton-create-button {
+    width: 170px;
+  }
+
+  .my-story-skeleton-title {
+    width: 180px;
+  }
+
+  .my-story-skeleton-premise span {
+    width: 260px;
+  }
+
+  .my-story-skeleton-action.continue {
+    width: 90px;
+  }
+
+  .my-story-skeleton-action.edit {
+    width: 80px;
+  }
+
+  .my-story-skeleton-action.delete {
+    width: 70px;
+  }
+}
+
+
+@media (max-width: 700px) {
+
+  .my-story-skeleton-page .mystories-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .my-story-skeleton-create-button {
+    width: 180px;
+  }
+
+  .my-story-skeleton-item {
+    flex-direction: column;
+  }
+
+  .my-story-skeleton-item .my-story-cover-wrapper {
+    width: 100%;
+    min-width: 100%;
+    height: 280px;
+  }
+
+  .my-story-skeleton-item .my-story-action {
+    width: 100%;
+  }
+
+  .my-story-skeleton-actions {
+    width: 100%;
+  }
+
+  .my-story-skeleton-action {
+    flex: 1;
+  }
+
+  .my-story-skeleton-premise span {
+    max-width: 100%;
+  }
+
+  .my-story-skeleton-progress-bg {
+    width: 100%;
+  }
+}

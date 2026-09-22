@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
+import {
+  useUser,
+  SignInButton,
+} from '@clerk/nextjs';
 
 import { supabase } from '@/lib/supabaseClient';
 import { ReaderView } from '@/components/ReaderView';
@@ -118,7 +121,7 @@ export default function StoryDetailPage() {
             creatorResponse.ok &&
             creatorData.success &&
             typeof creatorData.creatorName ===
-              'string' &&
+            'string' &&
             creatorData.creatorName.trim()
           ) {
             creatorName =
@@ -200,11 +203,11 @@ export default function StoryDetailPage() {
         const latestSharedChapter =
           sharedChapters.length > 0
             ? Math.max(
-                ...sharedChapters.map(
-                  (chapter) =>
-                    chapter.chapterNumber
-                )
+              ...sharedChapters.map(
+                (chapter) =>
+                  chapter.chapterNumber
               )
+            )
             : 1;
 
         /* =========================
@@ -257,7 +260,7 @@ export default function StoryDetailPage() {
           const {
             data: newSession,
             error:
-              createSessionError,
+            createSessionError,
           } = await supabase
             .from('game_sessions')
             .insert({
@@ -307,9 +310,9 @@ export default function StoryDetailPage() {
 
               const {
                 data:
-                  existingSessionAfterConflict,
+                existingSessionAfterConflict,
                 error:
-                  reloadSessionError,
+                reloadSessionError,
               } = await supabase
                 .from(
                   'game_sessions'
@@ -479,9 +482,9 @@ export default function StoryDetailPage() {
 
         const {
           data:
-            sessionChapterData,
+          sessionChapterData,
           error:
-            sessionChapterError,
+          sessionChapterError,
         } = await supabase
           .from(
             'session_chapters'
@@ -586,14 +589,14 @@ export default function StoryDetailPage() {
         const latestLoadedChapter =
           chapters.length > 0
             ? chapters[
-                chapters.length - 1
-              ].chapterNumber
+              chapters.length - 1
+            ].chapterNumber
             : 1;
 
         const sessionCurrentChapter =
           Number(
             currentSession.current_chapter ||
-              1
+            1
           );
 
         const currentChapter =
@@ -627,7 +630,7 @@ export default function StoryDetailPage() {
         ) {
           const {
             error:
-              updateSessionError,
+            updateSessionError,
           } = await supabase
             .from(
               'game_sessions'
@@ -912,21 +915,61 @@ export default function StoryDetailPage() {
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <h2 className="text-xl font-bold">
-          กรุณาเข้าสู่ระบบ
-        </h2>
+      <main className="login-required-page">
+        <div className="login-required-card">
 
-        <button
-          type="button"
-          className="px-4 py-2 bg-amber-700 text-white rounded hover:bg-amber-800"
-          onClick={() =>
-            router.push('/')
-          }
-        >
-          กลับหน้าหลัก
-        </button>
-      </div>
+          {/* Icon */}
+          <div className="login-required-icon">
+            <span>🔐</span>
+          </div>
+
+          {/* Text */}
+          <div className="login-required-content">
+            <p className="login-required-label">
+              GonnaTales
+            </p>
+
+            <h1>
+              กรุณาเข้าสู่ระบบ
+            </h1>
+
+            <p className="login-required-description">
+              เข้าสู่ระบบเพื่อเริ่มอ่านนิยาย
+              <br />
+              และบันทึกความคืบหน้าของคุณ
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="login-required-actions">
+
+            <SignInButton mode="modal">
+              <button
+                type="button"
+                className="login-required-primary"
+              >
+                <span>เข้าสู่ระบบ</span>
+                <span className="button-arrow">→</span>
+              </button>
+            </SignInButton>
+
+            <button
+              type="button"
+              className="login-required-secondary"
+              onClick={() => router.push('/')}
+            >
+              ← กลับหน้าหลัก
+            </button>
+
+          </div>
+
+          {/* Footer */}
+          <p className="login-required-footer">
+            Your stories, your journey.
+          </p>
+
+        </div>
+      </main>
     );
   }
 

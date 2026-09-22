@@ -575,3 +575,312 @@
         font-size: 0.75rem;
     }
 }
+
+/* =========================================================
+   DISCOVER FULL PAGE LOADING
+   Navbar จะไม่ถูก Skeleton
+========================================================= */
+
+.discover-loading-page {
+  width: 100%;
+}
+
+
+/* =========================================================
+   SHARED SKELETON
+========================================================= */
+
+.discover-skeleton-line {
+  position: relative;
+
+  overflow: hidden;
+
+  background: #e8e0d5;
+
+  border-radius: 8px;
+}
+
+.discover-skeleton-line::after {
+  content: '';
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.55) 50%,
+      transparent 100%
+    );
+
+  transform: translateX(-100%);
+
+  animation:
+    discoverSkeletonShimmer
+    1.5s
+    infinite;
+}
+
+@keyframes discoverSkeletonShimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.discover-loading-header {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 40px;
+
+  margin-bottom: 28px;
+}
+
+.discover-loading-title {
+  flex: 1;
+}
+
+.discover-skeleton-line.discover-loading-subtitle {
+  width: 170px;
+  height: 16px;
+
+  margin-bottom: 14px;
+}
+
+.discover-skeleton-line.discover-loading-heading {
+  width: 330px;
+  height: 38px;
+
+  border-radius: 9px;
+}
+
+.discover-skeleton-line.discover-loading-search {
+  width: 280px;
+  height: 48px;
+
+  border-radius: 999px;
+}
+
+
+/* =========================================================
+   CATEGORY
+========================================================= */
+
+.discover-loading-categories {
+  display: flex;
+
+  gap: 10px;
+
+  margin-bottom: 42px;
+
+  overflow: hidden;
+}
+
+.discover-loading-pill {
+  flex: 0 0 auto;
+
+  height: 38px;
+
+  border-radius: 999px;
+}
+
+.discover-loading-pill.pill-0 {
+  width: 72px;
+}
+
+.discover-loading-pill.pill-1 {
+  width: 92px;
+}
+
+.discover-loading-pill.pill-2 {
+  width: 110px;
+}
+
+.discover-loading-pill.pill-3 {
+  width: 128px;
+}
+
+.discover-loading-pill.pill-4 {
+  width: 78px;
+}
+
+.discover-loading-pill.pill-5 {
+  width: 110px;
+}
+
+.discover-loading-pill.pill-6 {
+  width: 96px;
+}
+
+
+/* =========================================================
+   SECTION
+========================================================= */
+
+.discover-loading-section {
+  width: 100%;
+}
+
+.discover-loading-section-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 22px;
+}
+
+.discover-skeleton-line.discover-loading-section-title {
+  width: 300px;
+  height: 30px;
+
+  border-radius: 8px;
+}
+
+.discover-skeleton-line.discover-loading-link {
+  width: 80px;
+  height: 17px;
+
+  border-radius: 6px;
+}
+
+
+/* =========================================================
+   STORY GRID
+========================================================= */
+
+.discover-loading-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 24px;
+}
+
+
+/* =========================================================
+   STORY CARD
+========================================================= */
+
+.discover-skeleton-card {
+  min-width: 0;
+
+  overflow: hidden;
+
+  border-radius: 16px;
+
+  background: #fffdf9;
+
+  border: 1px solid #eadcca;
+}
+
+.discover-skeleton-cover {
+  position: relative;
+
+  width: 100%;
+
+  aspect-ratio: 2 / 3;
+
+  overflow: hidden;
+
+  background: #e2d9cd;
+}
+
+.discover-skeleton-shimmer {
+  position: absolute;
+
+  inset: 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.45) 50%,
+      transparent 100%
+    );
+
+  transform: translateX(-100%);
+
+  animation:
+    discoverSkeletonShimmer
+    1.5s
+    infinite;
+}
+
+.discover-skeleton-card-content {
+  padding: 16px;
+}
+
+.discover-skeleton-line.discover-skeleton-title {
+  width: 80%;
+  height: 20px;
+
+  margin-bottom: 12px;
+}
+
+.discover-skeleton-line.discover-skeleton-author {
+  width: 55%;
+  height: 14px;
+
+  margin-bottom: 12px;
+}
+
+.discover-skeleton-line.discover-skeleton-meta {
+  width: 70%;
+  height: 12px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+  .discover-loading-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .discover-loading-header {
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 20px;
+  }
+
+  .discover-skeleton-line.discover-loading-search {
+    width: 100%;
+  }
+
+  .discover-loading-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .discover-loading-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .discover-loading-categories {
+    gap: 8px;
+  }
+
+  .discover-skeleton-line.discover-loading-heading {
+    width: 75%;
+  }
+}

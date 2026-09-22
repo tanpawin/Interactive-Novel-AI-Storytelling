@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
 
 import { DiscoverView } from '@/components/DiscoverView';
 import { supabase } from '@/lib/supabaseClient';
@@ -16,17 +17,32 @@ import type {
 export default function DiscoverPage() {
   const router = useRouter();
 
+  // ==========================================
+  // CLERK
+  // ==========================================
+
+  const { isLoaded } = useUser();
+
+  // ==========================================
+  // STATE
+  // ==========================================
+
   const [stories, setStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // ==========================================
+  // LOAD STORIES
+  // ==========================================
 
   useEffect(() => {
     const loadStories = async () => {
       setIsLoading(true);
 
       try {
-        /*
-         * โหลดเรื่องโปรดของผู้ใช้ปัจจุบัน
-         */
+        // ==========================================
+        // LOAD FAVORITES
+        // ==========================================
+
         let favoriteStoryIds: string[] = [];
 
         try {
@@ -41,15 +57,21 @@ export default function DiscoverPage() {
               favoriteData.favoriteStoryIds || [];
           }
         } catch (error) {
+          /*
+           * ถ้ายังไม่ได้ Login
+           * หรือ API Favorites ใช้งานไม่ได้
+           * ก็ไม่ทำให้หน้า Discover พัง
+           */
           console.error(
             'Load Favorites Error:',
             error
           );
         }
 
-        /*
-         * โหลดนิยายทั้งหมด
-         */
+        // ==========================================
+        // LOAD ALL STORIES
+        // ==========================================
+
         const {
           data: storyData,
           error: storyError,
@@ -65,24 +87,34 @@ export default function DiscoverPage() {
             'Discover Stories Error:',
             storyError
           );
+
           return;
         }
 
-        if (!storyData || storyData.length === 0) {
+        // ==========================================
+        // NO STORIES
+        // ==========================================
+
+        if (
+          !storyData ||
+          storyData.length === 0
+        ) {
           setStories([]);
           return;
         }
 
-        /*
-         * เอา ID ของนิยายทั้งหมด
-         */
+        // ==========================================
+        // GET STORY IDS
+        // ==========================================
+
         const storyIds = storyData.map(
           (story) => story.id
         );
 
-        /*
-         * โหลด chapters ของนิยายทั้งหมด
-         */
+        // ==========================================
+        // LOAD CHAPTERS
+        // ==========================================
+
         const {
           data: chapterData,
           error: chapterError,
@@ -99,17 +131,22 @@ export default function DiscoverPage() {
             'Discover Chapters Error:',
             chapterError
           );
+
           return;
         }
 
         const chapters = chapterData || [];
 
-        /*
-         * แปลงข้อมูลจาก Database
-         * ให้ตรงกับ Story type
-         */
+        // ==========================================
+        // MAP DATABASE → STORY TYPE
+        // ==========================================
+
         const mappedStories: Story[] =
           storyData.map((story) => {
+            // --------------------------------------
+            // Chapters ของ Story นี้
+            // --------------------------------------
+
             const storyChapters: Chapter[] =
               chapters
                 .filter(
@@ -118,15 +155,24 @@ export default function DiscoverPage() {
                 )
                 .map((chapter) => ({
                   id: chapter.id,
+
                   chapterNumber:
                     chapter.chapter_number,
+
                   title:
                     chapter.title ||
                     `บทที่ ${chapter.chapter_number}`,
-                  content: chapter.content,
+
+                  content:
+                    chapter.content || '',
+
                   createdAt:
                     chapter.created_at,
                 }));
+
+            // --------------------------------------
+            // Current Chapter
+            // --------------------------------------
 
             const currentChapter =
               storyChapters.length > 0
@@ -134,6 +180,10 @@ export default function DiscoverPage() {
                     storyChapters.length - 1
                   ].chapterNumber
                 : 0;
+
+            // --------------------------------------
+            // Word Count
+            // --------------------------------------
 
             const wordCount =
               storyChapters.reduce(
@@ -143,12 +193,20 @@ export default function DiscoverPage() {
                 0
               );
 
+            // --------------------------------------
+            // Fresh Story
+            // --------------------------------------
+
             const isFresh =
               Date.now() -
                 new Date(
                   story.created_at
                 ).getTime() <
               7 * 24 * 60 * 60 * 1000;
+
+            // --------------------------------------
+            // Return Story
+            // --------------------------------------
 
             return {
               id: story.id,
@@ -176,37 +234,58 @@ export default function DiscoverPage() {
                     : 'นวนิยายยาว',
 
               protagonist: '',
+
               worldSetting: '',
+
+              // ------------------------------------
+              // Cover
+              // ------------------------------------
 
               coverUrl:
                 story.cover_image_url || '',
 
-              author:
-                'นักเขียน',
+              // ------------------------------------
+              // Author
+              // ------------------------------------
+
+              author: 'นักเขียน',
+
+              // ------------------------------------
+              // Chapters
+              // ------------------------------------
 
               totalChapters:
-                story.total_chapters,
+                story.total_chapters || 0,
 
               currentChapter,
 
               wordCount,
 
-              /*
-               * เช็กจาก favorite_stories
-               */
+              chapters:
+                storyChapters,
+
+              // ------------------------------------
+              // Favorite
+              // ------------------------------------
+
               isFavorite:
                 favoriteStoryIds.includes(
                   story.id
                 ),
 
+              // ------------------------------------
+              // Status
+              // ------------------------------------
+
               isFresh,
 
               isTrending: false,
-
-              chapters:
-                storyChapters,
             };
           });
+
+        // ==========================================
+        // SET STORIES
+        // ==========================================
 
         setStories(mappedStories);
       } catch (error) {
@@ -222,17 +301,25 @@ export default function DiscoverPage() {
     loadStories();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>กำลังโหลดนิยาย...</p>
-      </div>
-    );
-  }
+  // ==========================================
+  // RENDER
+  // ==========================================
 
   return (
     <DiscoverView
       stories={stories}
+
+      /*
+       * สำคัญมาก
+       *
+       * ถ้า Clerk ยังไม่พร้อม
+       * หรือ Supabase ยังโหลดข้อมูลอยู่
+       * ให้ DiscoverView แสดง Skeleton
+       *
+       * Navbar จะยังแสดงตามปกติ
+       */
+      isLoading={!isLoaded || isLoading}
+
       onSelectStory={(id) =>
         router.push(`/story/${id}`)
       }

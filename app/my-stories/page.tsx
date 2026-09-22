@@ -7,6 +7,7 @@ import { useUser } from '@clerk/nextjs';
 import { supabase } from '@/lib/supabaseClient';
 
 import { MyStoriesView } from '@/components/MyStoriesView';
+import MyStoriesSkeleton from '@/components/MyStoriesSkeleton';
 import { EditStoryModal } from '@/components/EditStoryModal';
 import { DeleteStoryModal } from '@/components/DeleteStoryModal';
 
@@ -24,11 +25,15 @@ export default function MyStoriesPage() {
   const [stories, setStories] = useState<Story[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Edit Modal
+  // ==========================================
+  // EDIT MODAL
+  // ==========================================
   const [editingStory, setEditingStory] =
     useState<Story | null>(null);
 
-  // Delete Modal
+  // ==========================================
+  // DELETE MODAL
+  // ==========================================
   const [deletingStory, setDeletingStory] =
     useState<Story | null>(null);
 
@@ -39,8 +44,10 @@ export default function MyStoriesPage() {
   // LOAD MY STORIES
   // ==========================================
   useEffect(() => {
+    // รอให้ Clerk โหลดข้อมูล User เสร็จก่อน
     if (!isLoaded) return;
 
+    // ถ้ายังไม่ได้ Login
     if (!user) {
       setStories([]);
       setIsLoading(false);
@@ -51,7 +58,9 @@ export default function MyStoriesPage() {
       setIsLoading(true);
 
       try {
-        // โหลดเฉพาะนิยายของ User ที่ Login อยู่
+        // ==========================================
+        // LOAD STORIES
+        // ==========================================
         const {
           data: storyData,
           error: storyError,
@@ -68,20 +77,27 @@ export default function MyStoriesPage() {
             'My Stories Error:',
             storyError
           );
+
+          setStories([]);
           return;
         }
 
+        // ไม่มีนิยาย
         if (!storyData || storyData.length === 0) {
           setStories([]);
           return;
         }
 
-        // เอา ID ของนิยายทั้งหมด
+        // ==========================================
+        // STORY IDS
+        // ==========================================
         const storyIds = storyData.map(
           (story) => story.id
         );
 
-        // โหลด Chapter ของนิยายเหล่านั้น
+        // ==========================================
+        // LOAD CHAPTERS
+        // ==========================================
         const {
           data: chapterData,
           error: chapterError,
@@ -98,14 +114,19 @@ export default function MyStoriesPage() {
             'My Stories Chapter Error:',
             chapterError
           );
+
+          setStories([]);
           return;
         }
 
         const chapters = chapterData || [];
 
-        // แปลงข้อมูล Supabase → Story type
+        // ==========================================
+        // MAP SUPABASE DATA → STORY TYPE
+        // ==========================================
         const mappedStories: Story[] =
           storyData.map((story) => {
+            // Chapters ของนิยายเรื่องนี้
             const storyChapters: Chapter[] =
               chapters
                 .filter(
@@ -114,16 +135,24 @@ export default function MyStoriesPage() {
                 )
                 .map((chapter) => ({
                   id: chapter.id,
+
                   chapterNumber:
                     chapter.chapter_number,
+
                   title:
                     chapter.title ||
                     `บทที่ ${chapter.chapter_number}`,
-                  content: chapter.content,
+
+                  content:
+                    chapter.content || '',
+
                   createdAt:
                     chapter.created_at,
                 }));
 
+            // ==========================================
+            // CURRENT CHAPTER
+            // ==========================================
             const currentChapter =
               storyChapters.length > 0
                 ? storyChapters[
@@ -131,6 +160,9 @@ export default function MyStoriesPage() {
                   ].chapterNumber
                 : 0;
 
+            // ==========================================
+            // WORD COUNT
+            // ==========================================
             const wordCount =
               storyChapters.reduce(
                 (total, chapter) =>
@@ -139,6 +171,9 @@ export default function MyStoriesPage() {
                 0
               );
 
+            // ==========================================
+            // RETURN STORY
+            // ==========================================
             return {
               id: story.id,
 
@@ -175,7 +210,7 @@ export default function MyStoriesPage() {
                 'ไม่ระบุชื่อ',
 
               totalChapters:
-                story.total_chapters,
+                story.total_chapters || 0,
 
               currentChapter,
 
@@ -204,6 +239,8 @@ export default function MyStoriesPage() {
           'Load My Stories Error:',
           error
         );
+
+        setStories([]);
       } finally {
         setIsLoading(false);
       }
@@ -219,7 +256,6 @@ export default function MyStoriesPage() {
     /*
      * ล้าง Draft ของนิยายเรื่องเก่า
      * เพื่อให้หน้า Create Story เริ่มเรื่องใหม่
-     * โดยไม่มีชื่อเรื่อง / ข้อมูล / รูปปกเก่าค้างอยู่
      */
     sessionStorage.removeItem(
       'cozytales_create_story_draft'
@@ -246,14 +282,19 @@ export default function MyStoriesPage() {
         story.id === updatedStory.id
           ? {
               ...story,
+
               title:
                 updatedStory.title,
+
               corePremise:
                 updatedStory.corePremise,
+
               genre:
                 updatedStory.genre,
+
               tone:
                 updatedStory.tone,
+
               coverUrl:
                 updatedStory.coverUrl,
             }
@@ -302,7 +343,9 @@ export default function MyStoriesPage() {
         );
       }
 
-      // เอานิยายที่ถูกลบออกจากหน้าจอทันที
+      // ==========================================
+      // REMOVE FROM UI
+      // ==========================================
       setStories((prevStories) =>
         prevStories.filter(
           (story) =>
@@ -328,14 +371,17 @@ export default function MyStoriesPage() {
   };
 
   // ==========================================
-  // LOADING
+  // CLERK LOADING
   // ==========================================
-  if (!isLoaded || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>กำลังโหลดนิยาย...</p>
-      </div>
-    );
+  if (!isLoaded) {
+    return <MyStoriesSkeleton />;
+  }
+
+  // ==========================================
+  // SUPABASE LOADING
+  // ==========================================
+  if (isLoading) {
+    return <MyStoriesSkeleton />;
   }
 
   // ==========================================
@@ -353,7 +399,9 @@ export default function MyStoriesPage() {
         onDeleteStory={handleDeleteStory}
       />
 
-      {/* EDIT */}
+      {/* ========================================
+          EDIT MODAL
+      ======================================== */}
       <EditStoryModal
         isOpen={editingStory !== null}
         story={editingStory}
@@ -363,7 +411,9 @@ export default function MyStoriesPage() {
         onSaved={handleStorySaved}
       />
 
-      {/* DELETE */}
+      {/* ========================================
+          DELETE MODAL
+      ======================================== */}
       <DeleteStoryModal
         isOpen={deletingStory !== null}
         story={deletingStory}

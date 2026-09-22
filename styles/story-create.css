@@ -1229,3 +1229,147 @@
     padding-right: 1rem;
   }
 }
+
+/* =========================================================
+   CREATE STORY AUTH
+========================================================= */
+
+.story-create-auth-loading {
+  min-height: calc(100vh - 100px);
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 40px;
+}
+
+.story-create-auth-loading h2 {
+  margin: 20px 0 8px;
+
+  font-family:
+    Georgia,
+    'Times New Roman',
+    serif;
+
+  font-size: 30px;
+
+  color: #3b241c;
+}
+
+.story-create-auth-loading p {
+  margin: 0 0 26px;
+
+  color: #806f63;
+
+  font-size: 16px;
+}
+
+.story-create-auth-icon {
+  width: 78px;
+  height: 78px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #f3e8dc;
+
+  font-size: 34px;
+}
+
+
+/* Loading spinner */
+
+.story-create-auth-spinner {
+  width: 42px;
+  height: 42px;
+
+  border: 4px solid #eaded1;
+
+  border-top-color: #985b42;
+
+  border-radius: 50%;
+
+  animation:
+    storyCreateAuthSpin
+    0.8s
+    linear
+    infinite;
+}
+
+@keyframes storyCreateAuthSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* Login button */
+
+.story-create-auth-login {
+  min-width: 170px;
+
+  padding: 13px 26px;
+
+  margin-bottom: 10px;
+
+  border: none;
+  border-radius: 999px;
+
+  background: #985b42;
+
+  color: #fff;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.story-create-auth-login:hover {
+  background: #824b37;
+
+  transform: translateY(-2px);
+}
+
+
+/* Home button */
+
+.story-create-auth-home {
+  min-width: 170px;
+
+  padding: 12px 26px;
+
+  border: 1px solid #ddcdbd;
+
+  border-radius: 999px;
+
+  background: #fffaf4;
+
+  color: #6f5143;
+
+  font-size: 15px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.story-create-auth-home:hover {
+  background: #f5eadf;
+
+  transform: translateY(-1px);
+}
