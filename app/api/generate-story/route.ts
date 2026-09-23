@@ -1966,25 +1966,7 @@ ${formData.worldSetting || 'ไม่ระบุ'}
         );
       }
 
-      /* =====================================================
-         Check Story Access
-      ===================================================== */
 
-      const isOwner =
-        story.user_id === userId;
-
-      const isPublished =
-        story.is_published === true;
-
-      if (!isOwner && !isPublished) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'นิยายเรื่องนี้ยังไม่ได้เผยแพร่',
-          },
-          { status: 403 }
-        );
-      }
 
       /* =====================================================
          Get / Create Game Session
@@ -2230,15 +2212,7 @@ ${formData.worldSetting || 'ไม่ระบุ'}
         userId
       );
 
-      console.log(
-        'Is Owner:',
-        isOwner
-      );
 
-      console.log(
-        'Is Published:',
-        isPublished
-      );
 
       console.log(
         'Session ID:',
