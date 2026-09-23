@@ -1,13 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
+import {
+  useClerk,
+  useSession,
   useUser,
-  SignInButton,
 } from '@clerk/nextjs';
 
-import { supabase } from '@/lib/supabaseClient';
+import {
+  useParams,
+  useRouter,
+} from 'next/navigation';
+
+import { createSupabaseClient } from '@/lib/supabaseClient';
+
 import { ReaderView } from '@/components/ReaderView';
 
 import {
@@ -20,7 +31,20 @@ import {
 export default function StoryDetailPage() {
   const params = useParams();
   const router = useRouter();
+
   const { user, isLoaded } = useUser();
+  const { session } = useSession();
+  const { openSignIn } = useClerk();
+
+  const supabase = useMemo(
+    () =>
+      createSupabaseClient(
+        () =>
+          session?.getToken() ??
+          Promise.resolve(null)
+      ),
+    [session]
+  );
 
   const rawId = params?.id;
 
@@ -47,8 +71,28 @@ export default function StoryDetailPage() {
   const [isLoading, setIsLoading] =
     useState(true);
 
+  /* =========================
+     Open Login Modal
+  ========================= */
+
   useEffect(() => {
-    if (!isLoaded) {
+    if (!isLoaded) return;
+
+    if (!user) {
+      openSignIn();
+    }
+  }, [
+    isLoaded,
+    user,
+    openSignIn,
+  ]);
+
+  /* =========================
+     Load Story
+  ========================= */
+
+  useEffect(() => {
+    if (!isLoaded || !session) {
       return;
     }
 
@@ -121,7 +165,7 @@ export default function StoryDetailPage() {
             creatorResponse.ok &&
             creatorData.success &&
             typeof creatorData.creatorName ===
-            'string' &&
+              'string' &&
             creatorData.creatorName.trim()
           ) {
             creatorName =
@@ -148,16 +192,14 @@ export default function StoryDetailPage() {
           error: chapterError,
         } = await supabase
           .from('chapters')
-          .select(
-            `
+          .select(`
             id,
             story_id,
             chapter_number,
             title,
             content,
             created_at
-            `
-          )
+          `)
           .eq(
             'story_id',
             storyId
@@ -203,11 +245,11 @@ export default function StoryDetailPage() {
         const latestSharedChapter =
           sharedChapters.length > 0
             ? Math.max(
-              ...sharedChapters.map(
-                (chapter) =>
-                  chapter.chapterNumber
+                ...sharedChapters.map(
+                  (chapter) =>
+                    chapter.chapterNumber
+                )
               )
-            )
             : 1;
 
         /* =========================
@@ -219,8 +261,7 @@ export default function StoryDetailPage() {
           error: sessionError,
         } = await supabase
           .from('game_sessions')
-          .select(
-            `
+          .select(`
             id,
             user_id,
             story_id,
@@ -228,8 +269,7 @@ export default function StoryDetailPage() {
             status,
             current_inventory,
             is_public
-            `
-          )
+          `)
           .eq(
             'user_id',
             user.id
@@ -260,7 +300,7 @@ export default function StoryDetailPage() {
           const {
             data: newSession,
             error:
-            createSessionError,
+              createSessionError,
           } = await supabase
             .from('game_sessions')
             .insert({
@@ -284,8 +324,7 @@ export default function StoryDetailPage() {
               is_public:
                 false,
             })
-            .select(
-              `
+            .select(`
               id,
               user_id,
               story_id,
@@ -293,8 +332,7 @@ export default function StoryDetailPage() {
               status,
               current_inventory,
               is_public
-              `
-            )
+            `)
             .single();
 
           if (
@@ -310,15 +348,14 @@ export default function StoryDetailPage() {
 
               const {
                 data:
-                existingSessionAfterConflict,
+                  existingSessionAfterConflict,
                 error:
-                reloadSessionError,
+                  reloadSessionError,
               } = await supabase
                 .from(
                   'game_sessions'
                 )
-                .select(
-                  `
+                .select(`
                   id,
                   user_id,
                   story_id,
@@ -326,8 +363,7 @@ export default function StoryDetailPage() {
                   status,
                   current_inventory,
                   is_public
-                  `
-                )
+                `)
                 .eq(
                   'user_id',
                   user.id
@@ -482,15 +518,14 @@ export default function StoryDetailPage() {
 
         const {
           data:
-          sessionChapterData,
+            sessionChapterData,
           error:
-          sessionChapterError,
+            sessionChapterError,
         } = await supabase
           .from(
             'session_chapters'
           )
-          .select(
-            `
+          .select(`
             id,
             session_id,
             chapter_number,
@@ -498,8 +533,7 @@ export default function StoryDetailPage() {
             content,
             user_choice,
             created_at
-            `
-          )
+          `)
           .eq(
             'session_id',
             currentSession.id
@@ -589,14 +623,14 @@ export default function StoryDetailPage() {
         const latestLoadedChapter =
           chapters.length > 0
             ? chapters[
-              chapters.length - 1
-            ].chapterNumber
+                chapters.length - 1
+              ].chapterNumber
             : 1;
 
         const sessionCurrentChapter =
           Number(
             currentSession.current_chapter ||
-            1
+              1
           );
 
         const currentChapter =
@@ -630,7 +664,7 @@ export default function StoryDetailPage() {
         ) {
           const {
             error:
-            updateSessionError,
+              updateSessionError,
           } = await supabase
             .from(
               'game_sessions'
@@ -841,6 +875,8 @@ export default function StoryDetailPage() {
     storyId,
     user,
     isLoaded,
+    session,
+    supabase,
   ]);
 
   /* =========================
@@ -914,63 +950,7 @@ export default function StoryDetailPage() {
   ========================= */
 
   if (!user) {
-    return (
-      <main className="login-required-page">
-        <div className="login-required-card">
-
-          {/* Icon */}
-          <div className="login-required-icon">
-            <span>🔐</span>
-          </div>
-
-          {/* Text */}
-          <div className="login-required-content">
-            <p className="login-required-label">
-              GonnaTales
-            </p>
-
-            <h1>
-              กรุณาเข้าสู่ระบบ
-            </h1>
-
-            <p className="login-required-description">
-              เข้าสู่ระบบเพื่อเริ่มอ่านนิยาย
-              <br />
-              และบันทึกความคืบหน้าของคุณ
-            </p>
-          </div>
-
-          {/* Actions */}
-          <div className="login-required-actions">
-
-            <SignInButton mode="modal">
-              <button
-                type="button"
-                className="login-required-primary"
-              >
-                <span>เข้าสู่ระบบ</span>
-                <span className="button-arrow">→</span>
-              </button>
-            </SignInButton>
-
-            <button
-              type="button"
-              className="login-required-secondary"
-              onClick={() => router.push('/')}
-            >
-              ← กลับหน้าหลัก
-            </button>
-
-          </div>
-
-          {/* Footer */}
-          <p className="login-required-footer">
-            Your stories, your journey.
-          </p>
-
-        </div>
-      </main>
-    );
+    return null;
   }
 
   /* =========================

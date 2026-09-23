@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 
-import { supabase } from '@/lib/supabaseClient';
+import { createServerSupabaseClient } from '@/lib/supabaseServer';
 
 export async function GET(req: Request) {
   try {
@@ -17,6 +17,8 @@ export async function GET(req: Request) {
       );
     }
 
+    const supabase = createServerSupabaseClient();
+
     const { searchParams } = new URL(req.url);
     const storyId = searchParams.get('storyId');
 
@@ -30,41 +32,7 @@ export async function GET(req: Request) {
       );
     }
 
-    // ตรวจสอบว่า Story เป็นของ User คนนี้
-    const { data: story, error: storyError } =
-      await supabase
-        .from('stories')
-        .select('id')
-        .eq('id', storyId)
-        .eq('user_id', userId)
-        .maybeSingle();
-
-    if (storyError) {
-      console.error(
-        'Character Story Check Error:',
-        storyError
-      );
-
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'ไม่สามารถตรวจสอบนิยายได้',
-        },
-        { status: 500 }
-      );
-    }
-
-    if (!story) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            'ไม่พบเรื่องนี้หรือไม่มีสิทธิ์เข้าถึง',
-        },
-        { status: 404 }
-      );
-    }
-
+    // ทุก User ที่เข้าสู่ระบบสามารถอ่านตัวละครของ Story ได้
     const {
       data: characters,
       error: characterError,
@@ -137,6 +105,8 @@ export async function POST(req: Request) {
       );
     }
 
+    const supabase = createServerSupabaseClient();
+
     const body = await req.json();
 
     const {
@@ -178,13 +148,16 @@ export async function POST(req: Request) {
     }
 
     // ตรวจสอบว่า Story เป็นของ User คนนี้
-    const { data: story, error: storyError } =
-      await supabase
-        .from('stories')
-        .select('id')
-        .eq('id', storyId)
-        .eq('user_id', userId)
-        .maybeSingle();
+    // เฉพาะเจ้าของ Story เท่านั้นที่สร้างตัวละครได้
+    const {
+      data: story,
+      error: storyError,
+    } = await supabase
+      .from('stories')
+      .select('id')
+      .eq('id', storyId)
+      .eq('user_id', userId)
+      .maybeSingle();
 
     if (storyError) {
       console.error(
@@ -212,21 +185,23 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data: character, error: insertError } =
-      await supabase
-        .from('characters')
-        .insert({
-          story_id: storyId,
-          name: name.trim(),
-          role,
-          appearance:
-            appearance?.trim() || null,
-          personality: personality.trim(),
-          initial_items:
-            initialItems || [],
-        })
-        .select()
-        .single();
+    const {
+      data: character,
+      error: insertError,
+    } = await supabase
+      .from('characters')
+      .insert({
+        story_id: storyId,
+        name: name.trim(),
+        role,
+        appearance:
+          appearance?.trim() || null,
+        personality: personality.trim(),
+        initial_items:
+          initialItems || [],
+      })
+      .select()
+      .single();
 
     if (insertError) {
       console.error(
@@ -237,8 +212,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            'ไม่สามารถบันทึกตัวละครได้',
+          error: 'ไม่สามารถบันทึกตัวละครได้',
         },
         { status: 500 }
       );
@@ -281,6 +255,8 @@ export async function DELETE(req: Request) {
       );
     }
 
+    const supabase = createServerSupabaseClient();
+
     const body = await req.json();
 
     const {
@@ -299,13 +275,31 @@ export async function DELETE(req: Request) {
     }
 
     // ตรวจสอบว่า Story เป็นของ User คนนี้
-    const { data: story } =
-      await supabase
-        .from('stories')
-        .select('id')
-        .eq('id', storyId)
-        .eq('user_id', userId)
-        .maybeSingle();
+    // เฉพาะเจ้าของ Story เท่านั้นที่ลบตัวละครได้
+    const {
+      data: story,
+      error: storyError,
+    } = await supabase
+      .from('stories')
+      .select('id')
+      .eq('id', storyId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (storyError) {
+      console.error(
+        'Character Story Check Error:',
+        storyError
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'ไม่สามารถตรวจสอบนิยายได้',
+        },
+        { status: 500 }
+      );
+    }
 
     if (!story) {
       return NextResponse.json(
@@ -335,8 +329,7 @@ export async function DELETE(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            'ไม่สามารถลบตัวละครได้',
+          error: 'ไม่สามารถลบตัวละครได้',
         },
         { status: 500 }
       );

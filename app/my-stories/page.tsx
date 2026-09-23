@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
+import { useSession, useUser } from '@clerk/nextjs';
 
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 
 import { MyStoriesView } from '@/components/MyStoriesView';
 import MyStoriesSkeleton from '@/components/MyStoriesSkeleton';
@@ -20,10 +20,24 @@ import type {
 
 export default function MyStoriesPage() {
   const { user, isLoaded } = useUser();
+  const { session } = useSession();
   const router = useRouter();
 
-  const [stories, setStories] = useState<Story[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const supabase = useMemo(
+    () =>
+      createSupabaseClient(
+        () =>
+          session?.getToken() ??
+          Promise.resolve(null)
+      ),
+    [session]
+  );
+
+  const [stories, setStories] =
+    useState<Story[]>([]);
+
+  const [isLoading, setIsLoading] =
+    useState(true);
 
   // ==========================================
   // EDIT MODAL
@@ -44,11 +58,9 @@ export default function MyStoriesPage() {
   // LOAD MY STORIES
   // ==========================================
   useEffect(() => {
-    // รอให้ Clerk โหลดข้อมูล User เสร็จก่อน
     if (!isLoaded) return;
 
-    // ถ้ายังไม่ได้ Login
-    if (!user) {
+    if (!user || !session) {
       setStories([]);
       setIsLoading(false);
       return;
@@ -82,8 +94,10 @@ export default function MyStoriesPage() {
           return;
         }
 
-        // ไม่มีนิยาย
-        if (!storyData || storyData.length === 0) {
+        if (
+          !storyData ||
+          storyData.length === 0
+        ) {
           setStories([]);
           return;
         }
@@ -104,10 +118,16 @@ export default function MyStoriesPage() {
         } = await supabase
           .from('chapters')
           .select('*')
-          .in('story_id', storyIds)
-          .order('chapter_number', {
-            ascending: true,
-          });
+          .in(
+            'story_id',
+            storyIds
+          )
+          .order(
+            'chapter_number',
+            {
+              ascending: true,
+            }
+          );
 
         if (chapterError) {
           console.error(
@@ -119,19 +139,20 @@ export default function MyStoriesPage() {
           return;
         }
 
-        const chapters = chapterData || [];
+        const chapters =
+          chapterData || [];
 
         // ==========================================
         // MAP SUPABASE DATA → STORY TYPE
         // ==========================================
         const mappedStories: Story[] =
           storyData.map((story) => {
-            // Chapters ของนิยายเรื่องนี้
             const storyChapters: Chapter[] =
               chapters
                 .filter(
                   (chapter) =>
-                    chapter.story_id === story.id
+                    chapter.story_id ===
+                    story.id
                 )
                 .map((chapter) => ({
                   id: chapter.id,
@@ -165,7 +186,10 @@ export default function MyStoriesPage() {
             // ==========================================
             const wordCount =
               storyChapters.reduce(
-                (total, chapter) =>
+                (
+                  total,
+                  chapter
+                ) =>
                   total +
                   chapter.content.length,
                 0
@@ -203,7 +227,8 @@ export default function MyStoriesPage() {
               worldSetting: '',
 
               coverUrl:
-                story.cover_image_url || '',
+                story.cover_image_url ||
+                '',
 
               author:
                 user.fullName ||
@@ -220,20 +245,27 @@ export default function MyStoriesPage() {
                 storyChapters,
 
               isFavorite:
-                story.is_favorite ?? false,
+                story.is_favorite ??
+                false,
 
               isFresh:
                 Date.now() -
                   new Date(
                     story.created_at
                   ).getTime() <
-                7 * 24 * 60 * 60 * 1000,
+                7 *
+                  24 *
+                  60 *
+                  60 *
+                  1000,
 
               isTrending: false,
             };
           });
 
-        setStories(mappedStories);
+        setStories(
+          mappedStories
+        );
       } catch (error) {
         console.error(
           'Load My Stories Error:',
@@ -247,27 +279,32 @@ export default function MyStoriesPage() {
     };
 
     loadStories();
-  }, [user, isLoaded]);
+  }, [
+    user,
+    isLoaded,
+    session,
+    supabase,
+  ]);
 
   // ==========================================
   // CREATE NEW STORY
   // ==========================================
   const handleCreateStory = () => {
-    /*
-     * ล้าง Draft ของนิยายเรื่องเก่า
-     * เพื่อให้หน้า Create Story เริ่มเรื่องใหม่
-     */
     sessionStorage.removeItem(
       'cozytales_create_story_draft'
     );
 
-    router.push('/story/create');
+    router.push(
+      '/story/create'
+    );
   };
 
   // ==========================================
   // EDIT STORY
   // ==========================================
-  const handleEditStory = (story: Story) => {
+  const handleEditStory = (
+    story: Story
+  ) => {
     setEditingStory(story);
   };
 
@@ -277,29 +314,32 @@ export default function MyStoriesPage() {
   const handleStorySaved = (
     updatedStory: Story
   ) => {
-    setStories((prevStories) =>
-      prevStories.map((story) =>
-        story.id === updatedStory.id
-          ? {
-              ...story,
+    setStories(
+      (prevStories) =>
+        prevStories.map(
+          (story) =>
+            story.id ===
+            updatedStory.id
+              ? {
+                  ...story,
 
-              title:
-                updatedStory.title,
+                  title:
+                    updatedStory.title,
 
-              corePremise:
-                updatedStory.corePremise,
+                  corePremise:
+                    updatedStory.corePremise,
 
-              genre:
-                updatedStory.genre,
+                  genre:
+                    updatedStory.genre,
 
-              tone:
-                updatedStory.tone,
+                  tone:
+                    updatedStory.tone,
 
-              coverUrl:
-                updatedStory.coverUrl,
-            }
-          : story
-      )
+                  coverUrl:
+                    updatedStory.coverUrl,
+                }
+              : story
+        )
     );
 
     setEditingStory(null);
@@ -308,80 +348,96 @@ export default function MyStoriesPage() {
   // ==========================================
   // DELETE STORY
   // ==========================================
-  const handleDeleteStory = (id: string) => {
-    const story = stories.find(
-      (item) => item.id === id
-    );
+  const handleDeleteStory = (
+    id: string
+  ) => {
+    const story =
+      stories.find(
+        (item) =>
+          item.id === id
+      );
 
     if (!story) return;
 
-    setDeletingStory(story);
+    setDeletingStory(
+      story
+    );
   };
 
   // ==========================================
   // CONFIRM DELETE
   // ==========================================
-  const handleConfirmDelete = async () => {
-    if (!deletingStory) return;
+  const handleConfirmDelete =
+    async () => {
+      if (!deletingStory) return;
 
-    setIsDeleting(true);
+      setIsDeleting(true);
 
-    try {
-      const response = await fetch(
-        `/api/stories/${deletingStory.id}`,
-        {
-          method: 'DELETE',
+      try {
+        const response =
+          await fetch(
+            `/api/stories/${deletingStory.id}`,
+            {
+              method: 'DELETE',
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !data.success
+        ) {
+          throw new Error(
+            data.error ||
+              'ไม่สามารถลบนิยายได้'
+          );
         }
-      );
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.error ||
-            'ไม่สามารถลบนิยายได้'
+        // เอานิยายออกจาก UI ทันที
+        setStories(
+          (prevStories) =>
+            prevStories.filter(
+              (story) =>
+                story.id !==
+                deletingStory.id
+            )
         );
+
+        setDeletingStory(null);
+      } catch (error) {
+        console.error(
+          'Delete Story Error:',
+          error
+        );
+
+        alert(
+          error instanceof Error
+            ? error.message
+            : 'ไม่สามารถลบนิยายได้'
+        );
+      } finally {
+        setIsDeleting(false);
       }
-
-      // ==========================================
-      // REMOVE FROM UI
-      // ==========================================
-      setStories((prevStories) =>
-        prevStories.filter(
-          (story) =>
-            story.id !== deletingStory.id
-        )
-      );
-
-      setDeletingStory(null);
-    } catch (error) {
-      console.error(
-        'Delete Story Error:',
-        error
-      );
-
-      alert(
-        error instanceof Error
-          ? error.message
-          : 'ไม่สามารถลบนิยายได้'
-      );
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+    };
 
   // ==========================================
   // CLERK LOADING
   // ==========================================
   if (!isLoaded) {
-    return <MyStoriesSkeleton />;
+    return (
+      <MyStoriesSkeleton />
+    );
   }
 
   // ==========================================
   // SUPABASE LOADING
   // ==========================================
   if (isLoading) {
-    return <MyStoriesSkeleton />;
+    return (
+      <MyStoriesSkeleton />
+    );
   }
 
   // ==========================================
@@ -392,36 +448,48 @@ export default function MyStoriesPage() {
       <MyStoriesView
         myStories={stories}
         onSelectStory={(id) =>
-          router.push(`/story/${id}`)
+          router.push(
+            `/story/${id}`
+          )
         }
-        onCreateStory={handleCreateStory}
-        onEditStory={handleEditStory}
-        onDeleteStory={handleDeleteStory}
+        onCreateStory={
+          handleCreateStory
+        }
+        onEditStory={
+          handleEditStory
+        }
+        onDeleteStory={
+          handleDeleteStory
+        }
       />
 
-      {/* ========================================
-          EDIT MODAL
-      ======================================== */}
+      {/* EDIT */}
       <EditStoryModal
-        isOpen={editingStory !== null}
+        isOpen={
+          editingStory !== null
+        }
         story={editingStory}
         onClose={() =>
           setEditingStory(null)
         }
-        onSaved={handleStorySaved}
+        onSaved={
+          handleStorySaved
+        }
       />
 
-      {/* ========================================
-          DELETE MODAL
-      ======================================== */}
+      {/* DELETE */}
       <DeleteStoryModal
-        isOpen={deletingStory !== null}
+        isOpen={
+          deletingStory !== null
+        }
         story={deletingStory}
         isDeleting={isDeleting}
         onClose={() =>
           setDeletingStory(null)
         }
-        onConfirm={handleConfirmDelete}
+        onConfirm={
+          handleConfirmDelete
+        }
       />
     </>
   );

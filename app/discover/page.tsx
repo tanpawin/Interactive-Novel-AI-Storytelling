@@ -1,11 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+
+import { useSession } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
 
 import { DiscoverView } from '@/components/DiscoverView';
-import { supabase } from '@/lib/supabaseClient';
+import { createSupabaseClient } from '@/lib/supabaseClient';
 
 import type {
   Story,
@@ -17,311 +22,342 @@ import type {
 export default function DiscoverPage() {
   const router = useRouter();
 
-  // ==========================================
-  // CLERK
-  // ==========================================
+  const { session } =
+    useSession();
 
-  const { isLoaded } = useUser();
+  const supabase = useMemo(
+    () =>
+      createSupabaseClient(
+        () =>
+          session?.getToken() ??
+          Promise.resolve(null)
+      ),
+    [session]
+  );
 
-  // ==========================================
-  // STATE
-  // ==========================================
+  const [stories, setStories] =
+    useState<Story[]>([]);
 
-  const [stories, setStories] = useState<Story[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] =
+    useState(true);
 
   // ==========================================
   // LOAD STORIES
   // ==========================================
-
   useEffect(() => {
-    const loadStories = async () => {
-      setIsLoading(true);
+    if (!session) {
+      setStories([]);
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        // ==========================================
-        // LOAD FAVORITES
-        // ==========================================
-
-        let favoriteStoryIds: string[] = [];
+    const loadStories =
+      async () => {
+        setIsLoading(true);
 
         try {
-          const favoriteResponse =
-            await fetch('/api/favorites');
+          // ==========================================
+          // LOAD FAVORITES
+          // ==========================================
+          let favoriteStoryIds: string[] =
+            [];
 
-          const favoriteData =
-            await favoriteResponse.json();
-
-          if (favoriteData.success) {
-            favoriteStoryIds =
-              favoriteData.favoriteStoryIds || [];
-          }
-        } catch (error) {
-          /*
-           * ถ้ายังไม่ได้ Login
-           * หรือ API Favorites ใช้งานไม่ได้
-           * ก็ไม่ทำให้หน้า Discover พัง
-           */
-          console.error(
-            'Load Favorites Error:',
-            error
-          );
-        }
-
-        // ==========================================
-        // LOAD ALL STORIES
-        // ==========================================
-
-        const {
-          data: storyData,
-          error: storyError,
-        } = await supabase
-          .from('stories')
-          .select('*')
-          .order('created_at', {
-            ascending: false,
-          });
-
-        if (storyError) {
-          console.error(
-            'Discover Stories Error:',
-            storyError
-          );
-
-          return;
-        }
-
-        // ==========================================
-        // NO STORIES
-        // ==========================================
-
-        if (
-          !storyData ||
-          storyData.length === 0
-        ) {
-          setStories([]);
-          return;
-        }
-
-        // ==========================================
-        // GET STORY IDS
-        // ==========================================
-
-        const storyIds = storyData.map(
-          (story) => story.id
-        );
-
-        // ==========================================
-        // LOAD CHAPTERS
-        // ==========================================
-
-        const {
-          data: chapterData,
-          error: chapterError,
-        } = await supabase
-          .from('chapters')
-          .select('*')
-          .in('story_id', storyIds)
-          .order('chapter_number', {
-            ascending: true,
-          });
-
-        if (chapterError) {
-          console.error(
-            'Discover Chapters Error:',
-            chapterError
-          );
-
-          return;
-        }
-
-        const chapters = chapterData || [];
-
-        // ==========================================
-        // MAP DATABASE → STORY TYPE
-        // ==========================================
-
-        const mappedStories: Story[] =
-          storyData.map((story) => {
-            // --------------------------------------
-            // Chapters ของ Story นี้
-            // --------------------------------------
-
-            const storyChapters: Chapter[] =
-              chapters
-                .filter(
-                  (chapter) =>
-                    chapter.story_id === story.id
-                )
-                .map((chapter) => ({
-                  id: chapter.id,
-
-                  chapterNumber:
-                    chapter.chapter_number,
-
-                  title:
-                    chapter.title ||
-                    `บทที่ ${chapter.chapter_number}`,
-
-                  content:
-                    chapter.content || '',
-
-                  createdAt:
-                    chapter.created_at,
-                }));
-
-            // --------------------------------------
-            // Current Chapter
-            // --------------------------------------
-
-            const currentChapter =
-              storyChapters.length > 0
-                ? storyChapters[
-                    storyChapters.length - 1
-                  ].chapterNumber
-                : 0;
-
-            // --------------------------------------
-            // Word Count
-            // --------------------------------------
-
-            const wordCount =
-              storyChapters.reduce(
-                (total, chapter) =>
-                  total +
-                  chapter.content.length,
-                0
+          try {
+            const favoriteResponse =
+              await fetch(
+                '/api/favorites',
+                {
+                  cache: 'no-store',
+                }
               );
 
-            // --------------------------------------
-            // Fresh Story
-            // --------------------------------------
+            const favoriteData =
+              await favoriteResponse.json();
 
-            const isFresh =
-              Date.now() -
-                new Date(
-                  story.created_at
-                ).getTime() <
-              7 * 24 * 60 * 60 * 1000;
+            if (
+              favoriteResponse.ok &&
+              favoriteData.success
+            ) {
+              favoriteStoryIds =
+                favoriteData.favoriteStoryIds ||
+                [];
+            }
+          } catch (error) {
+            /*
+             * Favorites โหลดไม่ได้
+             * ไม่ควรทำให้ Discover พัง
+             */
+            console.error(
+              'Load Favorites Error:',
+              error
+            );
+          }
 
-            // --------------------------------------
-            // Return Story
-            // --------------------------------------
+          // ==========================================
+          // LOAD ALL STORIES
+          // ==========================================
+          const {
+            data: storyData,
+            error: storyError,
+          } = await supabase
+            .from('stories')
+            .select('*')
+            .order(
+              'created_at',
+              {
+                ascending: false,
+              }
+            );
 
-            return {
-              id: story.id,
+          if (storyError) {
+            console.error(
+              'Discover Stories Error:',
+              storyError
+            );
 
-              title:
-                story.title ||
-                'นิยายไม่มีชื่อ',
+            setStories([]);
+            return;
+          }
 
-              corePremise:
-                story.synopsis || '',
+          // ==========================================
+          // NO STORIES
+          // ==========================================
+          if (
+            !storyData ||
+            storyData.length === 0
+          ) {
+            setStories([]);
+            return;
+          }
 
-              genre:
-                (story.genre ||
-                  'แฟนตาซี') as Genre,
+          // ==========================================
+          // GET STORY IDS
+          // ==========================================
+          const storyIds =
+            storyData.map(
+              (story) =>
+                story.id
+            );
 
-              tone:
-                (story.tone ||
-                  'มืดมนและสมจริง') as NarrativeTone,
+          // ==========================================
+          // LOAD CHAPTERS
+          // ==========================================
+          const {
+            data: chapterData,
+            error: chapterError,
+          } = await supabase
+            .from('chapters')
+            .select('*')
+            .in(
+              'story_id',
+              storyIds
+            )
+            .order(
+              'chapter_number',
+              {
+                ascending: true,
+              }
+            );
 
-              length:
-                story.total_chapters <= 5
-                  ? 'เรื่องสั้น'
-                  : story.total_chapters <= 15
-                    ? 'นวนิยายขนาดกลาง'
-                    : 'นวนิยายยาว',
+          if (chapterError) {
+            console.error(
+              'Discover Chapters Error:',
+              chapterError
+            );
 
-              protagonist: '',
+            setStories([]);
+            return;
+          }
 
-              worldSetting: '',
+          const chapters =
+            chapterData || [];
 
-              // ------------------------------------
-              // Cover
-              // ------------------------------------
+          // ==========================================
+          // MAP DATABASE → STORY TYPE
+          // ==========================================
+          const mappedStories: Story[] =
+            storyData.map(
+              (story) => {
+                // ==========================================
+                // CHAPTERS
+                // ==========================================
+                const storyChapters: Chapter[] =
+                  chapters
+                    .filter(
+                      (chapter) =>
+                        chapter.story_id ===
+                        story.id
+                    )
+                    .map(
+                      (chapter) => ({
+                        id:
+                          chapter.id,
 
-              coverUrl:
-                story.cover_image_url || '',
+                        chapterNumber:
+                          chapter.chapter_number,
 
-              // ------------------------------------
-              // Author
-              // ------------------------------------
+                        title:
+                          chapter.title ||
+                          `บทที่ ${chapter.chapter_number}`,
 
-              author: 'นักเขียน',
+                        content:
+                          chapter.content ||
+                          '',
 
-              // ------------------------------------
-              // Chapters
-              // ------------------------------------
+                        createdAt:
+                          chapter.created_at,
+                      })
+                    );
 
-              totalChapters:
-                story.total_chapters || 0,
+                // ==========================================
+                // CURRENT CHAPTER
+                // ==========================================
+                const currentChapter =
+                  storyChapters.length >
+                  0
+                    ? storyChapters[
+                        storyChapters.length -
+                          1
+                      ]
+                        .chapterNumber
+                    : 0;
 
-              currentChapter,
+                // ==========================================
+                // WORD COUNT
+                // ==========================================
+                const wordCount =
+                  storyChapters.reduce(
+                    (
+                      total,
+                      chapter
+                    ) =>
+                      total +
+                      chapter.content
+                        .length,
+                    0
+                  );
 
-              wordCount,
+                // ==========================================
+                // FRESH STORY
+                // ==========================================
+                const isFresh =
+                  Date.now() -
+                    new Date(
+                      story.created_at
+                    ).getTime() <
+                  7 *
+                    24 *
+                    60 *
+                    60 *
+                    1000;
 
-              chapters:
-                storyChapters,
+                // ==========================================
+                // RETURN STORY
+                // ==========================================
+                return {
+                  id:
+                    story.id,
 
-              // ------------------------------------
-              // Favorite
-              // ------------------------------------
+                  title:
+                    story.title ||
+                    'นิยายไม่มีชื่อ',
 
-              isFavorite:
-                favoriteStoryIds.includes(
-                  story.id
-                ),
+                  corePremise:
+                    story.synopsis ||
+                    '',
 
-              // ------------------------------------
-              // Status
-              // ------------------------------------
+                  genre:
+                    (story.genre ||
+                      'แฟนตาซี') as Genre,
 
-              isFresh,
+                  tone:
+                    (story.tone ||
+                      'มืดมนและสมจริง') as NarrativeTone,
 
-              isTrending: false,
-            };
-          });
+                  length:
+                    story.total_chapters <=
+                    5
+                      ? 'เรื่องสั้น'
+                      : story.total_chapters <=
+                          15
+                        ? 'นวนิยายขนาดกลาง'
+                        : 'นวนิยายยาว',
 
-        // ==========================================
-        // SET STORIES
-        // ==========================================
+                  protagonist:
+                    '',
 
-        setStories(mappedStories);
-      } catch (error) {
-        console.error(
-          'Discover Load Error:',
-          error
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
+                  worldSetting:
+                    '',
+
+                  coverUrl:
+                    story.cover_image_url ||
+                    '',
+
+                  author:
+                    'นักเขียน',
+
+                  totalChapters:
+                    story.total_chapters ||
+                    0,
+
+                  currentChapter,
+
+                  wordCount,
+
+                  chapters:
+                    storyChapters,
+
+                  // ==========================================
+                  // FAVORITE
+                  // ==========================================
+                  isFavorite:
+                    favoriteStoryIds.includes(
+                      story.id
+                    ),
+
+                  // ==========================================
+                  // STATUS
+                  // ==========================================
+                  isFresh,
+
+                  isTrending:
+                    false,
+                };
+              }
+            );
+
+          setStories(
+            mappedStories
+          );
+        } catch (error) {
+          console.error(
+            'Discover Load Error:',
+            error
+          );
+
+          setStories([]);
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
     loadStories();
-  }, []);
+  }, [
+    session,
+    supabase,
+  ]);
 
   // ==========================================
   // RENDER
   // ==========================================
-
   return (
     <DiscoverView
       stories={stories}
-
-      /*
-       * สำคัญมาก
-       *
-       * ถ้า Clerk ยังไม่พร้อม
-       * หรือ Supabase ยังโหลดข้อมูลอยู่
-       * ให้ DiscoverView แสดง Skeleton
-       *
-       * Navbar จะยังแสดงตามปกติ
-       */
-      isLoading={!isLoaded || isLoading}
-
+      isLoading={isLoading}
       onSelectStory={(id) =>
-        router.push(`/story/${id}`)
+        router.push(
+          `/story/${id}`
+        )
       }
     />
   );

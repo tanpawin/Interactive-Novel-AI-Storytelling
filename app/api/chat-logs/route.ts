@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 
-import { supabase } from '@/lib/supabaseClient';
+import { createServerSupabaseClient } from '@/lib/supabaseServer';
 
 export async function GET(req: Request) {
   try {
@@ -17,8 +17,9 @@ export async function GET(req: Request) {
       );
     }
 
-    const { searchParams } = new URL(req.url);
+    const supabase = createServerSupabaseClient();
 
+    const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get('sessionId');
 
     if (!sessionId) {
@@ -32,13 +33,15 @@ export async function GET(req: Request) {
     }
 
     // ตรวจสอบว่า Session เป็นของ User คนนี้
-    const { data: session, error: sessionError } =
-      await supabase
-        .from('game_sessions')
-        .select('id')
-        .eq('id', sessionId)
-        .eq('user_id', userId)
-        .maybeSingle();
+    const {
+      data: session,
+      error: sessionError,
+    } = await supabase
+      .from('game_sessions')
+      .select('id')
+      .eq('id', sessionId)
+      .eq('user_id', userId)
+      .maybeSingle();
 
     if (sessionError) {
       console.error(
@@ -66,21 +69,23 @@ export async function GET(req: Request) {
       );
     }
 
-    const { data: logs, error: logError } =
-      await supabase
-        .from('chat_logs')
-        .select(`
-          id,
-          session_id,
-          chapter,
-          role,
-          content,
-          created_at
-        `)
-        .eq('session_id', sessionId)
-        .order('created_at', {
-          ascending: true,
-        });
+    const {
+      data: logs,
+      error: logError,
+    } = await supabase
+      .from('chat_logs')
+      .select(`
+        id,
+        session_id,
+        chapter,
+        role,
+        content,
+        created_at
+      `)
+      .eq('session_id', sessionId)
+      .order('created_at', {
+        ascending: true,
+      });
 
     if (logError) {
       console.error(
@@ -135,6 +140,8 @@ export async function POST(req: Request) {
       );
     }
 
+    const supabase = createServerSupabaseClient();
+
     const body = await req.json();
 
     const {
@@ -159,28 +166,31 @@ export async function POST(req: Request) {
       );
     }
 
+    // DB ใช้ role: user | model
     if (
       role !== 'user' &&
-      role !== 'assistant'
+      role !== 'model'
     ) {
       return NextResponse.json(
         {
           success: false,
           error:
-            'Role ต้องเป็น user หรือ assistant เท่านั้น',
+            'Role ต้องเป็น user หรือ model เท่านั้น',
         },
         { status: 400 }
       );
     }
 
     // ตรวจสอบว่า Session เป็นของ User คนนี้
-    const { data: session, error: sessionError } =
-      await supabase
-        .from('game_sessions')
-        .select('id')
-        .eq('id', sessionId)
-        .eq('user_id', userId)
-        .maybeSingle();
+    const {
+      data: session,
+      error: sessionError,
+    } = await supabase
+      .from('game_sessions')
+      .select('id')
+      .eq('id', sessionId)
+      .eq('user_id', userId)
+      .maybeSingle();
 
     if (sessionError) {
       console.error(
@@ -208,17 +218,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const { data: log, error: insertError } =
-      await supabase
-        .from('chat_logs')
-        .insert({
-          session_id: sessionId,
-          chapter: chapter,
-          role: role,
-          content: content,
-        })
-        .select()
-        .single();
+    const {
+      data: log,
+      error: insertError,
+    } = await supabase
+      .from('chat_logs')
+      .insert({
+        session_id: sessionId,
+        chapter,
+        role,
+        content,
+      })
+      .select()
+      .single();
 
     if (insertError) {
       console.error(
@@ -229,8 +241,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            'ไม่สามารถบันทึก Chat Log ได้',
+          error: 'ไม่สามารถบันทึก Chat Log ได้',
         },
         { status: 500 }
       );
