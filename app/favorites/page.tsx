@@ -370,7 +370,7 @@ export default function FavoritesPage() {
         {/* Back to Profile */}
         <button
           type="button"
-          className="profile-branches-back"
+          className="favorites-back-button"
           onClick={() =>
             router.push(
               '/profile'
