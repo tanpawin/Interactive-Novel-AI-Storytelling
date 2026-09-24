@@ -83,7 +83,7 @@
 .delete-story-modal h2 {
     margin: 0;
     color: var(--text-primary);
-    font-family: var(--font-serif);
+    font-family: var(--font-global);
     font-size: 26px;
     font-weight: 700;
 }
@@ -134,7 +134,7 @@
 .story-modal-step-content h2 {
     margin: 0 0 22px;
     color: var(--text-primary);
-    font-family: var(--font-serif);
+    font-family: var(--font-global);
     font-size: 23px;
     font-weight: 700;
     line-height: 1.4;
@@ -422,13 +422,13 @@
 .story-modal-blueprint-story-title {
     margin: 0 0 10px;
     color: var(--text-primary);
-    font-family: var(--font-serif);
+    font-family: var(--font-global);
     font-size: 15px;
     line-height: 1.5;
 }
 
 .story-modal-blueprint-story-title strong {
-    font-family: var(--font-sans);
+    font-family: var(--font-global);
     font-size: 12px;
 }
 
@@ -454,7 +454,7 @@
 .story-modal-blueprint-premise {
     margin: 0;
     color: var(--text-secondary);
-    font-family: var(--font-serif);
+    font-family: var(--font-global);
     font-size: 13px;
     line-height: 1.7;
     word-break: break-word;
@@ -575,7 +575,7 @@
 .delete-story-name {
     margin-top: 9px;
     color: var(--accent-color);
-    font-family: var(--font-serif);
+    font-family: var(--font-global);
     font-size: 16px;
     font-weight: 600;
 }
@@ -664,7 +664,7 @@
 .edit-cover-info h3 {
     margin: 0;
     color: var(--text-primary);
-    font-family: var(--font-serif);
+    font-family: var(--font-global);
     font-size: 16px;
 }
 
@@ -794,7 +794,7 @@
     margin: 0;
     min-width: 0;
     color: var(--text-primary);
-    font-family: var(--font-serif);
+    font-family: var(--font-global);
     font-size: 18px;
     font-weight: 700;
     line-height: 1.3;

@@ -80,10 +80,14 @@ export default function HomePage() {
         try {
           /*
            * ========================================
-           * 1. โหลดนิยายทั้งหมด
+           * 1. โหลดเฉพาะนิยายที่เผยแพร่แล้ว
            *
-           * Guest = 8 เรื่อง
-           * Login = 100 เรื่อง
+           * Guest  = 8 เรื่อง
+           * Login  = 100 เรื่อง
+           *
+           * สำคัญ:
+           * Home แสดงเฉพาะ is_published = true
+           * ไม่ว่าจะเป็น Guest หรือ Login
            * ========================================
            */
 
@@ -94,6 +98,10 @@ export default function HomePage() {
             await supabase
               .from('stories')
               .select('*')
+              .eq(
+                'is_published',
+                true
+              )
               .order(
                 'created_at',
                 {
@@ -229,6 +237,14 @@ export default function HomePage() {
               );
             }
 
+            /*
+             * สำคัญ:
+             *
+             * ถึงแม้ User จะมี session
+             * ของนิยายที่ถูกซ่อนไว้ในฐานข้อมูล
+             * ก็จะไม่ถูกนำมาแสดง เพราะ
+             * storyData ด้านบนกรอง is_published = true แล้ว
+             */
             sessions =
               sessionData || [];
 
@@ -460,6 +476,17 @@ export default function HomePage() {
                   isFresh,
 
                   isTrending:
+                    false,
+
+                  /*
+                   * Publish Status
+                   *
+                   * storyData ถูกกรอง
+                   * is_published = true แล้ว
+                   * ดังนั้นค่าตรงนี้จะเป็น true
+                   */
+                  isPublished:
+                    story.is_published ??
                     false,
                 };
               }

@@ -45,7 +45,7 @@
 }
 
 .nook-title {
-    font-family: var(--font-serif);
+    font-family: var(--font-global);
 
     font-size: 2.2rem;
 
@@ -200,7 +200,7 @@
 .section-header h2 {
     margin: 0;
 
-    font-family: var(--font-serif);
+    font-family: var(--font-global);
 
     font-size: 1.35rem;
 
@@ -270,7 +270,7 @@
 }
 
 .quote-text {
-    font-family: var(--font-serif);
+    font-family: var(--font-global);
 
     font-style: italic;
 

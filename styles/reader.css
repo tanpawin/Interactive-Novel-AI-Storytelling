@@ -415,7 +415,7 @@
 
   color: var(--text-primary);
 
-  font-family: var(--font-serif);
+  font-family: var(--font-global);
 
   font-size: 2.25rem;
 
@@ -505,7 +505,7 @@
 }
 
 .chapter-title {
-  font-family: var(--font-serif);
+  font-family: var(--font-global);
 
   font-size: 1.7rem;
 
@@ -724,7 +724,7 @@
 .reader-empty h2 {
   margin-top: 1rem;
 
-  font-family: var(--font-serif);
+  font-family: var(--font-global);
 
   color: var(--text-primary);
 }

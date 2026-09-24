@@ -96,7 +96,7 @@ export default function DiscoverPage() {
         }
 
         // ==========================================
-        // LOAD ALL STORIES
+        // LOAD PUBLISHED STORIES ONLY
         // ==========================================
         const {
           data: storyData,
@@ -112,9 +112,11 @@ export default function DiscoverPage() {
               tone,
               total_chapters,
               cover_image_url,
-              created_at
+              created_at,
+              is_published
             `
           )
+          .eq('is_published', true)
           .order(
             'created_at',
             {
@@ -187,11 +189,9 @@ export default function DiscoverPage() {
                     'มืดมนและสมจริง') as NarrativeTone,
 
                 length:
-                  story.total_chapters <=
-                  5
+                  story.total_chapters <= 5
                     ? 'เรื่องสั้น'
-                    : story.total_chapters <=
-                        15
+                    : story.total_chapters <= 15
                       ? 'นวนิยายขนาดกลาง'
                       : 'นวนิยายยาว',
 
@@ -236,6 +236,9 @@ export default function DiscoverPage() {
                 // ==========================================
                 // STATUS
                 // ==========================================
+                isPublished:
+                  story.is_published ?? false,
+
                 isFresh,
 
                 isTrending:

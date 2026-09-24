@@ -14,8 +14,9 @@ interface MyStoriesViewProps {
   onEditStory: (story: Story) => void;
 
   onDeleteStory: (id: string) => void;
-}
 
+  onTogglePublish: (story: Story) => void;
+}
 
 export const MyStoriesView: React.FC<
   MyStoriesViewProps
@@ -25,260 +26,281 @@ export const MyStoriesView: React.FC<
   onCreateStory,
   onEditStory,
   onDeleteStory,
+  onTogglePublish,
 }) => {
 
-  /*
-   * ==========================================
-   * TOTAL WORDS
-   * ==========================================
-   */
+    /*
+     * ==========================================
+     * TOTAL WORDS
+     * ==========================================
+     */
 
-  const totalWords = myStories.reduce(
-    (acc, curr) =>
-      acc + curr.wordCount,
-    0
-  );
-
-
-  /*
-   * ==========================================
-   * CREATE
-   * ==========================================
-   */
-
-  const handleCreateClick = (
-    e: React.MouseEvent<HTMLButtonElement>
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    onCreateStory();
-  };
+    const totalWords = myStories.reduce(
+      (acc, curr) =>
+        acc + curr.wordCount,
+      0
+    );
 
 
-  /*
-   * ==========================================
-   * EDIT
-   * ==========================================
-   */
+    /*
+     * ==========================================
+     * CREATE
+     * ==========================================
+     */
 
-  const handleEditClick = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    story: Story
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
+    const handleCreateClick = (
+      e: React.MouseEvent<HTMLButtonElement>
+    ) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    onEditStory(story);
-  };
-
-
-  /*
-   * ==========================================
-   * DELETE
-   * ==========================================
-   */
-
-  const handleDeleteClick = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    story: Story
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    onDeleteStory(story.id);
-  };
+      onCreateStory();
+    };
 
 
-  /*
-   * ==========================================
-   * CONTINUE
-   * ==========================================
-   */
+    /*
+     * ==========================================
+     * EDIT
+     * ==========================================
+     */
 
-  const handleContinueClick = (
-    e: React.MouseEvent<HTMLButtonElement>,
-    story: Story
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
+    const handleEditClick = (
+      e: React.MouseEvent<HTMLButtonElement>,
+      story: Story
+    ) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    onSelectStory(story.id);
-  };
+      onEditStory(story);
+    };
 
 
-  return (
-    <div className="view-container">
+    /*
+     * ==========================================
+     * DELETE
+     * ==========================================
+     */
 
-      {/* ======================================
+    const handleDeleteClick = (
+      e: React.MouseEvent<HTMLButtonElement>,
+      story: Story
+    ) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      onDeleteStory(story.id);
+    };
+
+
+    /*
+     * ==========================================
+     * PUBLISH / UNPUBLISH
+     * ==========================================
+     */
+
+    const handleTogglePublishClick = (
+      e: React.MouseEvent<HTMLButtonElement>,
+      story: Story
+    ) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      onTogglePublish(story);
+    };
+
+
+    /*
+     * ==========================================
+     * CONTINUE
+     * ==========================================
+     */
+
+    const handleContinueClick = (
+      e: React.MouseEvent<HTMLButtonElement>,
+      story: Story
+    ) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      onSelectStory(story.id);
+    };
+
+
+    return (
+      <div className="view-container">
+
+        {/* ======================================
           HEADER
       ======================================= */}
 
-      <div className="mystories-header">
+        <div className="mystories-header">
 
-        <div>
+          <div>
 
-          <span className="nook-subtitle">
-            ผลงานของคุณ
-          </span>
+            <span className="nook-subtitle">
+              ผลงานของคุณ
+            </span>
 
-          <h1 className="nook-title">
-            My Stories
-          </h1>
+            <h1 className="nook-title">
+              My Stories
+            </h1>
 
-          <p className="mystories-description">
-            จัดการนิยายที่คุณสร้าง
-            และกลับมาแต่งต่อได้ทุกเมื่อ
-          </p>
-
-        </div>
-
-
-        <button
-          type="button"
-          className="btn-hero-primary"
-          onClick={handleCreateClick}
-        >
-          ✨ สร้างเรื่องใหม่
-        </button>
-
-      </div>
-
-
-      {/* ======================================
-          AUTHOR DASHBOARD STATS
-      ======================================= */}
-
-      <div className="author-stats-banner font-serif">
-
-        {/* Total Words */}
-
-        <div className="stat-box">
-
-          <span className="stat-icon">
-            ✍️
-          </span>
-
-          <span className="stat-val">
-            {totalWords.toLocaleString()}
-          </span>
-
-          <span className="stat-lbl">
-            คำที่แต่งทั้งหมด
-          </span>
-
-        </div>
-
-
-        {/* Total Stories */}
-
-        <div className="stat-box">
-
-          <span className="stat-icon">
-            📚
-          </span>
-
-          <span className="stat-val">
-            {myStories.length}
-          </span>
-
-          <span className="stat-lbl">
-            เรื่องราวที่สร้าง
-          </span>
-
-        </div>
-
-
-        {/* Completed Stories */}
-
-        <div className="stat-box">
-
-          <span className="stat-icon">
-            🏆
-          </span>
-
-          <span className="stat-val">
-            {
-              myStories.filter(
-                (story) =>
-                  story.totalChapters > 0 &&
-                  story.currentChapter >=
-                    story.totalChapters
-              ).length
-            }
-          </span>
-
-          <span className="stat-lbl">
-            เรื่องที่แต่งจบแล้ว
-          </span>
-
-        </div>
-
-      </div>
-
-
-      {/* ======================================
-          STORY LIST
-      ======================================= */}
-
-      <div className="my-stories-list">
-
-        {myStories.length === 0 ? (
-
-          /* ==================================
-             EMPTY STATE
-          ================================== */
-
-          <div className="my-stories-empty">
-
-            <div className="my-stories-empty-icon">
-              📖
-            </div>
-
-            <h2>
-              ยังไม่มีนิยายของคุณ
-            </h2>
-
-            <p>
-              เริ่มต้นสร้างเรื่องราวแรก
-              ของคุณได้เลย
+            <p className="mystories-description">
+              จัดการนิยายที่คุณสร้าง
+              และกลับมาแต่งต่อได้ทุกเมื่อ
             </p>
-
-            <button
-              type="button"
-              className="btn-hero-primary"
-              onClick={handleCreateClick}
-            >
-              ✨ สร้างนิยายเรื่องแรก
-            </button>
 
           </div>
 
-        ) : (
 
-          myStories.map((story) => (
-            <MyStoryItem
-              key={story.id}
-              story={story}
-              onContinue={
-                handleContinueClick
-              }
-              onEdit={
-                handleEditClick
-              }
-              onDelete={
-                handleDeleteClick
-              }
-            />
-          ))
+          <button
+            type="button"
+            className="btn-hero-primary"
+            onClick={handleCreateClick}
+          >
+            ✨ สร้างเรื่องใหม่
+          </button>
 
-        )}
+        </div>
+
+
+        {/* ======================================
+          AUTHOR DASHBOARD STATS
+      ======================================= */}
+
+        <div className="author-stats-banner font-serif">
+
+          {/* Total Words */}
+
+          <div className="stat-box">
+
+            <span className="stat-icon">
+              ✍️
+            </span>
+
+            <span className="stat-val">
+              {totalWords.toLocaleString()}
+            </span>
+
+            <span className="stat-lbl">
+              คำที่แต่งทั้งหมด
+            </span>
+
+          </div>
+
+
+          {/* Total Stories */}
+
+          <div className="stat-box">
+
+            <span className="stat-icon">
+              📚
+            </span>
+
+            <span className="stat-val">
+              {myStories.length}
+            </span>
+
+            <span className="stat-lbl">
+              เรื่องราวที่สร้าง
+            </span>
+
+          </div>
+
+
+          {/* Completed Stories */}
+
+          <div className="stat-box">
+
+            <span className="stat-icon">
+              🏆
+            </span>
+
+            <span className="stat-val">
+              {
+                myStories.filter(
+                  (story) =>
+                    story.totalChapters > 0 &&
+                    story.currentChapter >=
+                    story.totalChapters
+                ).length
+              }
+            </span>
+
+            <span className="stat-lbl">
+              เรื่องที่แต่งจบแล้ว
+            </span>
+
+          </div>
+
+        </div>
+
+
+        {/* ======================================
+          STORY LIST
+      ======================================= */}
+
+        <div className="my-stories-list">
+
+          {myStories.length === 0 ? (
+
+            /* ==================================
+               EMPTY STATE
+            ================================== */
+
+            <div className="my-stories-empty">
+
+              <div className="my-stories-empty-icon">
+                📖
+              </div>
+
+              <h2>
+                ยังไม่มีนิยายของคุณ
+              </h2>
+
+              <p>
+                เริ่มต้นสร้างเรื่องราวแรก
+                ของคุณได้เลย
+              </p>
+
+              <button
+                type="button"
+                className="btn-hero-primary"
+                onClick={handleCreateClick}
+              >
+                ✨ สร้างนิยายเรื่องแรก
+              </button>
+
+            </div>
+
+          ) : (
+
+            myStories.map((story) => (
+              <MyStoryItem
+                key={story.id}
+                story={story}
+                onContinue={
+                  handleContinueClick
+                }
+                onEdit={
+                  handleEditClick
+                }
+                onDelete={
+                  handleDeleteClick
+                }
+                onTogglePublish={
+                  handleTogglePublishClick
+                }
+              />
+            ))
+
+          )}
+
+        </div>
 
       </div>
-
-    </div>
-  );
-};
+    );
+  };
 
 
 /*
@@ -304,6 +326,11 @@ interface MyStoryItemProps {
     e: React.MouseEvent<HTMLButtonElement>,
     story: Story
   ) => void;
+
+  onTogglePublish: (
+    e: React.MouseEvent<HTMLButtonElement>,
+    story: Story
+  ) => void;
 }
 
 
@@ -314,123 +341,123 @@ const MyStoryItem: React.FC<
   onContinue,
   onEdit,
   onDelete,
+  onTogglePublish,
 }) => {
 
-  const [isCoverLoaded, setIsCoverLoaded] =
-    useState(false);
+    const [isCoverLoaded, setIsCoverLoaded] =
+      useState(false);
 
-  const [coverError, setCoverError] =
-    useState(false);
+    const [coverError, setCoverError] =
+      useState(false);
 
 
-  return (
-    <div className="my-story-item">
+    return (
+      <div className="my-story-item">
 
-      {/* ==================================
+        {/* ==================================
           COVER
       ================================== */}
 
-      <div className="my-story-cover-wrapper">
+        <div className="my-story-cover-wrapper">
 
-        {/* Skeleton */}
+          {/* Skeleton */}
 
-        {story.coverUrl &&
-          !isCoverLoaded &&
-          !coverError && (
-            <div className="my-story-cover-skeleton">
+          {story.coverUrl &&
+            !isCoverLoaded &&
+            !coverError && (
+              <div className="my-story-cover-skeleton">
 
-              <div className="my-story-cover-shimmer" />
+                <div className="my-story-cover-shimmer" />
+
+              </div>
+            )}
+
+
+          {/* Image */}
+
+          {story.coverUrl &&
+            !coverError ? (
+
+            <img
+              src={story.coverUrl}
+              alt={story.title}
+              className={`my-story-cover ${isCoverLoaded
+                  ? 'my-story-cover-loaded'
+                  : 'my-story-cover-loading'
+                }`}
+              onLoad={() => {
+                setIsCoverLoaded(true);
+              }}
+              onError={() => {
+                setCoverError(true);
+              }}
+            />
+
+          ) : (
+
+            /* Placeholder */
+
+            <div className="my-story-cover my-story-cover-placeholder">
+
+              <span>
+                📖
+              </span>
 
             </div>
+
           )}
-
-
-        {/* Image */}
-
-        {story.coverUrl &&
-        !coverError ? (
-
-          <img
-            src={story.coverUrl}
-            alt={story.title}
-            className={`my-story-cover ${
-              isCoverLoaded
-                ? 'my-story-cover-loaded'
-                : 'my-story-cover-loading'
-            }`}
-            onLoad={() => {
-              setIsCoverLoaded(true);
-            }}
-            onError={() => {
-              setCoverError(true);
-            }}
-          />
-
-        ) : (
-
-          /* Placeholder */
-
-          <div className="my-story-cover my-story-cover-placeholder">
-
-            <span>
-              📖
-            </span>
-
-          </div>
-
-        )}
-
-      </div>
-
-
-      {/* ==================================
-          STORY DETAILS
-      ================================== */}
-
-      <div className="my-story-details">
-
-        <div className="my-story-top">
-
-          <h3>
-            {story.title}
-          </h3>
-
-          <span className="genre-tag">
-            {story.genre}
-          </span>
 
         </div>
 
 
-        <p className="my-story-premise">
-          {story.corePremise ||
-            'ยังไม่มีคำโปรยสำหรับนิยายเรื่องนี้'}
-        </p>
+        {/* ==================================
+          STORY DETAILS
+      ================================== */}
+
+        <div className="my-story-details">
+
+          <div className="my-story-top">
+
+            <h3>
+              {story.title}
+            </h3>
+
+            <span className="genre-tag">
+              {story.genre}
+            </span>
+
+          </div>
 
 
-        <div className="my-story-meta">
+          <p className="my-story-premise">
+            {story.corePremise ||
+              'ยังไม่มีคำโปรยสำหรับนิยายเรื่องนี้'}
+          </p>
 
-          <span>
-            {story.totalChapters} บท
-          </span>
 
-          <span>
-            •
-          </span>
+          <div className="my-story-meta">
 
-          <span>
-            {story.wordCount.toLocaleString()} คำ
-          </span>
+            <span>
+              {story.totalChapters} บท
+            </span>
 
-          <span>
-            •
-          </span>
+            <span>
+              •
+            </span>
 
-          <span>
-            แต่งเมื่อ{' '}
+            <span>
+              {story.wordCount.toLocaleString()} คำ
+            </span>
 
-            {story.chapters[0]?.createdAt
-              ? new Date(
+            <span>
+              •
+            </span>
+
+            <span>
+              แต่งเมื่อ{' '}
+
+              {story.chapters[0]?.createdAt
+                ? new Date(
                   story.chapters[0]
                     .createdAt
                 ).toLocaleDateString(
@@ -441,128 +468,180 @@ const MyStoryItem: React.FC<
                     year: 'numeric',
                   }
                 )
-              : 'ไม่นานมานี้'}
-          </span>
+                : 'ไม่นานมานี้'}
+            </span>
+
+          </div>
+
+
+          {/* Progress */}
+
+          {story.totalChapters > 0 && (
+            <div className="my-story-progress">
+
+              <div className="my-story-progress-top">
+
+                <span>
+                  ความคืบหน้า
+                </span>
+
+                <span>
+                  {Math.min(
+                    Math.round(
+                      (story.currentChapter /
+                        story.totalChapters) *
+                      100
+                    ),
+                    100
+                  )}
+                  %
+                </span>
+
+              </div>
+
+              <div className="my-story-progress-bg">
+
+                <div
+                  className="my-story-progress-fill"
+                  style={{
+                    width: `${Math.min(
+                      (story.currentChapter /
+                        story.totalChapters) *
+                      100,
+                      100
+                    )
+                      }%`,
+                  }}
+                />
+
+              </div>
+
+            </div>
+          )}
 
         </div>
 
 
-        {/* Progress */}
-
-        {story.totalChapters > 0 && (
-          <div className="my-story-progress">
-
-            <div className="my-story-progress-top">
-
-              <span>
-                ความคืบหน้า
-              </span>
-
-              <span>
-                {Math.min(
-                  Math.round(
-                    (story.currentChapter /
-                      story.totalChapters) *
-                      100
-                  ),
-                  100
-                )}
-                %
-              </span>
-
-            </div>
-
-            <div className="my-story-progress-bg">
-
-              <div
-                className="my-story-progress-fill"
-                style={{
-                  width: `${
-                    Math.min(
-                      (story.currentChapter /
-                        story.totalChapters) *
-                        100,
-                      100
-                    )
-                  }%`,
-                }}
-              />
-
-            </div>
-
-          </div>
-        )}
-
-      </div>
-
-
-      {/* ==================================
+        {/* ==================================
           ACTIONS
       ================================== */}
 
-      <div
-        className="my-story-action"
-        onClick={(e) =>
-          e.stopPropagation()
-        }
-      >
+        <div
+          className="my-story-action"
+          onClick={(e) =>
+            e.stopPropagation()
+          }
+        >
 
-        <div className="story-card-actions">
+          <div className="story-card-actions">
 
-          {/* Continue */}
+            {/* Continue */}
 
-          <button
-            type="button"
-            className="story-action-btn story-action-continue"
-            onClick={(e) =>
-              onContinue(e, story)
-            }
-          >
-            <span>
-              ▶
-            </span>
+            <button
+              type="button"
+              className="story-action-btn story-action-continue"
+              onClick={(e) =>
+                onContinue(e, story)
+              }
+            >
+              <span>
+                ▶
+              </span>
 
-            แต่งต่อ
-          </button>
-
-
-          {/* Edit */}
-
-          <button
-            type="button"
-            className="story-action-btn story-action-edit"
-            onClick={(e) =>
-              onEdit(e, story)
-            }
-          >
-            <span>
-              ✎
-            </span>
-
-            แก้ไข
-          </button>
+              แต่งต่อ
+            </button>
 
 
-          {/* Delete */}
+            {/* Edit */}
 
-          <button
-            type="button"
-            className="story-action-btn story-action-delete"
-            onClick={(e) =>
-              onDelete(e, story)
-            }
-          >
-            <span>
-              ⌫
-            </span>
+            <button
+              type="button"
+              className="story-action-btn story-action-edit"
+              onClick={(e) =>
+                onEdit(e, story)
+              }
+            >
+              <span>
+                ✎
+              </span>
 
-            ลบ
-          </button>
+              แก้ไข
+            </button>
+
+
+            {/* Publish / Unpublish */}
+
+            <button
+              type="button"
+              className={`story-action-btn ${story.isPublished
+                  ? 'story-action-unpublish'
+                  : 'story-action-publish'
+                }`}
+              onClick={(e) =>
+                onTogglePublish(
+                  e,
+                  story
+                )
+              }
+            >
+              <span className="story-action-icon">
+                {story.isPublished ? (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 3l18 18" />
+                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                    <path d="M9.9 4.2A10.8 10.8 0 0 1 12 4c5 0 8.7 4.1 9.7 6a11.7 11.7 0 0 1-2.2 2.8" />
+                    <path d="M6.6 6.6C4.6 7.8 3.4 9.7 2.3 12c1.2 2.5 4.5 6 9.7 6 1.5 0 2.8-.3 4-.8" />
+                  </svg>
+                ) : (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 3v12" />
+                    <path d="M7 8l5-5 5 5" />
+                    <path d="M5 14v4a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-4" />
+                  </svg>
+                )}
+              </span>
+
+              {story.isPublished
+                ? 'ซ่อนนิยาย'
+                : 'เผยแพร่นิยาย'}
+            </button>
+
+            {/* Delete */}
+
+            <button
+              type="button"
+              className="story-action-btn story-action-delete"
+              onClick={(e) =>
+                onDelete(e, story)
+              }
+            >
+              <span>
+                ⌫
+              </span>
+
+              ลบ
+            </button>
+
+          </div>
 
         </div>
 
       </div>
-
-    </div>
-  );
-};
+    );
+  };

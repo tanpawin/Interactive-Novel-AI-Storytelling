@@ -9,7 +9,8 @@ export async function GET() {
       error: storiesError,
     } = await supabaseAdmin
       .from('stories')
-      .select('id, user_id');
+      .select('id, user_id, is_published')
+      .eq('is_published', true);
 
     if (storiesError) {
       console.error(

@@ -5,21 +5,28 @@ import React, {
   useRef,
   useState,
 } from 'react';
+
 import { useRouter } from 'next/navigation';
+
 import {
   useUser,
   SignInButton,
 } from '@clerk/nextjs';
+
 import {
   CreateStoryFormData,
   Genre,
   NarrativeTone,
   StoryLength,
   SupportingCharacter,
+  Gender,
 } from '@/types/story';
 
-const DRAFT_KEY = 'cozytales_create_story_draft';
-const CREATE_KEY = 'cozytales_create_story';
+const DRAFT_KEY =
+  'cozytales_create_story_draft';
+
+const CREATE_KEY =
+  'cozytales_create_story';
 
 const genres: Genre[] = [
   'แฟนตาซี',
@@ -46,6 +53,12 @@ const lengths: StoryLength[] = [
   'นวนิยายยาว',
 ];
 
+const genders: Gender[] = [
+  'ชาย',
+  'หญิง',
+  'ไม่ระบุ',
+];
+
 const emptyForm: CreateStoryFormData = {
   title: '',
   corePremise: '',
@@ -54,6 +67,7 @@ const emptyForm: CreateStoryFormData = {
   length: 'เรื่องสั้น',
 
   protagonist: '',
+  protagonistGender: 'ไม่ระบุ',
   protagonistPersonality: '',
   protagonistItems: '',
 
@@ -68,15 +82,19 @@ export default function CreateStoryPage() {
   // ==========================================
   // AUTHENTICATION
   // ==========================================
+
   const {
     user,
     isLoaded,
   } = useUser();
 
-  const [step, setStep] = useState(1);
+  const [step, setStep] =
+    useState(1);
 
   const [formData, setFormData] =
-    useState<CreateStoryFormData>(emptyForm);
+    useState<CreateStoryFormData>(
+      emptyForm
+    );
 
   const [coverImageUrl, setCoverImageUrl] =
     useState('');
@@ -87,77 +105,101 @@ export default function CreateStoryPage() {
   const [isSubmitting, setIsSubmitting] =
     useState(false);
 
-  const hasRestoredDraft = useRef(false);
-
-
+  const hasRestoredDraft =
+    useRef(false);
 
   /* =====================================================
      Restore Draft
   ===================================================== */
 
   useEffect(() => {
-    // ยังไม่รู้สถานะ Login
     if (!isLoaded) {
       return;
     }
 
-    // ยังไม่ได้ Login
     if (!user) {
       return;
     }
 
     try {
       const savedDraft =
-        sessionStorage.getItem(DRAFT_KEY);
+        sessionStorage.getItem(
+          DRAFT_KEY
+        );
 
       if (savedDraft) {
-        const parsed = JSON.parse(savedDraft);
+        const parsed =
+          JSON.parse(savedDraft);
 
         if (parsed.formData) {
           const savedFormData =
             parsed.formData;
+
+          const restoredProtagonistGender: Gender =
+            savedFormData.protagonistGender ===
+              'ชาย' ||
+            savedFormData.protagonistGender ===
+              'หญิง' ||
+            savedFormData.protagonistGender ===
+              'ไม่ระบุ'
+              ? savedFormData.protagonistGender
+              : 'ไม่ระบุ';
 
           const restoredSupportingCharacters =
             Array.isArray(
               savedFormData.supportingCharacters
             )
               ? savedFormData.supportingCharacters
-                .filter(
-                  (
-                    character: SupportingCharacter
-                  ) =>
-                    character &&
-                    typeof character.name ===
-                    'string'
-                )
-                .map(
-                  (
-                    character: SupportingCharacter
-                  ) => ({
-                    name:
+                  .filter(
+                    (
+                      character: SupportingCharacter
+                    ) =>
+                      character &&
                       typeof character.name ===
                         'string'
-                        ? character.name
-                        : '',
+                  )
+                  .map(
+                    (
+                      character: SupportingCharacter
+                    ) => ({
+                      name:
+                        typeof character.name ===
+                          'string'
+                          ? character.name
+                          : '',
 
-                    personality:
-                      typeof character.personality ===
-                        'string'
-                        ? character.personality
-                        : '',
+                      gender:
+                        character.gender ===
+                          'ชาย' ||
+                        character.gender ===
+                          'หญิง' ||
+                        character.gender ===
+                          'ไม่ระบุ'
+                          ? character.gender
+                          : 'ไม่ระบุ',
 
-                    items:
-                      typeof character.items ===
-                        'string'
-                        ? character.items
-                        : '',
-                  })
-                )
+                      personality:
+                        typeof character.personality ===
+                          'string'
+                          ? character.personality
+                          : '',
+
+                      items:
+                        typeof character.items ===
+                          'string'
+                          ? character.items
+                          : '',
+                    })
+                  )
               : [];
 
           setFormData({
             ...emptyForm,
             ...savedFormData,
+
+            protagonistGender:
+              restoredProtagonistGender,
+
             supportingCharacters:
               restoredSupportingCharacters,
           });
@@ -179,7 +221,8 @@ export default function CreateStoryPage() {
         error
       );
     } finally {
-      hasRestoredDraft.current = true;
+      hasRestoredDraft.current =
+        true;
     }
   }, [
     isLoaded,
@@ -191,12 +234,10 @@ export default function CreateStoryPage() {
   ===================================================== */
 
   useEffect(() => {
-    // ยังไม่ได้ Login ไม่ต้องบันทึก Draft
     if (!isLoaded || !user) {
       return;
     }
 
-    // ยัง Restore Draft ไม่เสร็จ
     if (!hasRestoredDraft.current) {
       return;
     }
@@ -247,6 +288,7 @@ export default function CreateStoryPage() {
   const addSupportingCharacter = () => {
     const newCharacter: SupportingCharacter = {
       name: '',
+      gender: 'ไม่ระบุ',
       personality: '',
       items: '',
     };
@@ -260,21 +302,26 @@ export default function CreateStoryPage() {
     }));
   };
 
-  const updateSupportingCharacter = (
+  const updateSupportingCharacter = <
+    K extends keyof SupportingCharacter
+  >(
     index: number,
-    field: keyof SupportingCharacter,
-    value: string
+    field: K,
+    value: SupportingCharacter[K]
   ) => {
     setFormData((previous) => ({
       ...previous,
       supportingCharacters:
         previous.supportingCharacters.map(
-          (character, characterIndex) =>
+          (
+            character,
+            characterIndex
+          ) =>
             characterIndex === index
               ? {
-                ...character,
-                [field]: value,
-              }
+                  ...character,
+                  [field]: value,
+                }
               : character
         ),
     }));
@@ -333,7 +380,7 @@ export default function CreateStoryPage() {
       if (!response.ok) {
         throw new Error(
           data.error ||
-          'อัปโหลดรูปไม่สำเร็จ'
+            'อัปโหลดรูปไม่สำเร็จ'
         );
       }
 
@@ -356,12 +403,15 @@ export default function CreateStoryPage() {
 
   const canNext = () => {
     if (step === 1) {
-      // ต้องกรอกชื่อเรื่อง + แก่นเรื่อง
-      if (formData.title.trim() === '') {
+      if (
+        formData.title.trim() === ''
+      ) {
         return false;
       }
 
-      if (formData.corePremise.trim() === '') {
+      if (
+        formData.corePremise.trim() === ''
+      ) {
         return false;
       }
 
@@ -369,12 +419,12 @@ export default function CreateStoryPage() {
     }
 
     if (step === 2) {
-      // ต้องมีชื่อตัวละครหลัก
-      if (formData.protagonist.trim() === '') {
+      if (
+        formData.protagonist.trim() === ''
+      ) {
         return false;
       }
 
-      // ถ้าเพิ่ม NPC แล้ว ต้องกรอกชื่อ NPC ทุกตัว
       const hasEmptyNpcName =
         formData.supportingCharacters.some(
           (character) =>
@@ -401,7 +451,10 @@ export default function CreateStoryPage() {
     }
 
     setStep((previous) =>
-      Math.min(previous + 1, 3)
+      Math.min(
+        previous + 1,
+        3
+      )
     );
   };
 
@@ -416,37 +469,34 @@ export default function CreateStoryPage() {
     }
 
     setStep((previous) =>
-      Math.max(previous - 1, 1)
+      Math.max(
+        previous - 1,
+        1
+      )
     );
   };
 
   /* =====================================================
-   Submit
-===================================================== */
+     Submit
+  ===================================================== */
 
   const handleSubmit = () => {
-    // ==========================================
-    // ต้อง Login ก่อนสร้างนิยาย
-    // ==========================================
-if (!isLoaded || !user) {
-  return;
-}
+    if (!isLoaded || !user) {
+      return;
+    }
 
     if (isSubmitting) {
       return;
     }
 
-    // ต้องมีชื่อเรื่อง
     if (!formData.title.trim()) {
       return;
     }
 
-    // ต้องมีแก่นเรื่อง
     if (!formData.corePremise.trim()) {
       return;
     }
 
-    // ต้องมีตัวละครหลัก
     if (!formData.protagonist.trim()) {
       return;
     }
@@ -474,6 +524,10 @@ if (!isLoaded || !user) {
             name:
               character.name.trim(),
 
+            gender:
+              character.gender ||
+              'ไม่ระบุ',
+
             personality:
               character.personality.trim(),
 
@@ -482,42 +536,47 @@ if (!isLoaded || !user) {
           })
         );
 
-    const cleanFormData: CreateStoryFormData & {
-      coverImageUrl: string;
-    } = {
-      title:
-        formData.title.trim(),
+    const cleanFormData:
+      CreateStoryFormData & {
+        coverImageUrl: string;
+      } = {
+        title:
+          formData.title.trim(),
 
-      corePremise:
-        formData.corePremise.trim(),
+        corePremise:
+          formData.corePremise.trim(),
 
-      genre:
-        formData.genre,
+        genre:
+          formData.genre,
 
-      tone:
-        formData.tone,
+        tone:
+          formData.tone,
 
-      length:
-        formData.length,
+        length:
+          formData.length,
 
-      protagonist:
-        formData.protagonist.trim(),
+        protagonist:
+          formData.protagonist.trim(),
 
-      protagonistPersonality:
-        formData.protagonistPersonality.trim(),
+        protagonistGender:
+          formData.protagonistGender ||
+          'ไม่ระบุ',
 
-      protagonistItems:
-        formData.protagonistItems.trim(),
+        protagonistPersonality:
+          formData.protagonistPersonality.trim(),
 
-      supportingCharacters:
-        cleanSupportingCharacters,
+        protagonistItems:
+          formData.protagonistItems.trim(),
 
-      worldSetting:
-        formData.worldSetting.trim(),
+        supportingCharacters:
+          cleanSupportingCharacters,
 
-      coverImageUrl:
-        coverImageUrl,
-    };
+        worldSetting:
+          formData.worldSetting.trim(),
+
+        coverImageUrl:
+          coverImageUrl,
+      };
 
     try {
       sessionStorage.removeItem(
@@ -553,8 +612,8 @@ if (!isLoaded || !user) {
   };
 
   /* =====================================================
-   AUTH LOADING
-===================================================== */
+     AUTH LOADING
+  ===================================================== */
 
   if (!isLoaded) {
     return (
@@ -573,21 +632,20 @@ if (!isLoaded || !user) {
       </main>
     );
   }
-/* =========================
+
+  /* =====================================================
      Not Logged In
-  ========================= */
+  ===================================================== */
 
   if (!user) {
     return (
       <main className="login-required-page">
         <div className="login-required-card">
 
-          {/* Icon */}
           <div className="login-required-icon">
             <span>🔐</span>
           </div>
 
-          {/* Text */}
           <div className="login-required-content">
             <p className="login-required-label">
               GonnaTales
@@ -604,7 +662,6 @@ if (!isLoaded || !user) {
             </p>
           </div>
 
-          {/* Actions */}
           <div className="login-required-actions">
 
             <SignInButton mode="modal">
@@ -612,22 +669,28 @@ if (!isLoaded || !user) {
                 type="button"
                 className="login-required-primary"
               >
-                <span>เข้าสู่ระบบ</span>
-                <span className="button-arrow">→</span>
+                <span>
+                  เข้าสู่ระบบ
+                </span>
+
+                <span className="button-arrow">
+                  →
+                </span>
               </button>
             </SignInButton>
 
             <button
               type="button"
               className="login-required-secondary"
-              onClick={() => router.push('/')}
+              onClick={() =>
+                router.push('/')
+              }
             >
-              ← กลับหน้าหลัก
+              ‹ กลับหน้าหลัก
             </button>
 
           </div>
 
-          {/* Footer */}
           <p className="login-required-footer">
             Your stories, your journey.
           </p>
@@ -683,10 +746,11 @@ if (!isLoaded || !user) {
             (item) => (
               <div
                 key={item}
-                className={`story-create-progress-item ${step >= item
-                  ? 'active'
-                  : ''
-                  }`}
+                className={`story-create-progress-item ${
+                  step >= item
+                    ? 'active'
+                    : ''
+                }`}
               >
 
                 <div className="story-create-progress-number">
@@ -741,8 +805,6 @@ if (!isLoaded || !user) {
 
               <div className="story-create-fields">
 
-                {/* ชื่อเรื่อง */}
-
                 <div className="story-create-field">
 
                   <label>
@@ -768,8 +830,6 @@ if (!isLoaded || !user) {
 
                 </div>
 
-                {/* แก่นเรื่อง */}
-
                 <div className="story-create-field">
 
                   <label>
@@ -794,8 +854,6 @@ if (!isLoaded || !user) {
                   />
 
                 </div>
-
-                {/* แนวเรื่อง */}
 
                 <div className="story-create-field">
 
@@ -878,8 +936,6 @@ if (!isLoaded || !user) {
 
                 </div>
 
-                {/* ชื่อตัวละครหลัก */}
-
                 <div className="story-create-field">
 
                   <label>
@@ -905,7 +961,44 @@ if (!isLoaded || !user) {
 
                 </div>
 
-                {/* นิสัยและความสามารถ */}
+                {/* =================================================
+                    เพศตัวละครหลัก
+                ================================================= */}
+
+                <div className="story-create-field">
+
+                  <label>
+                    เพศตัวละครหลัก
+                  </label>
+
+                  <div className="story-create-options">
+
+                    {genders.map(
+                      (gender) => (
+                        <button
+                          key={gender}
+                          type="button"
+                          className={
+                            formData.protagonistGender ===
+                              gender
+                              ? 'selected'
+                              : ''
+                          }
+                          onClick={() =>
+                            updateField(
+                              'protagonistGender',
+                              gender
+                            )
+                          }
+                        >
+                          {gender}
+                        </button>
+                      )
+                    )}
+
+                  </div>
+
+                </div>
 
                 <div className="story-create-field">
 
@@ -935,8 +1028,6 @@ if (!isLoaded || !user) {
                   />
 
                 </div>
-
-                {/* ของที่พก */}
 
                 <div className="story-create-field">
 
@@ -1001,10 +1092,6 @@ if (!isLoaded || !user) {
 
                 </div>
 
-                {/* =================================================
-                    NPC List
-                ================================================= */}
-
                 {formData.supportingCharacters.length >
                   0 && (
                     <div className="story-create-supporting-list">
@@ -1018,8 +1105,6 @@ if (!isLoaded || !user) {
                             key={index}
                             className="story-create-supporting-character"
                           >
-
-                            {/* NPC Header */}
 
                             <div className="story-create-supporting-character-header">
 
@@ -1040,8 +1125,6 @@ if (!isLoaded || !user) {
                               </button>
 
                             </div>
-
-                            {/* ชื่อ NPC */}
 
                             <div className="story-create-field">
 
@@ -1069,7 +1152,45 @@ if (!isLoaded || !user) {
 
                             </div>
 
-                            {/* นิสัย / ความสามารถ */}
+                            {/* =================================================
+                                เพศ NPC
+                            ================================================= */}
+
+                            <div className="story-create-field">
+
+                              <label>
+                                เพศตัวละคร
+                              </label>
+
+                              <div className="story-create-options">
+
+                                {genders.map(
+                                  (gender) => (
+                                    <button
+                                      key={gender}
+                                      type="button"
+                                      className={
+                                        character.gender ===
+                                          gender
+                                          ? 'selected'
+                                          : ''
+                                      }
+                                      onClick={() =>
+                                        updateSupportingCharacter(
+                                          index,
+                                          'gender',
+                                          gender
+                                        )
+                                      }
+                                    >
+                                      {gender}
+                                    </button>
+                                  )
+                                )}
+
+                              </div>
+
+                            </div>
 
                             <div className="story-create-field">
 
@@ -1100,8 +1221,6 @@ if (!isLoaded || !user) {
                               />
 
                             </div>
-
-                            {/* ของที่พก */}
 
                             <div className="story-create-field">
 
@@ -1250,10 +1369,6 @@ if (!isLoaded || !user) {
 
               <div className="story-create-fields">
 
-                {/* =================================================
-                    ความยาว
-                ================================================= */}
-
                 <div className="story-create-field">
 
                   <label>
@@ -1307,10 +1422,6 @@ if (!isLoaded || !user) {
 
                 </div>
 
-                {/* =================================================
-                    Cover
-                ================================================= */}
-
                 <div className="story-create-field">
 
                   <label>
@@ -1354,10 +1465,6 @@ if (!isLoaded || !user) {
                   </label>
 
                 </div>
-
-                {/* =================================================
-                    Summary
-                ================================================= */}
 
                 <div className="story-create-summary">
 
@@ -1415,15 +1522,27 @@ if (!isLoaded || !user) {
 
                   <div>
                     <span>
+                      เพศตัวละครหลัก
+                    </span>
+
+                    <strong>
+                      {formData.protagonistGender}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
                       ตัวละครประกอบ
                     </span>
 
                     <strong>
-                      {formData.supportingCharacters.filter(
-                        (character) =>
-                          character.name.trim() !==
-                          ''
-                      ).length}{' '}
+                      {
+                        formData.supportingCharacters.filter(
+                          (character) =>
+                            character.name.trim() !==
+                            ''
+                        ).length
+                      }{' '}
                       ตัว
                     </strong>
                   </div>
@@ -1448,6 +1567,8 @@ if (!isLoaded || !user) {
 
                           <strong>
                             {character.name}
+                            {' '}
+                            ({character.gender})
                           </strong>
                         </div>
                       )

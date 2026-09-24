@@ -63,7 +63,7 @@
 }
 
 .logo-text {
-  font-family: var(--font-serif);
+  font-family: var(--font-global);
 
   font-size: 1.25rem;
   font-weight: 700;
@@ -106,7 +106,7 @@
 
   color: var(--text-secondary);
 
-  font-family: var(--font-sans);
+  font-family: var(--font-global);
   font-size: 0.95rem;
 
   cursor: pointer;
@@ -165,7 +165,7 @@
 
   color: #ffffff;
 
-  font-family: var(--font-sans);
+  font-family: var(--font-global);
   font-size: 0.9rem;
   font-weight: 600;
 
@@ -472,7 +472,7 @@
     border-bottom:
       1px solid var(--border-color);
 
-    font-family: var(--font-sans);
+    font-family: var(--font-global);
 
     transition:
       color 0.2s ease,
@@ -534,7 +534,7 @@
 
     color: #ffffff;
 
-    font-family: var(--font-sans);
+    font-family: var(--font-global);
 
     font-size: 0.78rem;
     font-weight: 600;

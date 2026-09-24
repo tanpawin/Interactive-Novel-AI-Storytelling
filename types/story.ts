@@ -20,6 +20,11 @@ export type StoryLength =
   | 'นวนิยายขนาดกลาง'
   | 'นวนิยายยาว';
 
+export type Gender =
+  | 'ชาย'
+  | 'หญิง'
+  | 'ไม่ระบุ';
+
 export interface Chapter {
   id: string;
   chapterNumber: number;
@@ -31,13 +36,14 @@ export interface Chapter {
 
 /* =========================================================
    ตัวละครประกอบ (NPC)
-   
+
    ตัวละครเหล่านี้เป็น NPC ที่ผู้สร้างนิยายกำหนดไว้
    ตั้งแต่ตอนสร้าง Story
 ========================================================= */
 
 export interface SupportingCharacter {
   name: string;
+  gender: Gender;
   personality: string;
   items: string;
 }
@@ -68,6 +74,14 @@ export interface Story {
   isTrending?: boolean;
   isFresh?: boolean;
 
+  /*
+   * สถานะการเผยแพร่นิยาย
+   *
+   * false = ส่วนตัว
+   * true  = เผยแพร่แล้ว
+   */
+  isPublished: boolean;
+
   chapters: Chapter[];
 }
 
@@ -89,25 +103,29 @@ export interface CreateStoryFormData {
 
   protagonist: string;
 
+  protagonistGender: Gender;
+
   protagonistPersonality: string;
 
   protagonistItems: string;
 
   /* -------------------------------------------------------
      ตัวละครประกอบ (NPC)
-     
+
      สามารถเพิ่มได้หลายตัว
-     
+
      ตัวอย่าง:
-     
+
      supportingCharacters: [
        {
          name: 'แทน',
+         gender: 'ชาย',
          personality: 'ใจเย็น ฉลาด...',
          items: 'ดาบสั้น, ยา'
        },
        {
          name: 'ทิว',
+         gender: 'หญิง',
          personality: 'ร่าเริง...',
          items: 'ธนู, มีด'
        }

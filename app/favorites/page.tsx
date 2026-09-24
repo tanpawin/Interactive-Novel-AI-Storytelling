@@ -299,6 +299,10 @@ export default function FavoritesPage() {
                   isFresh:
                     false,
 
+                  isPublished:
+                    story.is_published ??
+                    false,
+
                   chapters:
                     storyChapters,
                 };

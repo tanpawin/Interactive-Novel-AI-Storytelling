@@ -7,11 +7,9 @@
   min-height: calc(100vh - 64px);
 
   background:
-    radial-gradient(
-      circle at top left,
+    radial-gradient(circle at top left,
       rgba(140, 83, 62, 0.05),
-      transparent 35%
-    ),
+      transparent 35%),
     var(--bg-main);
 
   padding: 3rem 1.5rem 5rem;
@@ -52,7 +50,7 @@
 
   color: var(--accent-color);
 
-  font-family: var(--font-sans);
+  font-family: var(--font-global);
   font-size: 0.86rem;
   font-weight: 600;
   line-height: 1.4;
@@ -79,7 +77,7 @@
 
   color: var(--accent-color);
 
-  font-family: var(--font-serif);
+  font-family: var(--font-global);
   font-size: 0.85rem;
   letter-spacing: 0.08em;
 }
@@ -89,7 +87,7 @@
 
   color: var(--text-primary);
 
-  font-family: var(--font-serif);
+  font-family: var(--font-global);
   font-size: clamp(1.8rem, 4vw, 2.5rem);
 }
 
@@ -157,8 +155,7 @@
     color 0.2s ease;
 }
 
-.story-create-progress-item.active
-  .story-create-progress-number {
+.story-create-progress-item.active .story-create-progress-number {
   background: var(--accent-color);
 
   border-color: var(--accent-color);
@@ -195,7 +192,7 @@
   margin-bottom: 2.4rem;
 }
 
-.story-create-step-heading > span {
+.story-create-step-heading>span {
   color: var(--accent-color);
 
   font-size: 0.8rem;
@@ -209,7 +206,7 @@
 
   color: var(--text-primary);
 
-  font-family: var(--font-serif);
+  font-family: var(--font-global);
 
   font-size: 1.6rem;
   line-height: 1.4;
@@ -283,7 +280,7 @@
    Field Description
 ========================================== */
 
-.story-create-field > p {
+.story-create-field>p {
   margin: -0.1rem 0 0;
 
   color: var(--text-muted);
@@ -313,7 +310,7 @@
 
   color: var(--text-primary);
 
-  font-family: var(--font-sans);
+  font-family: var(--font-global);
 
   font-size: 0.9rem;
   line-height: 1.6;
@@ -377,7 +374,7 @@
 
   color: var(--text-primary);
 
-  font-family: var(--font-serif);
+  font-family: var(--font-global);
 
   font-size: 1.2rem;
   font-weight: 700;
@@ -398,15 +395,13 @@
 
 /* ช่องกรอกที่อยู่หลังหัวข้อ Section */
 
-.story-create-section-heading
-  + .story-create-field {
+.story-create-section-heading+.story-create-field {
   margin-top: 1.2rem;
 }
 
 /* Section ใหม่หลังจาก Field */
 
-.story-create-field
-  + .story-create-section-heading {
+.story-create-field+.story-create-section-heading {
   margin-top: 2.8rem;
 }
 
@@ -428,7 +423,7 @@
   gap: 16px;
 }
 
-.story-create-supporting-header > div:first-child {
+.story-create-supporting-header>div:first-child {
   min-width: 0;
 }
 
@@ -445,8 +440,7 @@
   line-height: 1.5;
 }
 
-.story-create-supporting-header
-  .story-create-secondary {
+.story-create-supporting-header .story-create-secondary {
   flex-shrink: 0;
 }
 
@@ -500,9 +494,7 @@
   font-size: 14px;
 }
 
-.story-create-supporting-character
-  .story-create-field
-  + .story-create-field {
+.story-create-supporting-character .story-create-field+.story-create-field {
   margin-top: 0.4rem;
 }
 
@@ -838,8 +830,7 @@
     font-size: 0.8rem;
   }
 
-  .story-create-field
-    + .story-create-section-heading {
+  .story-create-field+.story-create-section-heading {
     margin-top: 2.5rem;
   }
 }
@@ -962,7 +953,7 @@
     opacity: 0.55;
   }
 
-  .story-create-field > p {
+  .story-create-field>p {
     margin-top: -0.05rem;
 
     font-size: 0.74rem;
@@ -1003,13 +994,11 @@
     line-height: 1.5;
   }
 
-  .story-create-field
-    + .story-create-section-heading {
+  .story-create-field+.story-create-section-heading {
     margin-top: 2.25rem;
   }
 
-  .story-create-section-heading
-    + .story-create-field {
+  .story-create-section-heading+.story-create-field {
     margin-top: 1rem;
   }
 
@@ -1041,9 +1030,7 @@
     border-radius: 13px;
   }
 
-  .story-create-supporting-character
-    .story-create-field
-    + .story-create-field {
+  .story-create-supporting-character .story-create-field+.story-create-field {
     margin-top: 0.25rem;
   }
 
@@ -1184,7 +1171,7 @@
     font-size: 0.7rem;
   }
 
-  .story-create-field > p {
+  .story-create-field>p {
     font-size: 0.72rem;
   }
 
@@ -1206,13 +1193,11 @@
     font-size: 0.72rem;
   }
 
-  .story-create-field
-    + .story-create-section-heading {
+  .story-create-field+.story-create-section-heading {
     margin-top: 2rem;
   }
 
-  .story-create-section-heading
-    + .story-create-field {
+  .story-create-section-heading+.story-create-field {
     margin-top: 0.9rem;
   }
 
@@ -1238,28 +1223,31 @@
   min-height: calc(100vh - 100px);
 
   display: flex;
+
   flex-direction: column;
 
   align-items: center;
+
   justify-content: center;
 
   text-align: center;
 
   padding: 40px;
+
+  font-family: var(--font-global);
 }
+
 
 .story-create-auth-loading h2 {
   margin: 20px 0 8px;
 
-  font-family:
-    Georgia,
-    'Times New Roman',
-    serif;
+  font-family: var(--font-global);
 
   font-size: 30px;
 
   color: #3b241c;
 }
+
 
 .story-create-auth-loading p {
   margin: 0 0 26px;
@@ -1269,12 +1257,16 @@
   font-size: 16px;
 }
 
+
 .story-create-auth-icon {
   width: 78px;
+
   height: 78px;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   border-radius: 50%;
@@ -1283,7 +1275,6 @@
 
   font-size: 34px;
 }
-
 
 /* Loading spinner */
 
@@ -1298,10 +1289,7 @@
   border-radius: 50%;
 
   animation:
-    storyCreateAuthSpin
-    0.8s
-    linear
-    infinite;
+    storyCreateAuthSpin 0.8s linear infinite;
 }
 
 @keyframes storyCreateAuthSpin {

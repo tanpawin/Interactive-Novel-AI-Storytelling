@@ -177,7 +177,7 @@ async function initializeSessionCharacters(
     } = await supabaseAdmin
       .from('characters')
       .select(
-        'id, name, role, appearance, personality, initial_items'
+        'id, name, gender, role, appearance, personality, initial_items'
       )
       .eq('story_id', storyId);
 
@@ -246,6 +246,7 @@ async function initializeSessionCharacters(
           session_id: sessionId,
           base_character_id: character.id,
           name: character.name,
+          gender: character.gender,
           role: character.role,
           appearance: character.appearance,
           personality: character.personality,
@@ -304,11 +305,12 @@ async function loadSessionCharacterContext(
       .from('session_characters')
       .select(`
         id,
-        name,
-        role,
-        appearance,
-        personality,
-        initial_items
+name,
+gender,
+role,
+appearance,
+personality,
+initial_items
       `)
       .eq('session_id', sessionId)
       .order('created_at', {
@@ -444,7 +446,7 @@ async function syncCharactersFromChapter({
     } = await supabaseAdmin
       .from('session_characters')
       .select(
-        'id, base_character_id, name, role, appearance, personality, initial_items'
+        'id, base_character_id, name, gender, role, appearance, personality, initial_items'
       )
       .eq(
         'session_id',
@@ -1328,6 +1330,12 @@ export async function POST(req: Request) {
           )
           .map((character: any) => ({
             name: character.name.trim(),
+            gender:
+              character.gender === 'ชาย' ||
+                character.gender === 'หญิง' ||
+                character.gender === 'ไม่ระบุ'
+                ? character.gender
+                : 'ไม่ระบุ',
             personality:
               typeof character.personality === 'string' &&
                 character.personality.trim()
@@ -1341,12 +1349,17 @@ export async function POST(req: Request) {
         supportingCharacters.length > 0
           ? supportingCharacters
             .map(
-              (character: {
-                name: string;
-                personality: string;
-                initial_items: string[];
-              }, index: number) => `NPC ${index + 1}:
+              (
+                character: {
+                  name: string;
+                  gender: 'ชาย' | 'หญิง' | 'ไม่ระบุ';
+                  personality: string;
+                  initial_items: string[];
+                },
+                index: number
+              ) => `NPC ${index + 1}:
 ชื่อ: ${character.name}
+เพศ: ${character.gender}
 นิสัยและความสามารถ: ${character.personality}
 ของที่พกติดตัว: ${character.initial_items.length > 0
                   ? character.initial_items.join(', ')
@@ -1378,6 +1391,9 @@ ${formData.corePremise || ''}
 
 ตัวละครเอก:
 ${formData.protagonist || 'ไม่ระบุ'}
+
+เพศตัวละครเอก:
+${formData.protagonistGender || 'ไม่ระบุ'}
 
 นิสัยและความสามารถของตัวละครเอก:
 ${formData.protagonistPersonality || 'ไม่ระบุ'}
@@ -1570,6 +1586,9 @@ ${formData.worldSetting || 'ไม่ระบุ'}
           cover_image_url:
             formData.coverImageUrl ||
             null,
+
+          // สร้างใหม่ = ส่วนตัว
+          is_published: false,
         })
         .select()
         .single();
@@ -1665,20 +1684,19 @@ ${formData.worldSetting || 'ไม่ระบุ'}
         } = await supabaseAdmin
           .from('characters')
           .insert({
-            story_id:
-              story.id,
-
-            name:
-              formData.protagonist.trim(),
-
+            story_id: story.id,
+            name: formData.protagonist.trim(),
+            gender:
+              formData.protagonistGender === 'ชาย' ||
+                formData.protagonistGender === 'หญิง' ||
+                formData.protagonistGender === 'ไม่ระบุ'
+                ? formData.protagonistGender
+                : 'ไม่ระบุ',
             role: 'player',
-
             appearance: null,
-
             personality:
               formData.protagonistPersonality?.trim() ||
               'ตัวละครเอกของเรื่อง',
-
             initial_items:
               parseInitialItems(
                 formData.protagonistItems
@@ -1719,11 +1737,13 @@ ${formData.worldSetting || 'ไม่ระบุ'}
             supportingCharacters.map(
               (character: {
                 name: string;
+                gender: 'ชาย' | 'หญิง' | 'ไม่ระบุ';
                 personality: string;
                 initial_items: string[];
               }) => ({
                 story_id: story.id,
                 name: character.name,
+                gender: character.gender,
                 role: 'npc',
                 appearance: null,
                 personality: character.personality,
@@ -1959,10 +1979,32 @@ ${formData.worldSetting || 'ไม่ระบุ'}
         return NextResponse.json(
           {
             success: false,
-            error:
-              'ไม่พบเรื่องนี้',
+            error: 'ไม่พบเรื่องนี้',
           },
           { status: 404 }
+        );
+      }
+
+      /* =====================================================
+         Story Access Control
+      
+         เจ้าของเรื่อง:
+         - เล่นได้เสมอ
+      
+         ผู้ใช้อื่น:
+         - เล่นได้เฉพาะเรื่องที่เผยแพร่แล้ว
+      ===================================================== */
+
+      if (
+        story.user_id !== userId &&
+        !story.is_published
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'นิยายเรื่องนี้ยังไม่ได้เผยแพร่',
+          },
+          { status: 403 }
         );
       }
 
@@ -2449,11 +2491,10 @@ ${chapter.content || ''}
             .map(
               (character) => `
 - ชื่อ: ${character.name}
+  เพศ: ${character.gender || 'ไม่ระบุ'}
   บทบาท: ${character.role}
-  รูปลักษณ์: ${character.appearance || 'ไม่ระบุ'
-                }
-  บุคลิก: ${character.personality || 'ไม่ระบุ'
-                }
+  รูปลักษณ์: ${character.appearance || 'ไม่ระบุ'}
+  บุคลิก: ${character.personality || 'ไม่ระบุ'}
   สิ่งของเริ่มต้น: ${Array.isArray(character.initial_items)
                   ? character.initial_items.join(', ') || 'ไม่มี'
                   : 'ไม่มี'

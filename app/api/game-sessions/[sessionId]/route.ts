@@ -108,6 +108,66 @@ export async function PATCH(
     }
 
     // ==========================================
+    // CHECK STORY PUBLISH STATUS
+    //
+    // ถ้าจะเปิด Session เป็น Public
+    // Story หลักต้องถูก Publish ก่อน
+    // ==========================================
+    if (is_public) {
+      const {
+        data: story,
+        error: storyError,
+      } = await supabaseAdmin
+        .from('stories')
+        .select(
+          'id, is_published'
+        )
+        .eq('id', session.story_id)
+        .maybeSingle();
+
+      if (storyError) {
+        console.error(
+          'Get Story Publish Status Error:',
+          JSON.stringify(
+            storyError,
+            null,
+            2
+          )
+        );
+
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'ไม่สามารถตรวจสอบสถานะการเผยแพร่นิยายได้',
+          },
+          { status: 500 }
+        );
+      }
+
+      if (!story) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'ไม่พบ Story ที่เกี่ยวข้องกับ Session นี้',
+          },
+          { status: 404 }
+        );
+      }
+
+      if (!story.is_published) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'ไม่สามารถเปิด Session เป็น Public ได้ เนื่องจากนิยายเรื่องนี้ยังไม่ได้เผยแพร่',
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    // ==========================================
     // UPDATE PUBLIC / PRIVATE
     // ==========================================
     const {

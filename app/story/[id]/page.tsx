@@ -143,6 +143,50 @@ export default function StoryDetailPage() {
         }
 
         /* =========================
+           Check Story Visibility
+        ========================= */
+
+        const isOwner =
+          storyData.user_id === user.id;
+
+        const isPublished =
+          storyData.is_published === true;
+
+        console.log(
+          'Story Published:',
+          isPublished
+        );
+
+        console.log(
+          'Story Owner:',
+          storyData.user_id
+        );
+
+        console.log(
+          'Current User:',
+          user.id
+        );
+
+        console.log(
+          'Is Owner:',
+          isOwner
+        );
+
+        /*
+         * ถ้าเป็นเรื่องที่ซ่อนอยู่
+         * และผู้ใช้ไม่ใช่เจ้าของ
+         * ห้ามเข้าถึงเรื่องนี้
+         */
+        if (!isOwner && !isPublished) {
+          console.warn(
+            'Access denied: story is not published'
+          );
+
+          setStory(null);
+          return;
+        }
+
+        /* =========================
            Load Creator Username
         ========================= */
 
@@ -165,7 +209,7 @@ export default function StoryDetailPage() {
             creatorResponse.ok &&
             creatorData.success &&
             typeof creatorData.creatorName ===
-              'string' &&
+            'string' &&
             creatorData.creatorName.trim()
           ) {
             creatorName =
@@ -245,11 +289,11 @@ export default function StoryDetailPage() {
         const latestSharedChapter =
           sharedChapters.length > 0
             ? Math.max(
-                ...sharedChapters.map(
-                  (chapter) =>
-                    chapter.chapterNumber
-                )
+              ...sharedChapters.map(
+                (chapter) =>
+                  chapter.chapterNumber
               )
+            )
             : 1;
 
         /* =========================
@@ -300,7 +344,7 @@ export default function StoryDetailPage() {
           const {
             data: newSession,
             error:
-              createSessionError,
+            createSessionError,
           } = await supabase
             .from('game_sessions')
             .insert({
@@ -348,9 +392,9 @@ export default function StoryDetailPage() {
 
               const {
                 data:
-                  existingSessionAfterConflict,
+                existingSessionAfterConflict,
                 error:
-                  reloadSessionError,
+                reloadSessionError,
               } = await supabase
                 .from(
                   'game_sessions'
@@ -518,9 +562,9 @@ export default function StoryDetailPage() {
 
         const {
           data:
-            sessionChapterData,
+          sessionChapterData,
           error:
-            sessionChapterError,
+          sessionChapterError,
         } = await supabase
           .from(
             'session_chapters'
@@ -623,14 +667,14 @@ export default function StoryDetailPage() {
         const latestLoadedChapter =
           chapters.length > 0
             ? chapters[
-                chapters.length - 1
-              ].chapterNumber
+              chapters.length - 1
+            ].chapterNumber
             : 1;
 
         const sessionCurrentChapter =
           Number(
             currentSession.current_chapter ||
-              1
+            1
           );
 
         const currentChapter =
@@ -664,7 +708,7 @@ export default function StoryDetailPage() {
         ) {
           const {
             error:
-              updateSessionError,
+            updateSessionError,
           } = await supabase
             .from(
               'game_sessions'
@@ -707,6 +751,9 @@ export default function StoryDetailPage() {
 
           author:
             creatorName,
+
+          isPublished:
+            storyData.is_published ?? false,
 
           genre: (
             storyData.genre ||

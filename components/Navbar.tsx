@@ -13,7 +13,20 @@ import {
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { isLoaded, isSignedIn } = useAuth();
+
+  const {
+    isLoaded,
+    isSignedIn,
+    sessionClaims,
+  } = useAuth();
+
+  const metadata = sessionClaims?.metadata as
+    | {
+        role?: string;
+      }
+    | undefined;
+
+  const isAdmin = metadata?.role === 'admin';
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] =
     useState(false);
@@ -65,30 +78,38 @@ export const Navbar: React.FC = () => {
 
           <Link
             href="/"
-            className={`nav-link ${
-              isActive('/') ? 'active' : ''
-            }`}
+            className={`nav-link ${isActive('/') ? 'active' : ''
+              }`}
           >
             หน้าหลัก (Library)
           </Link>
 
           <Link
             href="/discover"
-            className={`nav-link ${
-              isActive('/discover') ? 'active' : ''
-            }`}
+            className={`nav-link ${isActive('/discover') ? 'active' : ''
+              }`}
           >
             สำรวจ (Discover)
           </Link>
 
           <Link
             href="/my-stories"
-            className={`nav-link ${
-              isActive('/my-stories') ? 'active' : ''
-            }`}
+            className={`nav-link ${isActive('/my-stories') ? 'active' : ''
+              }`}
           >
             นิยายของฉัน (My Stories)
           </Link>
+
+          {/* Admin */}
+          {isSignedIn && isAdmin && (
+            <Link
+              href="/admin"
+              className={`nav-link ${isActive('/admin') ? 'active' : ''
+                }`}
+            >
+              🛠️ Admin
+            </Link>
+          )}
 
         </nav>
 
@@ -147,11 +168,10 @@ export const Navbar: React.FC = () => {
 
                   <Link
                     href="/profile"
-                    className={`nav-link navbar-profile-link ${
-                      isActive('/profile')
+                    className={`nav-link navbar-profile-link ${isActive('/profile')
                         ? 'active'
                         : ''
-                    }`}
+                      }`}
                   >
                     โปรไฟล์
                   </Link>
@@ -174,9 +194,8 @@ export const Navbar: React.FC = () => {
 
           <button
             type="button"
-            className={`mobile-menu-button ${
-              isMobileMenuOpen ? 'open' : ''
-            }`}
+            className={`mobile-menu-button ${isMobileMenuOpen ? 'open' : ''
+              }`}
             onClick={() =>
               setIsMobileMenuOpen(
                 (prev) => !prev
@@ -204,22 +223,20 @@ export const Navbar: React.FC = () => {
       ========================================== */}
 
       <div
-        className={`mobile-menu ${
-          isMobileMenuOpen
+        className={`mobile-menu ${isMobileMenuOpen
             ? 'mobile-menu-open'
             : ''
-        }`}
+          }`}
       >
 
         <nav className="mobile-menu-links">
 
           <Link
             href="/"
-            className={`mobile-nav-link ${
-              isActive('/')
+            className={`mobile-nav-link ${isActive('/')
                 ? 'active'
                 : ''
-            }`}
+              }`}
             onClick={closeMobileMenu}
           >
             <span>หน้าหลัก</span>
@@ -228,11 +245,10 @@ export const Navbar: React.FC = () => {
 
           <Link
             href="/discover"
-            className={`mobile-nav-link ${
-              isActive('/discover')
+            className={`mobile-nav-link ${isActive('/discover')
                 ? 'active'
                 : ''
-            }`}
+              }`}
             onClick={closeMobileMenu}
           >
             <span>สำรวจ</span>
@@ -241,25 +257,38 @@ export const Navbar: React.FC = () => {
 
           <Link
             href="/my-stories"
-            className={`mobile-nav-link ${
-              isActive('/my-stories')
+            className={`mobile-nav-link ${isActive('/my-stories')
                 ? 'active'
                 : ''
-            }`}
+              }`}
             onClick={closeMobileMenu}
           >
             <span>นิยายของฉัน</span>
             <small>My Stories</small>
           </Link>
 
+          {/* Admin Mobile */}
+          {isSignedIn && isAdmin && (
+            <Link
+              href="/admin"
+              className={`mobile-nav-link ${isActive('/admin')
+                  ? 'active'
+                  : ''
+                }`}
+              onClick={closeMobileMenu}
+            >
+              <span>🛠️ Admin</span>
+              <small>Admin Panel</small>
+            </Link>
+          )}
+
           {isSignedIn && (
             <Link
               href="/profile"
-              className={`mobile-nav-link ${
-                isActive('/profile')
+              className={`mobile-nav-link ${isActive('/profile')
                   ? 'active'
                   : ''
-              }`}
+                }`}
               onClick={closeMobileMenu}
             >
               <span>โปรไฟล์</span>

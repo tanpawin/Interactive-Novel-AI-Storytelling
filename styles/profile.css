@@ -53,7 +53,7 @@
 .profile-modal-header h2 {
   margin: 0;
   color: var(--text-primary);
-  font-family: var(--font-serif);
+  font-family: var(--font-global);
   font-size: 22px;
   font-weight: 600;
   line-height: 1.3;
@@ -117,7 +117,7 @@
   outline: none;
   background: #fff;
   color: var(--text-primary);
-  font-family: var(--font-sans);
+  font-family: var(--font-global);
   font-size: 15px;
   transition:
     border-color 0.2s ease,
@@ -178,7 +178,7 @@
   min-width: 78px;
   padding: 9px 15px;
   border-radius: 9px;
-  font-family: var(--font-sans);
+  font-family: var(--font-global);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -295,7 +295,7 @@
   border: none;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-primary);
-  font-family: var(--font-sans);
+  font-family: var(--font-global);
   text-align: left;
   cursor: pointer;
   box-sizing: border-box;
@@ -312,7 +312,7 @@
 .profile-activity-content h3 {
   margin: 0 0 0.2rem;
   color: var(--text-primary);
-  font-family: var(--font-serif);
+  font-family: var(--font-global);
   font-size: 1rem;
   font-weight: 600;
   line-height: 1.4;
@@ -321,7 +321,7 @@
 .profile-activity-content p {
   margin: 0;
   color: var(--text-secondary);
-  font-family: var(--font-sans);
+  font-family: var(--font-global);
   font-size: 0.82rem;
   line-height: 1.5;
 }

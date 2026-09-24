@@ -52,7 +52,8 @@ export async function GET(
         cover_image_url,
         genre,
         tone,
-        synopsis
+        synopsis,
+        is_published
         `
       )
       .eq('id', storyId)
@@ -150,27 +151,45 @@ export async function GET(
     }
 
     // ==================================================
-    // 4. ตรวจสอบ Public / Private
+    // 4. ตรวจสอบสิทธิ์การเข้าถึง Branch
     // ==================================================
 
     // เจ้าของ Session สามารถเข้าดูได้เสมอ
     const isOwner =
       userId === session.user_id;
 
-    // ถ้าไม่ใช่เจ้าของ
-    // ต้องเป็น Public เท่านั้นจึงจะเข้าดูได้
-    if (
-      !isOwner &&
-      !session.is_public
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            'เส้นเรื่องนี้เป็น Private และไม่เปิดให้ผู้เล่นอื่นเข้าชม',
-        },
-        { status: 403 }
-      );
+    // ==================================================
+    // กรณีไม่ใช่เจ้าของ
+    //
+    // ต้องผ่านทั้ง 2 เงื่อนไข:
+    // 1. Story ต้อง Publish
+    // 2. Session ต้อง Public
+    // ==================================================
+
+    if (!isOwner) {
+      // Story ยังไม่ Publish
+      if (!story.is_published) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'นิยายเรื่องนี้ยังไม่ได้เผยแพร่',
+          },
+          { status: 403 }
+        );
+      }
+
+      // Session เป็น Private
+      if (!session.is_public) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'เส้นเรื่องนี้เป็น Private และไม่เปิดให้ผู้เล่นอื่นเข้าชม',
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // ==================================================
@@ -315,7 +334,10 @@ export async function GET(
       }
     >();
 
+    // ==================================================
     // Shared Chapters
+    // ==================================================
+
     for (
       const chapter of
       sharedChapters ?? []
@@ -341,9 +363,13 @@ export async function GET(
       );
     }
 
+    // ==================================================
     // Branch Chapters
+    //
     // ถ้ามีเลขบทเดียวกัน
     // Branch จะทับ Shared Chapter
+    // ==================================================
+
     for (
       const chapter of
       sessionChapters ?? []
@@ -409,6 +435,9 @@ export async function GET(
         synopsis:
           story.synopsis ?? '',
 
+        isPublished:
+          story.is_published,
+
         // Username ของเจ้าของ Story
         creatorName,
       },
@@ -427,7 +456,9 @@ export async function GET(
 
         isOwner,
 
-        currentChapter: 1,
+        // ใช้ Current Chapter จริงจาก Session
+        currentChapter:
+          session.current_chapter,
 
         status:
           session.status,
@@ -438,7 +469,7 @@ export async function GET(
         updatedAt:
           session.updated_at,
       },
-      
+
       chapters,
     });
   } catch (error) {
