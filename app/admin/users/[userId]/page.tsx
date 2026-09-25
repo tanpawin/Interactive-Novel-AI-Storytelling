@@ -65,7 +65,7 @@ function getInitial(name: string) {
 
 function UserDetailSkeleton() {
   return (
-    <main className="admin-page">
+    <main className="admin-page admin-user-detail-page">
       <div className="admin-container">
         {/* Header Skeleton */}
         <header className="admin-page-header">
@@ -298,7 +298,7 @@ export default function AdminUserDetailPage() {
 
   if (error || !user || !stats) {
     return (
-      <main className="admin-page">
+      <main className="admin-page admin-user-detail-page">
         <div className="admin-container">
           <div className="admin-page-header">
             <Link
@@ -334,7 +334,7 @@ export default function AdminUserDetailPage() {
      ------------------------------------------------------- */
 
   return (
-    <main className="admin-page">
+    <main className="admin-page admin-user-detail-page">
       <div className="admin-container">
         {/* Header */}
         <header className="admin-page-header">
@@ -603,16 +603,6 @@ export default function AdminUserDetailPage() {
           )}
         </section>
 
-        {/* Footer */}
-        <div className="admin-user-detail-footer">
-          <Link
-            href="/admin/users"
-            className="admin-back-link"
-          >
-            <span aria-hidden="true">‹</span>
-            กลับไปหน้าผู้ใช้ทั้งหมด
-          </Link>
-        </div>
       </div>
     </main>
   );

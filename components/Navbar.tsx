@@ -22,8 +22,8 @@ export const Navbar: React.FC = () => {
 
   const metadata = sessionClaims?.metadata as
     | {
-        role?: string;
-      }
+      role?: string;
+    }
     | undefined;
 
   const isAdmin = metadata?.role === 'admin';
@@ -62,7 +62,21 @@ export const Navbar: React.FC = () => {
           className="navbar-brand"
           onClick={closeMobileMenu}
         >
-          <span className="logo-icon">📖</span>
+          <span className="logo-mark" aria-hidden="true">
+            <svg
+              viewBox="0 0 32 32"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 7.5A3.5 3.5 0 0 1 8.5 4H27v22H8.5A3.5 3.5 0 0 0 5 29.5v-22Z" />
+              <path d="M5 7.5v22" />
+              <path d="M10 9h11" />
+              <path d="M10 13h9" />
+            </svg>
+          </span>
 
           <span className="logo-text">
             GonnaTales
@@ -76,38 +90,88 @@ export const Navbar: React.FC = () => {
 
         <nav className="navbar-links">
 
+          {/* หน้าหลัก */}
+
           <Link
             href="/"
             className={`nav-link ${isActive('/') ? 'active' : ''
               }`}
           >
-            หน้าหลัก (Library)
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H11v16H6.5A2.5 2.5 0 0 0 4 22.5v-16Z" />
+              <path d="M20 6.5A2.5 2.5 0 0 0 17.5 4H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z" />
+              <path d="M12 4v16" />
+            </svg>
+
+            <span>หน้าหลัก</span>
           </Link>
+
+
+          {/* สำรวจ */}
 
           <Link
             href="/discover"
             className={`nav-link ${isActive('/discover') ? 'active' : ''
               }`}
           >
-            สำรวจ (Discover)
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="8.5"
+              />
+
+              <path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2Z" />
+            </svg>
+
+            <span>สำรวจ</span>
           </Link>
+
+
+          {/* นิยายของฉัน */}
 
           <Link
             href="/my-stories"
             className={`nav-link ${isActive('/my-stories') ? 'active' : ''
               }`}
           >
-            นิยายของฉัน (My Stories)
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v17H7.5A2.5 2.5 0 0 0 5 21.5v-17Z" />
+              <path d="M5 6h11" />
+              <path d="M9 9h6" />
+              <path d="M9 12h6" />
+            </svg>
+
+            <span>นิยายของฉัน</span>
           </Link>
 
-          {/* Admin */}
+
+          {/* ผู้ดูแลระบบ */}
+
           {isSignedIn && isAdmin && (
             <Link
               href="/admin"
               className={`nav-link ${isActive('/admin') ? 'active' : ''
                 }`}
             >
-              🛠️ Admin
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M12 3 20 6v5.5c0 4.5-3 7.8-8 9.5-5-1.7-8-5-8-9.5V6l8-3Z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+
+              <span>ผู้ดูแลระบบ</span>
             </Link>
           )}
 
@@ -127,7 +191,24 @@ export const Navbar: React.FC = () => {
             className="btn-create-story"
             onClick={handleCreateStory}
           >
-            + เรื่องใหม่
+            <span
+              className="create-story-icon"
+              aria-hidden="true"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" />
+              </svg>
+            </span>
+
+            <span>เรื่องใหม่</span>
           </button>
 
 
@@ -169,11 +250,24 @@ export const Navbar: React.FC = () => {
                   <Link
                     href="/profile"
                     className={`nav-link navbar-profile-link ${isActive('/profile')
-                        ? 'active'
-                        : ''
+                      ? 'active'
+                      : ''
                       }`}
                   >
-                    โปรไฟล์
+                    <svg
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <circle
+                        cx="12"
+                        cy="8"
+                        r="3.5"
+                      />
+
+                      <path d="M5 20c.8-3.3 3.2-5 7-5s6.2 1.7 7 5" />
+                    </svg>
+
+                    <span>โปรไฟล์</span>
                   </Link>
 
                   {/* รูปโปรไฟล์ */}
@@ -224,75 +318,134 @@ export const Navbar: React.FC = () => {
 
       <div
         className={`mobile-menu ${isMobileMenuOpen
-            ? 'mobile-menu-open'
-            : ''
+          ? 'mobile-menu-open'
+          : ''
           }`}
       >
 
         <nav className="mobile-menu-links">
 
+          {/* หน้าหลัก */}
+
           <Link
             href="/"
-            className={`mobile-nav-link ${isActive('/')
-                ? 'active'
-                : ''
+            className={`mobile-nav-link ${isActive('/') ? 'active' : ''
               }`}
             onClick={closeMobileMenu}
           >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H11v16H6.5A2.5 2.5 0 0 0 4 22.5v-16Z" />
+              <path d="M20 6.5A2.5 2.5 0 0 0 17.5 4H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5v-16Z" />
+              <path d="M12 4v16" />
+            </svg>
+
             <span>หน้าหลัก</span>
-            <small>Library</small>
           </Link>
+
+
+          {/* สำรวจ */}
 
           <Link
             href="/discover"
             className={`mobile-nav-link ${isActive('/discover')
-                ? 'active'
-                : ''
+              ? 'active'
+              : ''
               }`}
             onClick={closeMobileMenu}
           >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="8.5"
+              />
+
+              <path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8 4.8-2.2Z" />
+            </svg>
+
             <span>สำรวจ</span>
-            <small>Discover</small>
           </Link>
+
+
+          {/* นิยายของฉัน */}
 
           <Link
             href="/my-stories"
             className={`mobile-nav-link ${isActive('/my-stories')
-                ? 'active'
-                : ''
+              ? 'active'
+              : ''
               }`}
             onClick={closeMobileMenu}
           >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v17H7.5A2.5 2.5 0 0 0 5 21.5v-17Z" />
+              <path d="M5 6h11" />
+              <path d="M9 9h6" />
+              <path d="M9 12h6" />
+            </svg>
+
             <span>นิยายของฉัน</span>
-            <small>My Stories</small>
           </Link>
 
-          {/* Admin Mobile */}
+
+          {/* ผู้ดูแลระบบ */}
+
           {isSignedIn && isAdmin && (
             <Link
               href="/admin"
               className={`mobile-nav-link ${isActive('/admin')
-                  ? 'active'
-                  : ''
+                ? 'active'
+                : ''
                 }`}
               onClick={closeMobileMenu}
             >
-              <span>🛠️ Admin</span>
-              <small>Admin Panel</small>
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M12 3 20 6v5.5c0 4.5-3 7.8-8 9.5-5-1.7-8-5-8-9.5V6l8-3Z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+
+              <span>ผู้ดูแลระบบ</span>
             </Link>
           )}
+
+
+          {/* โปรไฟล์ */}
 
           {isSignedIn && (
             <Link
               href="/profile"
               className={`mobile-nav-link ${isActive('/profile')
-                  ? 'active'
-                  : ''
+                ? 'active'
+                : ''
                 }`}
               onClick={closeMobileMenu}
             >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="12"
+                  cy="8"
+                  r="3.5"
+                />
+
+                <path d="M5 20c.8-3.3 3.2-5 7-5s6.2 1.7 7 5" />
+              </svg>
+
               <span>โปรไฟล์</span>
-              <small>Profile</small>
             </Link>
           )}
 

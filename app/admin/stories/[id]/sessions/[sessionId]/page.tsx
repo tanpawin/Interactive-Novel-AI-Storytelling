@@ -293,7 +293,7 @@ export default async function AdminSessionDetailPage({
     chapters.length;
 
   return (
-    <main className="admin-page">
+    <main className="admin-page admin-session-detail">
       <div className="admin-container">
 
         {/* ==================================================
@@ -306,7 +306,7 @@ export default async function AdminSessionDetailPage({
             href={`/admin/stories/${storyId}`}
             className="admin-back-link"
           >
-            {'<'} กลับไปยังนิยาย
+            ‹ กลับไปยังนิยาย
           </Link>
 
           <p className="admin-label">

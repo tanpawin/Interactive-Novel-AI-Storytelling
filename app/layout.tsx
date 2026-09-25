@@ -14,6 +14,11 @@ import '@/styles/reader.css';
 import '@/styles/story-create.css';
 import '@/styles/story-modal.css';
 import '@/styles/admin.css';
+import '@/styles/admin-dashboard.css';
+import '@/styles/admin-stories.css';
+import '@/styles/admin-users.css';
+import '@/styles/admin-stories-loading.css';
+import '@/styles/admin-user-detail.css';
 
 import { Navbar } from '@/components/Navbar';
 

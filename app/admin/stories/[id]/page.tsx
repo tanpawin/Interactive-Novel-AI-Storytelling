@@ -185,7 +185,7 @@ export default async function AdminStoryDetailPage({
     ).length;
 
   return (
-    <main className="admin-page">
+    <main className="admin-page admin-story-detail">
       <div className="admin-container">
 
         {/* ==================================================
@@ -198,7 +198,7 @@ export default async function AdminStoryDetailPage({
             href="/admin/stories"
             className="admin-back-link"
           >
-            {'<'} กลับไปจัดการนิยาย
+            ‹ กลับไปจัดการนิยาย
           </Link>
 
           <p className="admin-label">

@@ -1,8 +1,18 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Story, Genre } from '../types/story';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+
+import {
+  Story,
+  Genre,
+} from '../types/story';
+
 import { StoryCard } from './StoryCard';
+
 import DiscoverSkeleton from '@/components/DiscoverSkeleton';
 
 interface DiscoverViewProps {
@@ -22,23 +32,35 @@ const CATEGORIES: ('ทั้งหมด' | Genre)[] = [
   'ผจญภัย',
 ];
 
-export const DiscoverView: React.FC<DiscoverViewProps> = ({
+export const DiscoverView: React.FC<
+  DiscoverViewProps
+> = ({
   stories,
   isLoading = false,
   onSelectStory,
 }) => {
-  const [selectedCategory, setSelectedCategory] =
-    useState<string>('ทั้งหมด');
+  const [
+    selectedCategory,
+    setSelectedCategory,
+  ] = useState<string>('ทั้งหมด');
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [
+    searchQuery,
+    setSearchQuery,
+  ] = useState('');
 
-  const [isCategoryOpen, setIsCategoryOpen] =
-    useState(false);
+  const [
+    isCategoryOpen,
+    setIsCategoryOpen,
+  ] = useState(false);
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef =
+    useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (
+      event: MouseEvent
+    ) => {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(
@@ -62,54 +84,77 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
     };
   }, []);
 
-const filteredStories = stories.filter((story) => {
-  const matchesCategory =
-    selectedCategory === 'ทั้งหมด' ||
-    story.genre === selectedCategory;
+  const filteredStories =
+    stories.filter((story) => {
+      const matchesCategory =
+        selectedCategory === 'ทั้งหมด' ||
+        story.genre === selectedCategory;
 
-  const matchesSearch =
-    story.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase()) ||
-    story.corePremise
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
+      const matchesSearch =
+        story.title
+          .toLowerCase()
+          .includes(
+            searchQuery.toLowerCase()
+          ) ||
+        story.corePremise
+          .toLowerCase()
+          .includes(
+            searchQuery.toLowerCase()
+          );
 
-  return matchesCategory && matchesSearch;
-});
+      return (
+        matchesCategory &&
+        matchesSearch
+      );
+    });
 
-// ==========================================
-// FULL PAGE LOADING
-// ==========================================
+  // ==========================================
+  // FULL PAGE LOADING
+  // ==========================================
 
-if (isLoading) {
-  return <DiscoverSkeleton />;
-}
+  if (isLoading) {
+    return <DiscoverSkeleton />;
+  }
 
-return (
-  <div className="view-container">
+  return (
+    <div className="view-container">
 
-      {/* Title & Search Bar */}
+      {/* ======================================
+          TITLE & SEARCH BAR
+      ======================================= */}
+
       <div className="discover-header">
+
         <div className="discover-title">
-          <span className="nook-subtitle">
+
+          <span className="discover-eyebrow">
             ค้นพบโลกใบใหม่
           </span>
 
-          <h1 className="nook-title">
+          <h1 className="discover-main-title">
             Discover Stories
           </h1>
+
         </div>
 
         <div className="search-input-wrapper">
-          <span className="search-icon" aria-hidden="true">
+
+          <span
+            className="search-icon"
+            aria-hidden="true"
+          >
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
             >
-              <circle cx="11" cy="11" r="7" />
+              <circle
+                cx="11"
+                cy="11"
+                r="7"
+              />
+
               <path d="m20 20-4-4" />
             </svg>
           </span>
@@ -119,24 +164,31 @@ return (
             placeholder="ค้นหาชื่อเรื่อง..."
             value={searchQuery}
             onChange={(e) =>
-              setSearchQuery(e.target.value)
+              setSearchQuery(
+                e.target.value
+              )
             }
           />
+
         </div>
+
       </div>
 
 
-      {/* ==========================================
+      {/* ======================================
           DESKTOP - CATEGORY PILLS
-      ========================================== */}
+      ======================================= */}
 
       <div className="category-scroll">
+
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
             type="button"
             className={`cat-pill ${
-              selectedCategory === cat ? 'active' : ''
+              selectedCategory === cat
+                ? 'active'
+                : ''
             }`}
             onClick={() =>
               setSelectedCategory(cat)
@@ -145,18 +197,21 @@ return (
             {cat}
           </button>
         ))}
+
       </div>
 
 
-      {/* ==========================================
+      {/* ======================================
           MOBILE - CUSTOM CATEGORY DROPDOWN
-      ========================================== */}
+      ======================================= */}
 
       <div className="discover-filters">
+
         <div
           className="filter-group"
           ref={dropdownRef}
         >
+
           <label>
             หมวดหมู่
           </label>
@@ -164,20 +219,29 @@ return (
           <button
             type="button"
             className={`category-select ${
-              isCategoryOpen ? 'open' : ''
+              isCategoryOpen
+                ? 'open'
+                : ''
             }`}
             onClick={() =>
-              setIsCategoryOpen((prev) => !prev)
+              setIsCategoryOpen(
+                (prev) => !prev
+              )
             }
-            aria-expanded={isCategoryOpen}
+            aria-expanded={
+              isCategoryOpen
+            }
           >
+
             <span>
               {selectedCategory}
             </span>
 
             <span
               className={`category-arrow ${
-                isCategoryOpen ? 'open' : ''
+                isCategoryOpen
+                  ? 'open'
+                  : ''
               }`}
             >
               <svg
@@ -189,10 +253,12 @@ return (
                 <path d="m6 9 6 6 6-6" />
               </svg>
             </span>
+
           </button>
 
           {isCategoryOpen && (
             <div className="category-menu">
+
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat}
@@ -203,35 +269,57 @@ return (
                       : ''
                   }`}
                   onClick={() => {
-                    setSelectedCategory(cat);
-                    setIsCategoryOpen(false);
+                    setSelectedCategory(
+                      cat
+                    );
+
+                    setIsCategoryOpen(
+                      false
+                    );
                   }}
                 >
-                  <span>{cat}</span>
 
-                  {selectedCategory === cat && (
+                  <span>
+                    {cat}
+                  </span>
+
+                  {selectedCategory ===
+                    cat && (
                     <span className="category-check">
                       ✓
                     </span>
                   )}
+
                 </button>
               ))}
+
             </div>
           )}
+
         </div>
+
       </div>
 
 
-      {/* Stories Grid */}
+      {/* ======================================
+          STORIES GRID
+      ======================================= */}
+
       <div className="story-grid">
-        {filteredStories.map((story) => (
-          <StoryCard
-            key={story.id}
-            story={story}
-            onClick={onSelectStory}
-            branchFrom="discover"
-          />
-        ))}
+
+        {filteredStories.map(
+          (story) => (
+            <StoryCard
+              key={story.id}
+              story={story}
+              onClick={
+                onSelectStory
+              }
+              branchFrom="discover"
+            />
+          )
+        )}
+
       </div>
 
     </div>

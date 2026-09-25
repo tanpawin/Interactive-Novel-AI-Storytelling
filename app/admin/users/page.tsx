@@ -94,25 +94,25 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <main className="admin-page">
+    <main className="admin-page admin-users-page">
       <div className="admin-container">
         {/* Header */}
         <header className="admin-page-header admin-users-header">
-          <div>
-            <Link href="/admin" className="admin-back-link">
-              ‹ กลับหน้า Admin
-            </Link>
+          <Link href="/admin" className="admin-back-link">
+            ‹ กลับหน้า Admin
+          </Link>
 
-            <div className="admin-users-title">
-              <div>
-                <h1>ผู้ใช้</h1>
+          <span className="admin-label">
+            COZYTALES ADMIN
+          </span>
 
-                <p>
-                  จัดการและตรวจสอบข้อมูลผู้ใช้งานภายใน CozyTales
-                </p>
-              </div>
-            </div>
-          </div>
+          <h1>
+            ผู้ใช้
+          </h1>
+
+          <p className="admin-description">
+            จัดการและตรวจสอบข้อมูลผู้ใช้งานภายใน CozyTales
+          </p>
         </header>
 
         {/* Overview */}

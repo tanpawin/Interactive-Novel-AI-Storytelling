@@ -1,26 +1,54 @@
 export default function AdminLoading() {
   return (
-    <main className="admin-page">
+    <main className="admin-page admin-dashboard">
       <div className="admin-container">
+
+        {/* =====================================================
+            HEADER
+        ====================================================== */}
         <header className="admin-page-header">
-          <div>
-            <div className="admin-skeleton admin-dashboard-skeleton-label" />
+          <div className="admin-header-title">
+            <div className="admin-skeleton admin-dashboard-skeleton-header-icon" />
 
-            <div className="admin-skeleton admin-dashboard-skeleton-title" />
+            <div>
+              <div className="admin-skeleton admin-dashboard-skeleton-label" />
 
-            <div className="admin-skeleton admin-dashboard-skeleton-description" />
+              <div className="admin-skeleton admin-dashboard-skeleton-title" />
+
+              <div className="admin-skeleton admin-dashboard-skeleton-description" />
+            </div>
           </div>
         </header>
 
-        <section className="admin-dashboard-stats">
-          <DashboardStatSkeleton />
-          <DashboardStatSkeleton />
-          <DashboardStatSkeleton />
-          <DashboardStatSkeleton />
+
+        {/* =====================================================
+            MAIN STATISTICS
+        ====================================================== */}
+        <section className="admin-dashboard-section">
+          <div className="admin-dashboard-skeleton-section-heading">
+            <div className="admin-skeleton admin-dashboard-skeleton-kicker" />
+
+            <div className="admin-skeleton admin-dashboard-skeleton-heading" />
+
+            <div className="admin-skeleton admin-dashboard-skeleton-subheading" />
+          </div>
+
+          <div className="admin-dashboard-stats">
+            <DashboardStatSkeleton />
+            <DashboardStatSkeleton />
+            <DashboardStatSkeleton />
+            <DashboardStatSkeleton />
+          </div>
         </section>
 
-        <section className="admin-section">
-          <div className="admin-dashboard-skeleton-section-title">
+
+        {/* =====================================================
+            MANAGEMENT
+        ====================================================== */}
+        <section className="admin-dashboard-section">
+          <div className="admin-dashboard-skeleton-section-heading">
+            <div className="admin-skeleton admin-dashboard-skeleton-kicker" />
+
             <div className="admin-skeleton admin-dashboard-skeleton-heading" />
 
             <div className="admin-skeleton admin-dashboard-skeleton-subheading" />
@@ -32,14 +60,34 @@ export default function AdminLoading() {
           </div>
         </section>
 
-        <section className="admin-dashboard-overview">
-          <DashboardOverviewSkeleton />
-          <DashboardOverviewSkeleton />
-          <DashboardOverviewSkeleton />
+
+        {/* =====================================================
+            STORY SESSIONS
+        ====================================================== */}
+        <section className="admin-dashboard-section">
+          <div className="admin-dashboard-skeleton-section-heading">
+            <div className="admin-skeleton admin-dashboard-skeleton-kicker" />
+
+            <div className="admin-skeleton admin-dashboard-skeleton-heading" />
+
+            <div className="admin-skeleton admin-dashboard-skeleton-subheading" />
+          </div>
+
+          <div className="admin-dashboard-overview">
+            <DashboardOverviewSkeleton />
+            <DashboardOverviewSkeleton />
+            <DashboardOverviewSkeleton />
+          </div>
         </section>
 
+
+        {/* =====================================================
+            STORY STATUS
+        ====================================================== */}
         <section className="admin-dashboard-breakdown">
-          <div>
+          <div className="admin-dashboard-skeleton-section-heading">
+            <div className="admin-skeleton admin-dashboard-skeleton-kicker" />
+
             <div className="admin-skeleton admin-dashboard-skeleton-heading" />
 
             <div className="admin-skeleton admin-dashboard-skeleton-subheading" />
@@ -52,24 +100,37 @@ export default function AdminLoading() {
             <DashboardBreakdownSkeleton />
           </div>
         </section>
+
       </div>
     </main>
   );
 }
 
+
+/* =========================================================
+   STAT SKELETON
+========================================================= */
+
 function DashboardStatSkeleton() {
   return (
-    <div className="admin-stat-card">
+    <div className="admin-stat-card admin-dashboard-stat-skeleton">
       <div className="admin-skeleton admin-dashboard-skeleton-stat-icon" />
 
       <div className="admin-stat-content">
         <div className="admin-skeleton admin-dashboard-skeleton-stat-label" />
 
         <div className="admin-skeleton admin-dashboard-skeleton-stat-value" />
+
+        <div className="admin-skeleton admin-dashboard-skeleton-stat-description" />
       </div>
     </div>
   );
 }
+
+
+/* =========================================================
+   MANAGEMENT SKELETON
+========================================================= */
 
 function DashboardMenuSkeleton() {
   return (
@@ -77,7 +138,11 @@ function DashboardMenuSkeleton() {
       <div className="admin-skeleton admin-dashboard-skeleton-menu-icon" />
 
       <div className="admin-menu-content">
-        <div className="admin-skeleton admin-dashboard-skeleton-menu-title" />
+        <div className="admin-dashboard-skeleton-menu-top">
+          <div className="admin-skeleton admin-dashboard-skeleton-menu-title" />
+
+          <div className="admin-skeleton admin-dashboard-skeleton-menu-arrow" />
+        </div>
 
         <div className="admin-skeleton admin-dashboard-skeleton-menu-description" />
 
@@ -87,26 +152,42 @@ function DashboardMenuSkeleton() {
   );
 }
 
+
+/* =========================================================
+   SESSION SKELETON
+========================================================= */
+
 function DashboardOverviewSkeleton() {
   return (
-    <div className="admin-dashboard-overview-card">
-      <div>
+    <div className="admin-overview-card admin-dashboard-overview-skeleton">
+      <div className="admin-skeleton admin-dashboard-skeleton-overview-icon" />
+
+      <div className="admin-overview-content">
         <div className="admin-skeleton admin-dashboard-skeleton-overview-label" />
 
         <div className="admin-skeleton admin-dashboard-skeleton-overview-value" />
-      </div>
 
-      <div className="admin-skeleton admin-dashboard-skeleton-overview-description" />
+        <div className="admin-skeleton admin-dashboard-skeleton-overview-description" />
+      </div>
     </div>
   );
 }
 
+
+/* =========================================================
+   BREAKDOWN SKELETON
+========================================================= */
+
 function DashboardBreakdownSkeleton() {
   return (
-    <div className="admin-dashboard-breakdown-item">
-      <div className="admin-skeleton admin-dashboard-skeleton-breakdown-label" />
+    <div className="admin-breakdown-item admin-dashboard-breakdown-skeleton">
+      <div className="admin-skeleton admin-dashboard-skeleton-breakdown-icon" />
 
-      <div className="admin-skeleton admin-dashboard-skeleton-breakdown-value" />
+      <div>
+        <div className="admin-skeleton admin-dashboard-skeleton-breakdown-label" />
+
+        <div className="admin-skeleton admin-dashboard-skeleton-breakdown-value" />
+      </div>
     </div>
   );
 }

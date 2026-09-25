@@ -66,38 +66,82 @@ export default function AdminStoriesPage() {
 
     if (loading) {
         return (
-            <main className="admin-page">
+            <main className="admin-page admin-stories">
                 <div className="admin-container">
                     <div className="admin-page-header">
                         <div>
-                            <Link
-                                href="/admin"
-                                className="admin-back-link"
-                            >
-                                ‹ กลับไปแดชบอร์ด
-                            </Link>
+                            <div className="admin-skeleton-back" />
 
-                            <p className="admin-label">
-                                COZYTALES ADMIN
-                            </p>
+                            <div className="admin-skeleton-label" />
 
-                            <h1>จัดการนิยาย</h1>
+                            <div className="admin-skeleton-title" />
 
-                            <p className="admin-description">
-                                ตรวจสอบและจัดการนิยายทั้งหมดในระบบ
-                            </p>
+                            <div className="admin-skeleton-description" />
                         </div>
                     </div>
 
-                    <div className="admin-table-card">
-                        <div className="admin-empty">
-                            <h2>กำลังโหลดข้อมูล</h2>
+                    <div className="admin-skeleton-search" />
 
-                            <p>
-                                กำลังโหลดรายการนิยาย...
-                            </p>
+                    <div className="admin-skeleton-summary" />
+
+                    <section className="admin-table-card admin-stories-skeleton-table">
+                        <div className="admin-skeleton-table-head">
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                            <span />
                         </div>
-                    </div>
+
+                        <div className="admin-skeleton-table-row">
+                            <div className="admin-skeleton-story">
+                                <span />
+                                <span />
+                            </div>
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                        </div>
+
+                        <div className="admin-skeleton-table-row">
+                            <div className="admin-skeleton-story">
+                                <span />
+                                <span />
+                            </div>
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                        </div>
+
+                        <div className="admin-skeleton-table-row">
+                            <div className="admin-skeleton-story">
+                                <span />
+                                <span />
+                            </div>
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                        </div>
+
+                        <div className="admin-skeleton-table-row">
+                            <div className="admin-skeleton-story">
+                                <span />
+                                <span />
+                            </div>
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                        </div>
+                    </section>
                 </div>
             </main>
         );
@@ -105,7 +149,7 @@ export default function AdminStoriesPage() {
 
     if (error) {
         return (
-            <main className="admin-page">
+            <main className="admin-page admin-stories">
                 <div className="admin-container">
                     <div className="admin-error">
                         <h1>ไม่สามารถโหลดข้อมูลนิยายได้</h1>
@@ -120,28 +164,28 @@ export default function AdminStoriesPage() {
     }
 
     return (
-        <main className="admin-page">
+        <main className="admin-page admin-stories">
             <div className="admin-container">
                 {/* Header */}
-                <div className="admin-page-header">
-                    <div>
-                        <Link
-                            href="/admin"
-                            className="admin-back-link"
-                        >
-                            ‹ กลับไปแดชบอร์ด
-                        </Link>
+                <div className="admin-page-header admin-stories-header">
+                    <Link
+                        href="/admin"
+                        className="admin-back-link"
+                    >
+                        ‹ กลับไปแดชบอร์ด
+                    </Link>
 
-                        <p className="admin-label">
-                            COZYTALES ADMIN
-                        </p>
+                    <span className="admin-label">
+                        COZYTALES ADMIN
+                    </span>
 
-                        <h1>จัดการนิยาย</h1>
+                    <h1>
+                        จัดการนิยาย
+                    </h1>
 
-                        <p className="admin-description">
-                            ตรวจสอบและจัดการนิยายทั้งหมดในระบบ
-                        </p>
-                    </div>
+                    <p className="admin-description">
+                        ตรวจสอบและจัดการนิยายทั้งหมดในระบบ
+                    </p>
                 </div>
 
                 {/* Search */}
@@ -159,14 +203,15 @@ export default function AdminStoriesPage() {
                             type="button"
                             onClick={clearSearch}
                             className="admin-clear-button"
+                            aria-label="ล้างการค้นหา"
                         >
-                            ล้าง
+                            ×
                         </button>
                     )}
                 </div>
 
                 {/* Result */}
-                <div className="admin-story-result">
+                <div className="admin-story-search-summary">
                     <span>
                         {search.trim()
                             ? `พบ ${filteredStories.length} เรื่องจาก "${search.trim()}"`

@@ -28,7 +28,6 @@ export const MyStoriesView: React.FC<
   onDeleteStory,
   onTogglePublish,
 }) => {
-
     /*
      * ==========================================
      * TOTAL WORDS
@@ -36,11 +35,9 @@ export const MyStoriesView: React.FC<
      */
 
     const totalWords = myStories.reduce(
-      (acc, curr) =>
-        acc + curr.wordCount,
+      (acc, curr) => acc + curr.wordCount,
       0
     );
-
 
     /*
      * ==========================================
@@ -56,7 +53,6 @@ export const MyStoriesView: React.FC<
 
       onCreateStory();
     };
-
 
     /*
      * ==========================================
@@ -74,7 +70,6 @@ export const MyStoriesView: React.FC<
       onEditStory(story);
     };
 
-
     /*
      * ==========================================
      * DELETE
@@ -90,7 +85,6 @@ export const MyStoriesView: React.FC<
 
       onDeleteStory(story.id);
     };
-
 
     /*
      * ==========================================
@@ -108,7 +102,6 @@ export const MyStoriesView: React.FC<
       onTogglePublish(story);
     };
 
-
     /*
      * ==========================================
      * CONTINUE
@@ -125,7 +118,6 @@ export const MyStoriesView: React.FC<
       onSelectStory(story.id);
     };
 
-
     return (
       <div className="view-container">
 
@@ -137,11 +129,11 @@ export const MyStoriesView: React.FC<
 
           <div>
 
-            <span className="nook-subtitle">
+            <span className="mystories-eyebrow">
               ผลงานของคุณ
             </span>
 
-            <h1 className="nook-title">
+            <h1 className="mystories-title">
               My Stories
             </h1>
 
@@ -152,13 +144,31 @@ export const MyStoriesView: React.FC<
 
           </div>
 
-
           <button
             type="button"
             className="btn-hero-primary"
             onClick={handleCreateClick}
           >
-            ✨ สร้างเรื่องใหม่
+            <span
+              className="create-story-icon"
+              aria-hidden="true"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+              </svg>
+            </span>
+
+            <span>
+              สร้างเรื่องใหม่
+            </span>
           </button>
 
         </div>
@@ -175,7 +185,20 @@ export const MyStoriesView: React.FC<
           <div className="stat-box">
 
             <span className="stat-icon">
-              ✍️
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
+                <path d="M8 6h8" />
+                <path d="M8 10h8" />
+              </svg>
             </span>
 
             <span className="stat-val">
@@ -194,7 +217,21 @@ export const MyStoriesView: React.FC<
           <div className="stat-box">
 
             <span className="stat-icon">
-              📚
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
+                <path d="M8 6h8" />
+                <path d="M8 10h6" />
+                <path d="M8 14h5" />
+              </svg>
             </span>
 
             <span className="stat-val">
@@ -213,7 +250,23 @@ export const MyStoriesView: React.FC<
           <div className="stat-box">
 
             <span className="stat-icon">
-              🏆
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M8 4h8" />
+                <path d="M7 4h10v4a5 5 0 0 1-10 0V4Z" />
+                <path d="M9 17h6" />
+                <path d="M12 13v4" />
+                <path d="M7 6H4v1a4 4 0 0 0 4 4" />
+                <path d="M17 6h3v1a4 4 0 0 1-4 4" />
+                <path d="M8 20h8" />
+              </svg>
             </span>
 
             <span className="stat-val">
@@ -221,8 +274,7 @@ export const MyStoriesView: React.FC<
                 myStories.filter(
                   (story) =>
                     story.totalChapters > 0 &&
-                    story.currentChapter >=
-                    story.totalChapters
+                    story.currentChapter >= story.totalChapters
                 ).length
               }
             </span>
@@ -244,14 +296,23 @@ export const MyStoriesView: React.FC<
 
           {myStories.length === 0 ? (
 
-            /* ==================================
-               EMPTY STATE
-            ================================== */
-
             <div className="my-stories-empty">
 
               <div className="my-stories-empty-icon">
-                📖
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
+                  <path d="M8 7h8" />
+                  <path d="M8 11h6" />
+                </svg>
               </div>
 
               <h2>
@@ -268,7 +329,22 @@ export const MyStoriesView: React.FC<
                 className="btn-hero-primary"
                 onClick={handleCreateClick}
               >
-                ✨ สร้างนิยายเรื่องแรก
+                <span className="story-action-icon">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 3v18" />
+                    <path d="M3 12h18" />
+                  </svg>
+                </span>
+
+                สร้างนิยายเรื่องแรก
               </button>
 
             </div>
@@ -279,18 +355,10 @@ export const MyStoriesView: React.FC<
               <MyStoryItem
                 key={story.id}
                 story={story}
-                onContinue={
-                  handleContinueClick
-                }
-                onEdit={
-                  handleEditClick
-                }
-                onDelete={
-                  handleDeleteClick
-                }
-                onTogglePublish={
-                  handleTogglePublishClick
-                }
+                onContinue={handleContinueClick}
+                onEdit={handleEditClick}
+                onDelete={handleDeleteClick}
+                onTogglePublish={handleTogglePublishClick}
               />
             ))
 
@@ -350,7 +418,6 @@ const MyStoryItem: React.FC<
     const [coverError, setCoverError] =
       useState(false);
 
-
     return (
       <div className="my-story-item">
 
@@ -360,20 +427,13 @@ const MyStoryItem: React.FC<
 
         <div className="my-story-cover-wrapper">
 
-          {/* Skeleton */}
-
           {story.coverUrl &&
             !isCoverLoaded &&
             !coverError && (
               <div className="my-story-cover-skeleton">
-
                 <div className="my-story-cover-shimmer" />
-
               </div>
             )}
-
-
-          {/* Image */}
 
           {story.coverUrl &&
             !coverError ? (
@@ -395,12 +455,23 @@ const MyStoryItem: React.FC<
 
           ) : (
 
-            /* Placeholder */
-
             <div className="my-story-cover my-story-cover-placeholder">
 
               <span>
-                📖
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
+                  <path d="M8 7h8" />
+                  <path d="M8 11h6" />
+                </svg>
               </span>
 
             </div>
@@ -458,8 +529,7 @@ const MyStoryItem: React.FC<
 
               {story.chapters[0]?.createdAt
                 ? new Date(
-                  story.chapters[0]
-                    .createdAt
+                  story.chapters[0].createdAt
                 ).toLocaleDateString(
                   'th-TH',
                   {
@@ -509,8 +579,7 @@ const MyStoryItem: React.FC<
                         story.totalChapters) *
                       100,
                       100
-                    )
-                      }%`,
+                    )}%`,
                   }}
                 />
 
@@ -544,11 +613,23 @@ const MyStoryItem: React.FC<
                 onContinue(e, story)
               }
             >
-              <span>
-                ▶
+              <span className="story-action-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M8 5l11 7-11 7V5Z" />
+                </svg>
               </span>
 
-              แต่งต่อ
+              <span className="story-action-label">
+                แต่งต่อ
+              </span>
             </button>
 
 
@@ -561,11 +642,24 @@ const MyStoryItem: React.FC<
                 onEdit(e, story)
               }
             >
-              <span>
-                ✎
+              <span className="story-action-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4 11.5-11.5Z" />
+                </svg>
               </span>
 
-              แก้ไข
+              <span className="story-action-label">
+                แก้ไข
+              </span>
             </button>
 
 
@@ -578,13 +672,12 @@ const MyStoryItem: React.FC<
                   : 'story-action-publish'
                 }`}
               onClick={(e) =>
-                onTogglePublish(
-                  e,
-                  story
-                )
+                onTogglePublish(e, story)
               }
             >
+
               <span className="story-action-icon">
+
                 {story.isPublished ? (
                   <svg
                     viewBox="0 0 24 24"
@@ -615,12 +708,17 @@ const MyStoryItem: React.FC<
                     <path d="M5 14v4a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-4" />
                   </svg>
                 )}
+
               </span>
 
-              {story.isPublished
-                ? 'ซ่อนนิยาย'
-                : 'เผยแพร่นิยาย'}
+              <span className="story-action-label">
+                {story.isPublished
+                  ? 'ซ่อนนิยาย'
+                  : 'เผยแพร่นิยาย'}
+              </span>
+
             </button>
+
 
             {/* Delete */}
 
@@ -631,11 +729,27 @@ const MyStoryItem: React.FC<
                 onDelete(e, story)
               }
             >
-              <span>
-                ⌫
+              <span className="story-action-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 7h16" />
+                  <path d="M9 7V4h6v3" />
+                  <path d="M7 7l1 13h8l1-13" />
+                  <path d="M10 11v5" />
+                  <path d="M14 11v5" />
+                </svg>
               </span>
 
-              ลบ
+              <span className="story-action-label">
+                ลบ
+              </span>
             </button>
 
           </div>

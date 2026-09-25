@@ -54,43 +54,42 @@ export default function ProfileBranchesPage() {
             return;
         }
 
-        const loadBranches =
-            async () => {
-                try {
-                    setLoading(true);
-                    setError('');
+        const loadBranches = async () => {
+            try {
+                setLoading(true);
+                setError('');
 
-                    const response =
-                        await fetch(
-                            '/api/profile/branches'
-                        );
-
-                    const data =
-                        await response.json();
-
-                    if (!response.ok || !data.success) {
-                        throw new Error(
-                            data.error ||
-                            'ไม่สามารถโหลดเส้นเรื่องได้'
-                        );
-                    }
-
-                    setBranches(
-                        data.branches ?? []
-                    );
-                } catch (error) {
-                    console.error(
-                        'โหลดเส้นเรื่องไม่สำเร็จ:',
-                        error
+                const response =
+                    await fetch(
+                        '/api/profile/branches'
                     );
 
-                    setError(
-                        'ไม่สามารถโหลดเส้นเรื่องได้ กรุณาลองใหม่'
+                const data =
+                    await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(
+                        data.error ||
+                        'ไม่สามารถโหลดเส้นเรื่องได้'
                     );
-                } finally {
-                    setLoading(false);
                 }
-            };
+
+                setBranches(
+                    data.branches ?? []
+                );
+            } catch (error) {
+                console.error(
+                    'โหลดเส้นเรื่องไม่สำเร็จ:',
+                    error
+                );
+
+                setError(
+                    'ไม่สามารถโหลดเส้นเรื่องได้ กรุณาลองใหม่'
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
 
         loadBranches();
     }, [
@@ -98,18 +97,6 @@ export default function ProfileBranchesPage() {
         isSignedIn,
         router,
     ]);
-
-    if (!isLoaded || !isSignedIn) {
-        return (
-            <main className="profile-branches-page">
-                <div className="profile-branches-loading">
-                    <p>
-                        กำลังโหลดข้อมูล...
-                    </p>
-                </div>
-            </main>
-        );
-    }
 
     return (
         <main className="profile-branches-page">
@@ -141,13 +128,56 @@ export default function ProfileBranchesPage() {
                     </p>
                 </header>
 
-                {/* Loading */}
+                {/* Loading Skeleton */}
                 {loading && (
-                    <div className="profile-branches-state">
-                        <p>
-                            กำลังโหลดเส้นเรื่อง...
-                        </p>
-                    </div>
+                    <section className="profile-branches-list">
+
+                        {[1, 2, 3].map((item) => (
+                            <article
+                                key={item}
+                                className="profile-branch-card branches-skeleton-card"
+                            >
+                                <div className="profile-branch-content">
+
+                                    <div className="branches-skeleton-cover" />
+
+                                    <div className="profile-branch-main">
+
+                                        <div className="branches-skeleton-meta" />
+
+                                        <div className="branches-skeleton-branch-title" />
+
+                                        <div className="branches-skeleton-synopsis">
+                                            <span />
+                                            <span />
+                                            <span />
+                                        </div>
+
+                                        <div className="branches-skeleton-player" />
+
+                                        <div className="branches-skeleton-progress">
+
+                                            <div className="branches-skeleton-progress-info" />
+
+                                            <div className="branches-skeleton-progress-bar" />
+
+                                        </div>
+
+                                    </div>
+
+                                    <div className="profile-branch-actions">
+
+                                        <div className="branches-skeleton-button" />
+
+                                        <div className="branches-skeleton-button" />
+
+                                    </div>
+
+                                </div>
+                            </article>
+                        ))}
+
+                    </section>
                 )}
 
                 {/* Error */}
@@ -171,6 +201,7 @@ export default function ProfileBranchesPage() {
                     !error &&
                     branches.length === 0 && (
                         <div className="profile-branches-empty">
+
                             <h2>
                                 ยังไม่มีเส้นเรื่อง
                             </h2>
@@ -188,6 +219,7 @@ export default function ProfileBranchesPage() {
                             >
                                 ไปสำรวจเรื่องราว
                             </button>
+
                         </div>
                     )}
 
@@ -197,141 +229,146 @@ export default function ProfileBranchesPage() {
                     branches.length > 0 && (
                         <section className="profile-branches-list">
 
-                            {branches.map(
-                                (branch) => {
-                                    const progress =
-                                        Math.min(
-                                            (branch.currentChapter /
-                                                Math.max(
-                                                    branch.totalChapters,
-                                                    1
-                                                )) *
-                                            100,
-                                            100
-                                        );
+                            {branches.map((branch) => {
+                                const progress =
+                                    Math.min(
+                                        (
+                                            branch.currentChapter /
+                                            Math.max(
+                                                branch.totalChapters,
+                                                1
+                                            )
+                                        ) * 100,
+                                        100
+                                    );
 
-                                    return (
-                                        <article
-                                            key={
-                                                branch.sessionId
-                                            }
-                                            className="profile-branch-card"
-                                        >
-                                            <div className="profile-branch-content">
+                                return (
+                                    <article
+                                        key={branch.sessionId}
+                                        className="profile-branch-card"
+                                    >
+                                        <div className="profile-branch-content">
 
-                                                <div className="profile-branch-cover">
-                                                    {branch.coverImageUrl ? (
-                                                        <img
-                                                            src={branch.coverImageUrl}
-                                                            alt={`ปกเรื่อง ${branch.title}`}
-                                                        />
-                                                    ) : (
-                                                        <div className="profile-branch-cover-empty" />
+                                            <div className="profile-branch-cover">
+                                                {branch.coverImageUrl ? (
+                                                    <img
+                                                        src={
+                                                            branch.coverImageUrl
+                                                        }
+                                                        alt={`ปกเรื่อง ${branch.title}`}
+                                                    />
+                                                ) : (
+                                                    <div className="profile-branch-cover-empty" />
+                                                )}
+                                            </div>
+
+                                            <div className="profile-branch-main">
+
+                                                <div className="profile-branch-meta">
+
+                                                    {branch.genre && (
+                                                        <span>
+                                                            {branch.genre}
+                                                        </span>
                                                     )}
-                                                </div>
 
-                                                <div className="profile-branch-main">
-
-                                                    <div className="profile-branch-meta">
-                                                        {branch.genre && (
-                                                            <span>
-                                                                {branch.genre}
-                                                            </span>
-                                                        )}
-
-                                                        {branch.tone && (
-                                                            <span>
-                                                                {branch.tone}
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    <h2>
-                                                        {branch.title}
-                                                    </h2>
-
-                                                    <p className="profile-branch-synopsis">
-                                                        {branch.synopsis ||
-                                                            'ไม่มีเรื่องย่อ'}
-                                                    </p>
-
-                                                    <div className="profile-branch-player">
-                                                        เส้นเรื่องของ{' '}
-                                                        <strong>
-                                                            "{branch.userName}"
-                                                        </strong>
-                                                    </div>
-
-                                                    <div className="profile-branch-progress">
-
-                                                        <div className="profile-branch-progress-info">
-                                                            <span>
-                                                                บทที่{' '}
-                                                                {
-                                                                    branch.currentChapter
-                                                                }{' '}
-                                                                /{' '}
-                                                                {
-                                                                    branch.totalChapters
-                                                                }
-                                                            </span>
-
-                                                            <span>
-                                                                {Math.round(
-                                                                    progress
-                                                                )}
-                                                                %
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="profile-branch-progress-bar">
-                                                            <div
-                                                                className="profile-branch-progress-fill"
-                                                                style={{
-                                                                    width: `${progress}%`,
-                                                                }}
-                                                            />
-                                                        </div>
-
-                                                    </div>
+                                                    {branch.tone && (
+                                                        <span>
+                                                            {branch.tone}
+                                                        </span>
+                                                    )}
 
                                                 </div>
 
-                                                <div className="profile-branch-actions">
+                                                <h2>
+                                                    {branch.title}
+                                                </h2>
 
-                                                    {/* เล่นต่อ */}
-                                                    <button
-                                                        type="button"
-                                                        className="profile-branch-continue"
-                                                        onClick={() =>
-                                                            router.push(
-                                                                `/story/${branch.storyId}`
-                                                            )
-                                                        }
-                                                    >
-                                                        เล่นต่อ
-                                                    </button>
+                                                <p className="profile-branch-synopsis">
+                                                    {branch.synopsis ||
+                                                        'ไม่มีเรื่องย่อ'}
+                                                </p>
 
-                                                    {/* ดูเส้นเรื่อง */}
-                                                    <button
-                                                        type="button"
-                                                        className="profile-branch-view"
-                                                        onClick={() =>
-                                                            router.push(
-                                                                `/story/${branch.storyId}/branches?from=profile`
-                                                            )
-                                                        }
-                                                    >
-                                                        ดูเส้นเรื่อง
-                                                    </button>
+                                                <div className="profile-branch-player">
+                                                    เส้นเรื่องของ{' '}
+                                                    <strong>
+                                                        "{branch.userName}"
+                                                    </strong>
+                                                </div>
+
+                                                <div className="profile-branch-progress">
+
+                                                    <div className="profile-branch-progress-info">
+
+                                                        <span>
+                                                            บทที่{' '}
+                                                            {
+                                                                branch.currentChapter
+                                                            }{' '}
+                                                            /{' '}
+                                                            {
+                                                                branch.totalChapters
+                                                            }
+                                                        </span>
+
+                                                        <span>
+                                                            {Math.round(
+                                                                progress
+                                                            )}
+                                                            %
+                                                        </span>
+
+                                                    </div>
+
+                                                    <div className="profile-branch-progress-bar">
+
+                                                        <div
+                                                            className="profile-branch-progress-fill"
+                                                            style={{
+                                                                width: `${progress}%`,
+                                                            }}
+                                                        />
+
+                                                    </div>
 
                                                 </div>
 
                                             </div>
-                                        </article>
-                                    );
-                                }
-                            )}
+
+                                            <div className="profile-branch-actions">
+
+                                                {/* เล่นต่อ */}
+                                                <button
+                                                    type="button"
+                                                    className="profile-branch-continue"
+                                                    onClick={() =>
+                                                        router.push(
+                                                            `/story/${branch.storyId}`
+                                                        )
+                                                    }
+                                                >
+                                                    เล่นต่อ
+                                                </button>
+
+                                                {/* ดูเส้นเรื่อง */}
+                                                <button
+                                                    type="button"
+                                                    className="profile-branch-view"
+                                                    onClick={() =>
+                                                        router.push(
+                                                            `/story/${branch.storyId}/branches?from=profile`
+                                                        )
+                                                    }
+                                                >
+                                                    ดูเส้นเรื่อง
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+                                    </article>
+                                );
+                            })}
 
                         </section>
                     )}
