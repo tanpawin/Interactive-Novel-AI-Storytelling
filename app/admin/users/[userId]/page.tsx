@@ -337,21 +337,24 @@ export default function AdminUserDetailPage() {
     <main className="admin-page admin-user-detail-page">
       <div className="admin-container">
         {/* Header */}
-        <header className="admin-page-header">
-          <div>
-            <Link
-              href="/admin/users"
-              className="admin-back-link"
-            >
-              <span aria-hidden="true">‹</span>
-              กลับไปผู้ใช้
-            </Link>
+        <header className="admin-page-header admin-user-detail-header">
+          <Link
+            href="/admin/users"
+            className="admin-back-link"
+          >
+            <span aria-hidden="true">‹</span>
+            กลับไปผู้ใช้
+          </Link>
+
+          <div className="admin-user-detail-heading">
+            <span className="admin-user-detail-label">
+              GONNATALES ADMIN · USER
+            </span>
 
             <h1>รายละเอียดผู้ใช้</h1>
 
             <p>
-              ข้อมูลบัญชี นิยาย และ Game Sessions
-              ของผู้ใช้
+              ข้อมูลบัญชี นิยาย และ Game Sessions ของผู้ใช้
             </p>
           </div>
         </header>
@@ -544,27 +547,27 @@ export default function AdminUserDetailPage() {
 
                   <div className="admin-user-session-content">
                     <div className="admin-user-session-header">
-                      <div>
+                      <div className="admin-user-session-title">
                         <h3>
                           {session.storyTitle}
                         </h3>
 
-                        <div className="admin-user-session-id">
-                          Session ID: {session.id}
-                        </div>
+                        <span
+                          className={
+                            session.isPublic
+                              ? 'admin-status admin-status-published'
+                              : 'admin-status admin-status-private'
+                          }
+                        >
+                          {session.isPublic
+                            ? 'Public'
+                            : 'Private'}
+                        </span>
                       </div>
 
-                      <span
-                        className={
-                          session.isPublic
-                            ? 'admin-status admin-status-published'
-                            : 'admin-status admin-status-private'
-                        }
-                      >
-                        {session.isPublic
-                          ? 'Public'
-                          : 'Private'}
-                      </span>
+                      <div className="admin-user-session-id">
+                        Session ID: {session.id}
+                      </div>
                     </div>
 
                     <div className="admin-user-session-meta">

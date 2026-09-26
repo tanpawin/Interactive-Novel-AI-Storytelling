@@ -108,6 +108,10 @@ export default function FavoritesPage() {
               'id',
               favoriteStoryIds
             )
+            .eq(
+              'is_banned',
+              false
+            )
             .order(
               'created_at',
               {
@@ -297,6 +301,10 @@ export default function FavoritesPage() {
                     false,
 
                   isFresh:
+                    false,
+
+                  isBanned:
+                    story.is_banned ??
                     false,
 
                   isPublished:

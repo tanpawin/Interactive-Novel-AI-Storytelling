@@ -457,57 +457,111 @@ export default function BranchReaderPage() {
   };
 
   /* =========================
-     Loading
-  ========================= */
+   Loading
+========================= */
 
   if (loading) {
     return (
-      <div className="reader-wrapper">
+      <div className="reader-loading">
+        <div className="reader-loading-content">
 
-        <header className="branches-reader-header">
-          <div className="branches-header-inner">
+          {/* Header */}
+          <header className="reader-header branches-reader-header">
+            <div className="branches-header-inner">
 
-            <button
-              className="btn-back"
-              onClick={handleBack}
-            >
-              ‹ ย้อนกลับ
-            </button>
+              <div className="reader-loading-back" />
 
-            <div
-              style={{
-                display:
-                  'flex',
-                alignItems:
-                  'center',
-              }}
-            >
-              <VisibilityButton />
+              <div className="reader-loading-header-actions">
 
-              <FontSizeControls />
+                <div className="reader-loading-branch" />
+
+                <div className="reader-loading-font">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+
+              </div>
+
+            </div>
+          </header>
+
+          {/* Reader */}
+          <main className="reader-content">
+
+            {/* Story Info */}
+            <div className="story-meta-banner">
+
+              <div className="reader-loading-title" />
+
+              <div className="reader-loading-badges">
+                <span />
+                <span />
+              </div>
+
+              <div className="reader-loading-premise">
+                <span />
+                <span />
+              </div>
+
+              <div className="reader-loading-author" />
+
+              <div className="reader-loading-counter" />
+
+              <div className="reader-loading-counter" />
+
+              <div className="reader-loading-counter" />
+
             </div>
 
-          </div>
-        </header>
+            {/* Chapter */}
+            <article className="chapter-block">
 
-        <main className="reader-empty">
+              <div className="chapter-heading">
 
-          <div>
+                <div className="reader-loading-chapter-number" />
 
-            <span>📖</span>
+                <div className="reader-loading-chapter-title" />
 
-            <h2>
-              กำลังโหลดเส้นเรื่อง...
-            </h2>
+              </div>
 
-            <p>
-              กำลังเปิดเรื่องราวของผู้เล่น
-            </p>
+              <div className="chapter-text font-serif">
 
-          </div>
+                <div className="reader-loading-lines">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
 
-        </main>
+                  <span />
+                  <span />
+                  <span />
+                  <span />
 
+                  <span />
+                  <span />
+                  <span />
+                </div>
+
+              </div>
+
+            </article>
+
+            {/* Navigation */}
+            <div className="chapter-navigation">
+
+              <div className="reader-loading-nav-button" />
+
+              <div className="reader-loading-nav-counter" />
+
+              <div className="reader-loading-nav-button" />
+
+            </div>
+
+          </main>
+
+        </div>
       </div>
     );
   }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 
 import { createServerSupabaseClient } from '@/lib/supabaseServer';
+import { isUserBanned } from '@/lib/auth/user';
 
 export async function GET(req: Request) {
   try {
@@ -32,7 +33,6 @@ export async function GET(req: Request) {
       );
     }
 
-    // ตรวจสอบว่า Session เป็นของ User คนนี้
     const {
       data: session,
       error: sessionError,
@@ -140,6 +140,18 @@ export async function POST(req: Request) {
       );
     }
 
+    const banned = await isUserBanned();
+
+    if (banned) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'บัญชีของคุณถูกระงับการใช้งาน',
+        },
+        { status: 403 }
+      );
+    }
+
     const supabase = createServerSupabaseClient();
 
     const body = await req.json();
@@ -166,7 +178,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // DB ใช้ role: user | model
     if (
       role !== 'user' &&
       role !== 'model'
@@ -181,7 +192,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // ตรวจสอบว่า Session เป็นของ User คนนี้
     const {
       data: session,
       error: sessionError,

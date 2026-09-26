@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { GoogleGenAI } from '@google/genai';
 
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { isUserBanned } from '@/lib/auth/user';
 
 const modelsToTry = [
   'gemini-3.8-flash',
@@ -1127,6 +1128,19 @@ export async function POST(req: Request) {
             'กรุณาเข้าสู่ระบบก่อนสร้างนิยาย',
         },
         { status: 401 }
+      );
+    }
+
+    const banned = await isUserBanned();
+
+    if (banned) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'บัญชีของคุณถูกระงับการใช้งาน',
+        },
+        { status: 403 }
       );
     }
 

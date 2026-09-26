@@ -29,16 +29,13 @@ export async function GET(
     } = await supabaseAdmin
       .from('stories')
       .select(
-        'id, title, cover_image_url, genre, tone, synopsis'
+        'id, title, cover_image_url, genre, tone, synopsis, is_banned'
       )
       .eq('id', storyId)
       .single();
 
     if (storyError || !story) {
-      console.error(
-        'Story error:',
-        storyError
-      );
+      console.error('Story error:', storyError);
 
       return NextResponse.json(
         {
@@ -49,8 +46,18 @@ export async function GET(
       );
     }
 
+    if (story.is_banned) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'นิยายเรื่องนี้ถูกระงับการใช้งาน',
+        },
+        { status: 403 }
+      );
+    }
+
     // ==================================================
-    // 2. ดึงเฉพาะ Session ที่เป็น Public
+    // 2. ดึงเฉพาะ Session ที่เป็น Public และไม่ถูก Ban
     // ==================================================
 
     const {
@@ -65,12 +72,14 @@ export async function GET(
         current_chapter,
         status,
         is_public,
+        is_banned,
         created_at,
         updated_at
         `
       )
       .eq('story_id', storyId)
       .eq('is_public', true)
+      .eq('is_banned', false)
       .order('created_at', {
         ascending: true,
       });
@@ -99,8 +108,7 @@ export async function GET(
         (session) => session.id
       );
 
-    const chapterCounts:
-      Record<string, number> = {};
+    const chapterCounts: Record<string, number> = {};
 
     if (sessionIds.length > 0) {
       const {
@@ -108,13 +116,8 @@ export async function GET(
         error: chapterError,
       } = await supabaseAdmin
         .from('session_chapters')
-        .select(
-          'session_id, chapter_number'
-        )
-        .in(
-          'session_id',
-          sessionIds
-        );
+        .select('session_id, chapter_number')
+        .in('session_id', sessionIds);
 
       if (chapterError) {
         console.error(
@@ -123,17 +126,10 @@ export async function GET(
         );
       } else {
         for (
-          const chapter of
-          sessionChapters ?? []
+          const chapter of sessionChapters ?? []
         ) {
-          chapterCounts[
-            chapter.session_id
-          ] =
-            (
-              chapterCounts[
-                chapter.session_id
-              ] ?? 0
-            ) + 1;
+          chapterCounts[chapter.session_id] =
+            (chapterCounts[chapter.session_id] ?? 0) + 1;
         }
       }
     }
@@ -142,14 +138,12 @@ export async function GET(
     // 4. ดึงชื่อผู้เล่นจาก profiles
     // ==================================================
 
-    const playerNames:
-      Record<string, string> = {};
+    const playerNames: Record<string, string> = {};
 
     const userIds =
       (sessions ?? [])
         .map(
-          (session) =>
-            session.user_id
+          (session) => session.user_id
         )
         .filter(
           (
@@ -164,13 +158,8 @@ export async function GET(
         error: profileError,
       } = await supabaseAdmin
         .from('profiles')
-        .select(
-          'user_id, display_name'
-        )
-        .in(
-          'user_id',
-          userIds
-        );
+        .select('user_id, display_name')
+        .in('user_id', userIds);
 
       if (profileError) {
         console.error(
@@ -179,14 +168,10 @@ export async function GET(
         );
       } else {
         for (
-          const profile of
-          profiles ?? []
+          const profile of profiles ?? []
         ) {
-          playerNames[
-            profile.user_id
-          ] =
-            profile.display_name ||
-            'ผู้เล่น';
+          playerNames[profile.user_id] =
+            profile.display_name || 'ผู้เล่น';
         }
       }
     }
@@ -198,11 +183,9 @@ export async function GET(
     const branches =
       (sessions ?? []).map(
         (session) => ({
-          sessionId:
-            session.id,
+          sessionId: session.id,
 
-          userId:
-            session.user_id,
+          userId: session.user_id,
 
           userName:
             playerNames[
@@ -210,25 +193,20 @@ export async function GET(
             ] ?? 'ผู้เล่น',
 
           currentChapter:
-            session.current_chapter ??
-            1,
+            session.current_chapter ?? 1,
 
-          status:
-            session.status,
+          status: session.status,
 
-          isPublic:
-            session.is_public,
+          isPublic: session.is_public,
 
           generatedChapters:
             chapterCounts[
               session.id
             ] ?? 0,
 
-          createdAt:
-            session.created_at,
+          createdAt: session.created_at,
 
-          updatedAt:
-            session.updated_at,
+          updatedAt: session.updated_at,
         })
       );
 
@@ -242,21 +220,16 @@ export async function GET(
       story: {
         id: story.id,
 
-        title:
-          story.title,
+        title: story.title,
 
         coverImageUrl:
-          story.cover_image_url ??
-          '',
+          story.cover_image_url ?? '',
 
-        genre:
-          story.genre ?? '',
+        genre: story.genre ?? '',
 
-        tone:
-          story.tone ?? '',
+        tone: story.tone ?? '',
 
-        synopsis:
-          story.synopsis ?? '',
+        synopsis: story.synopsis ?? '',
       },
 
       branches,
@@ -270,8 +243,7 @@ export async function GET(
     return NextResponse.json(
       {
         success: false,
-        error:
-          'Internal server error',
+        error: 'Internal server error',
       },
       { status: 500 }
     );

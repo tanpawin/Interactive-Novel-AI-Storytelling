@@ -28,6 +28,115 @@ import {
   NarrativeTone,
 } from '@/types/story';
 
+/* =========================================================
+   Loading Skeleton
+========================================================= */
+function StoryDetailLoading() {
+  return (
+    <div className="reader-loading">
+      <div className="reader-loading-content">
+
+        {/* Header */}
+        <header className="reader-header story-reader-header">
+          <div className="story-reader-header-inner">
+            <div className="reader-loading-back" />
+
+            <div className="reader-loading-header-actions">
+              <div className="reader-loading-branch" />
+
+              <div className="reader-loading-font">
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Reader */}
+        <main className="reader-content">
+
+          {/* Story Meta */}
+          <div className="story-meta-banner">
+
+            <div className="reader-loading-title" />
+
+            <div className="reader-loading-badges">
+              <span />
+              <span />
+            </div>
+
+            <div className="reader-loading-premise">
+              <span />
+              <span />
+            </div>
+
+            <div className="reader-loading-author" />
+
+            <div className="reader-loading-counter" />
+
+          </div>
+
+          {/* Chapter */}
+          <article className="chapter-block">
+
+            <div className="chapter-heading">
+              <div className="reader-loading-chapter-number" />
+
+              <div className="reader-loading-chapter-title" />
+            </div>
+
+            <div className="chapter-text">
+              <div className="reader-loading-lines">
+                <span />
+                <span />
+                <span />
+                <span />
+                <span />
+
+                <span />
+                <span />
+                <span />
+                <span />
+
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
+
+          </article>
+
+          {/* Navigation */}
+          <div className="chapter-navigation">
+            <div className="reader-loading-nav-button" />
+
+            <div className="reader-loading-nav-counter" />
+
+            <div className="reader-loading-nav-button" />
+          </div>
+
+        </main>
+
+        {/* Bottom Interaction */}
+        <div className="reader-interactive-bar">
+          <div className="interactive-container">
+
+            <div className="reader-loading-interactive-label" />
+
+            <div className="reader-loading-input-group">
+              <div className="reader-loading-input" />
+              <div className="reader-loading-submit" />
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 export default function StoryDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -72,11 +181,13 @@ export default function StoryDetailPage() {
     useState(true);
 
   /* =========================
-     Open Login Modal
+     Open Login
   ========================= */
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded) {
+      return;
+    }
 
     if (!user) {
       openSignIn();
@@ -172,11 +283,6 @@ export default function StoryDetailPage() {
           isOwner
         );
 
-        /*
-         * ถ้าเป็นเรื่องที่ซ่อนอยู่
-         * และผู้ใช้ไม่ใช่เจ้าของ
-         * ห้ามเข้าถึงเรื่องนี้
-         */
         if (!isOwner && !isPublished) {
           console.warn(
             'Access denied: story is not published'
@@ -209,7 +315,7 @@ export default function StoryDetailPage() {
             creatorResponse.ok &&
             creatorData.success &&
             typeof creatorData.creatorName ===
-            'string' &&
+              'string' &&
             creatorData.creatorName.trim()
           ) {
             creatorName =
@@ -289,11 +395,11 @@ export default function StoryDetailPage() {
         const latestSharedChapter =
           sharedChapters.length > 0
             ? Math.max(
-              ...sharedChapters.map(
-                (chapter) =>
-                  chapter.chapterNumber
+                ...sharedChapters.map(
+                  (chapter) =>
+                    chapter.chapterNumber
+                )
               )
-            )
             : 1;
 
         /* =========================
@@ -344,7 +450,7 @@ export default function StoryDetailPage() {
           const {
             data: newSession,
             error:
-            createSessionError,
+              createSessionError,
           } = await supabase
             .from('game_sessions')
             .insert({
@@ -363,8 +469,6 @@ export default function StoryDetailPage() {
               current_inventory:
                 [],
 
-              // Session ใหม่
-              // เริ่มเป็น Private
               is_public:
                 false,
             })
@@ -392,9 +496,9 @@ export default function StoryDetailPage() {
 
               const {
                 data:
-                existingSessionAfterConflict,
+                  existingSessionAfterConflict,
                 error:
-                reloadSessionError,
+                  reloadSessionError,
               } = await supabase
                 .from(
                   'game_sessions'
@@ -562,9 +666,9 @@ export default function StoryDetailPage() {
 
         const {
           data:
-          sessionChapterData,
+            sessionChapterData,
           error:
-          sessionChapterError,
+            sessionChapterError,
         } = await supabase
           .from(
             'session_chapters'
@@ -667,14 +771,14 @@ export default function StoryDetailPage() {
         const latestLoadedChapter =
           chapters.length > 0
             ? chapters[
-              chapters.length - 1
-            ].chapterNumber
+                chapters.length - 1
+              ].chapterNumber
             : 1;
 
         const sessionCurrentChapter =
           Number(
             currentSession.current_chapter ||
-            1
+              1
           );
 
         const currentChapter =
@@ -708,7 +812,7 @@ export default function StoryDetailPage() {
         ) {
           const {
             error:
-            updateSessionError,
+              updateSessionError,
           } = await supabase
             .from(
               'game_sessions'
@@ -979,17 +1083,8 @@ export default function StoryDetailPage() {
      Loading
   ========================= */
 
-  if (
-    !isLoaded ||
-    isLoading
-  ) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg">
-          กำลังโหลดเนื้อหา...
-        </p>
-      </div>
-    );
+  if (!isLoaded || isLoading) {
+    return <StoryDetailLoading />;
   }
 
   /* =========================

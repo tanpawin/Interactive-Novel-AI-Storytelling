@@ -250,16 +250,26 @@ export default function ProfileBranchesPage() {
                                         <div className="profile-branch-content">
 
                                             <div className="profile-branch-cover">
-                                                {branch.coverImageUrl ? (
-                                                    <img
-                                                        src={
-                                                            branch.coverImageUrl
+                                                <img
+                                                    src={
+                                                        branch.coverImageUrl ||
+                                                        '/images/default-cover.png'
+                                                    }
+                                                    alt={`ปกเรื่อง ${branch.title}`}
+                                                    onError={(event) => {
+                                                        const image =
+                                                            event.currentTarget;
+
+                                                        if (
+                                                            !image.src.endsWith(
+                                                                '/images/default-cover.png'
+                                                            )
+                                                        ) {
+                                                            image.src =
+                                                                '/images/default-cover.png';
                                                         }
-                                                        alt={`ปกเรื่อง ${branch.title}`}
-                                                    />
-                                                ) : (
-                                                    <div className="profile-branch-cover-empty" />
-                                                )}
+                                                    }}
+                                                />
                                             </div>
 
                                             <div className="profile-branch-main">

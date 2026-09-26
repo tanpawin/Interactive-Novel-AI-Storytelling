@@ -91,7 +91,7 @@ export default function BranchesPage() {
                 if (!response.ok || !data.success) {
                     throw new Error(
                         data.error ||
-                        'ไม่สามารถโหลดเส้นเรื่องได้'
+                            'ไม่สามารถโหลดเส้นเรื่องได้'
                     );
                 }
 
@@ -137,6 +137,9 @@ export default function BranchesPage() {
         loadBranches();
     }, [storyId]);
 
+    const coverSrc =
+        coverImageUrl || '/images/default-cover.png';
+
     return (
         <div className="reader-wrapper">
 
@@ -158,17 +161,69 @@ export default function BranchesPage() {
 
                 {/* Loading */}
                 {loading && (
-                    <div className="reader-empty">
-                        <div>
-                            <span>📖</span>
+                    <div className="branches-loading">
+                        <div className="branches-loading-content">
 
-                            <h2>
-                                กำลังโหลดเส้นเรื่อง...
-                            </h2>
+                            <div className="branches-loading-story">
 
-                            <p>
-                                กำลังรวบรวมเส้นทางของผู้เล่น
-                            </p>
+                                <div className="branches-loading-cover" />
+
+                                <div className="branches-loading-title" />
+
+                                <div className="branches-loading-badges">
+                                    <span />
+                                    <span />
+                                </div>
+
+                                <div className="branches-loading-synopsis">
+                                    <span />
+                                    <span />
+                                    <span />
+                                </div>
+
+                            </div>
+
+                            <div className="story-meta-banner">
+
+                                <div className="branches-loading-meta-badges">
+                                    <span />
+                                    <span />
+                                </div>
+
+                                <div className="branches-loading-meta-text">
+                                    <span />
+                                    <span />
+                                </div>
+
+                            </div>
+
+                            <div className="branches-loading-list">
+
+                                {[1, 2, 3].map((item) => (
+                                    <article
+                                        key={item}
+                                        className="chapter-block"
+                                    >
+                                        <div className="chapter-heading">
+
+                                            <div className="branches-loading-branch-label" />
+
+                                            <div className="branches-loading-branch-title" />
+
+                                        </div>
+
+                                        <div className="branches-loading-branch-info">
+                                            <span />
+                                            <span />
+                                            <span />
+                                        </div>
+
+                                        <div className="branches-loading-button" />
+                                    </article>
+                                ))}
+
+                            </div>
+
                         </div>
                     </div>
                 )}
@@ -176,8 +231,15 @@ export default function BranchesPage() {
                 {/* Error */}
                 {!loading && error && (
                     <div className="reader-empty">
-                        <div>
-                            <span>⚠️</span>
+                        <div className="reader-empty-state">
+
+                            <div className="reader-empty-symbol reader-error-symbol">
+                                !
+                            </div>
+
+                            <span className="reader-empty-eyebrow">
+                                เกิดข้อผิดพลาด
+                            </span>
 
                             <h2>
                                 ไม่สามารถโหลดเส้นเรื่องได้
@@ -191,191 +253,201 @@ export default function BranchesPage() {
                                     window.location.reload()
                                 }
                                 style={{
-                                    marginTop: '1rem',
+                                    marginTop: '1.25rem',
                                 }}
                             >
                                 ลองอีกครั้ง
                             </button>
+
                         </div>
                     </div>
                 )}
 
-                {/* Empty */}
-                {!loading &&
-                    !error &&
-                    branches.length === 0 && (
-                        <div className="reader-empty">
-                            <div>
-                                <span>📖</span>
-
-                                <h2>
-                                    ยังไม่มีเส้นเรื่องอื่น
-                                </h2>
-
-                                <p>
-                                    เมื่อผู้เล่นสร้างเส้นทางของตัวเอง
-                                    จะปรากฏที่นี่
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                {/* Content */}
-                {!loading &&
-                    !error &&
-                    branches.length > 0 && (
-                        <>
-                            {/* Story Cover + Information */}
-                            <div
+                {/* Story Content */}
+                {!loading && !error && (
+                    <>
+                        {/* Story Cover + Information */}
+                        <div
+                            style={{
+                                textAlign: 'center',
+                                marginBottom: '3rem',
+                            }}
+                        >
+                            <img
+                                src={coverSrc}
+                                alt={storyTitle}
                                 style={{
-                                    textAlign: 'center',
-                                    marginBottom: '3rem',
+                                    display: 'block',
+                                    width: '180px',
+                                    height: '260px',
+                                    objectFit: 'cover',
+                                    margin:
+                                        '0 auto 1.5rem',
+                                    borderRadius:
+                                        'var(--radius-md)',
+                                    boxShadow:
+                                        'var(--shadow-md)',
+                                    border:
+                                        '1px solid var(--border-color)',
+                                }}
+                                onError={(event) => {
+                                    const image =
+                                        event.currentTarget;
+
+                                    if (
+                                        image.src.endsWith(
+                                            '/images/default-cover.png'
+                                        )
+                                    ) {
+                                        return;
+                                    }
+
+                                    image.src =
+                                        '/images/default-cover.png';
+                                }}
+                            />
+
+                            <h1
+                                className="chapter-title"
+                                style={{
+                                    fontSize: '2rem',
+                                    marginBottom: '0.75rem',
                                 }}
                             >
-                                {coverImageUrl ? (
-                                    <img
-                                        src={coverImageUrl}
-                                        alt={storyTitle}
-                                        style={{
-                                            display: 'block',
-                                            width: '180px',
-                                            height: '260px',
-                                            objectFit: 'cover',
-                                            margin:
-                                                '0 auto 1.5rem',
-                                            borderRadius:
-                                                'var(--radius-md)',
-                                            boxShadow:
-                                                'var(--shadow-md)',
-                                            border:
-                                                '1px solid var(--border-color)',
-                                        }}
-                                    />
-                                ) : (
-                                    <div
-                                        style={{
-                                            width: '180px',
-                                            height: '260px',
-                                            margin:
-                                                '0 auto 1.5rem',
-                                            borderRadius:
-                                                'var(--radius-md)',
-                                            background:
-                                                'var(--bg-subtle)',
-                                            border:
-                                                '1px solid var(--border-color)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            fontSize: '3rem',
-                                        }}
-                                    >
-                                        📖
-                                    </div>
-                                )}
+                                {storyTitle}
+                            </h1>
 
-                                <h1
-                                    className="chapter-title"
+                            {/* Genre + Tone */}
+                            {(genre || tone) && (
+                                <div
                                     style={{
-                                        fontSize: '2rem',
-                                        marginBottom: '0.75rem',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        flexWrap: 'wrap',
+                                        marginBottom: '1.25rem',
                                     }}
                                 >
-                                    {storyTitle}
-                                </h1>
+                                    {genre && (
+                                        <span
+                                            className="badge"
+                                            style={{
+                                                backgroundColor:
+                                                    'var(--accent-light)',
+                                                border:
+                                                    '1px solid var(--border-color)',
+                                                color:
+                                                    'var(--accent-color)',
+                                                padding:
+                                                    '0.45rem 0.8rem',
+                                                borderRadius:
+                                                    'var(--radius-sm)',
+                                            }}
+                                        >
+                                            {genre}
+                                        </span>
+                                    )}
 
-                                {/* Genre + Tone */}
-                                {(genre || tone) && (
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            gap: '0.5rem',
-                                            flexWrap: 'wrap',
-                                            marginBottom: '1.25rem',
-                                        }}
-                                    >
-                                        {genre && (
-                                            <span
-                                                className="badge"
-                                                style={{
-                                                    backgroundColor:
-                                                        'var(--accent-light)',
-                                                    border:
-                                                        '1px solid var(--border-color)',
-                                                    color:
-                                                        'var(--accent-color)',
-                                                    padding:
-                                                        '0.45rem 0.8rem',
-                                                    borderRadius:
-                                                        'var(--radius-sm)',
-                                                }}
-                                            >
-                                                {genre}
-                                            </span>
-                                        )}
-
-                                        {tone && (
-                                            <span
-                                                className="badge"
-                                                style={{
-                                                    backgroundColor:
-                                                        'var(--accent-light)',
-                                                    border:
-                                                        '1px solid var(--border-color)',
-                                                    color:
-                                                        'var(--accent-color)',
-                                                    padding:
-                                                        '0.45rem 0.8rem',
-                                                    borderRadius:
-                                                        'var(--radius-sm)',
-                                                }}
-                                            >
-                                                {tone}
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Synopsis */}
-                                {synopsis && (
-                                    <p
-                                        className="premise font-serif"
-                                        style={{
-                                            maxWidth: '650px',
-                                            margin:
-                                                '0 auto',
-                                        }}
-                                    >
-                                        "{synopsis}"
-                                    </p>
-                                )}
-                            </div>
-
-                            {/* Story Meta */}
-                            <div className="story-meta-banner">
-                                <div className="story-badges">
-                                    <span className="badge">
-                                        เส้นเรื่องทั้งหมด
-                                    </span>
-
-                                    <span className="badge">
-                                        {branches.length} เส้นทาง
-                                    </span>
+                                    {tone && (
+                                        <span
+                                            className="badge"
+                                            style={{
+                                                backgroundColor:
+                                                    'var(--accent-light)',
+                                                border:
+                                                    '1px solid var(--border-color)',
+                                                color:
+                                                    'var(--accent-color)',
+                                                padding:
+                                                    '0.45rem 0.8rem',
+                                                borderRadius:
+                                                    'var(--radius-sm)',
+                                            }}
+                                        >
+                                            {tone}
+                                        </span>
+                                    )}
                                 </div>
+                            )}
 
-                                <p className="premise font-serif">
-                                    "แต่ละการตัดสินใจ
-                                    อาจนำเรื่องราวไปสู่จุดจบที่แตกต่างกัน"
+                            {/* Synopsis */}
+                            {synopsis && (
+                                <p
+                                    className="premise font-serif"
+                                    style={{
+                                        maxWidth: '650px',
+                                        margin: '0 auto',
+                                    }}
+                                >
+                                    "{synopsis}"
                                 </p>
+                            )}
+                        </div>
 
-                                <div className="chapter-counter">
-                                    เลือกเส้นเรื่องที่ต้องการอ่าน
-                                </div>
+                        {/* Story Meta */}
+                        <div className="story-meta-banner">
+                            <div className="story-badges">
+                                <span className="badge">
+                                    เส้นเรื่องทั้งหมด
+                                </span>
+
+                                <span className="badge">
+                                    {branches.length} เส้นทาง
+                                </span>
                             </div>
 
-                            {/* Branch List */}
+                            <p className="premise font-serif">
+                                "แต่ละการตัดสินใจ
+                                อาจนำเรื่องราวไปสู่จุดจบที่แตกต่างกัน"
+                            </p>
+
+                            <div className="chapter-counter">
+                                {branches.length > 0
+                                    ? 'เลือกเส้นเรื่องที่ต้องการอ่าน'
+                                    : 'ยังไม่มีเส้นเรื่องที่สร้างขึ้น'}
+                            </div>
+                        </div>
+
+                        {/* Empty */}
+                        {branches.length === 0 && (
+                            <div
+                                className="reader-empty"
+                                style={{
+                                    minHeight: '260px',
+                                    padding:
+                                        '2.5rem 1rem 4rem',
+                                }}
+                            >
+                                <div className="reader-empty-state">
+
+                                    <div className="reader-empty-symbol">
+                                        <span className="reader-empty-symbol-book">
+                                            <span />
+                                            <span />
+                                        </span>
+                                    </div>
+
+                                    <span className="reader-empty-eyebrow">
+                                        เส้นเรื่อง
+                                    </span>
+
+                                    <h2>
+                                        ยังไม่มีเส้นเรื่องอื่น
+                                    </h2>
+
+                                    <p>
+                                        เมื่อผู้เล่นสร้างเส้นทางของตัวเอง
+                                        <br />
+                                        เส้นเรื่องจะแสดงอยู่ที่นี่
+                                    </p>
+
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Branch List */}
+                        {branches.length > 0 && (
                             <div
                                 style={{
                                     display: 'flex',
@@ -442,7 +514,7 @@ export default function BranchesPage() {
 
                                                     <span>
                                                         {branch.status ===
-                                                            'in_progress'
+                                                        'in_progress'
                                                             ? 'กำลังดำเนินเรื่อง'
                                                             : branch.status}
                                                     </span>
@@ -456,7 +528,11 @@ export default function BranchesPage() {
                                                     }}
                                                     onClick={() =>
                                                         router.push(
-                                                            `/story/${storyId}/branches/${branch.sessionId}${from ? `?from=${from}` : ''}`
+                                                            `/story/${storyId}/branches/${branch.sessionId}${
+                                                                from
+                                                                    ? `?from=${from}`
+                                                                    : ''
+                                                            }`
                                                         )
                                                     }
                                                 >
@@ -467,8 +543,9 @@ export default function BranchesPage() {
                                     )
                                 )}
                             </div>
-                        </>
-                    )}
+                        )}
+                    </>
+                )}
             </main>
         </div>
     );

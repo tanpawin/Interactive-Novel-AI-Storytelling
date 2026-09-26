@@ -90,7 +90,8 @@ export async function GET() {
         genre,
         tone,
         total_chapters,
-        cover_image_url
+        cover_image_url,
+        is_banned
         `
       )
       .in('id', storyIds);
@@ -157,7 +158,7 @@ export async function GET() {
             session.story_id
           );
 
-        if (!story) {
+        if (!story || story.is_banned) {
           return null;
         }
 

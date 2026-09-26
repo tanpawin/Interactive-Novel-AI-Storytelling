@@ -213,7 +213,7 @@ export default function AdminPage() {
         ====================================================== */}
         <header className="admin-page-header admin-dashboard-header">
           <span className="admin-dashboard-eyebrow">
-            COZYTALES ADMIN
+            GONNATALES ADMIN
           </span>
 
           <h1 className="admin-dashboard-title">

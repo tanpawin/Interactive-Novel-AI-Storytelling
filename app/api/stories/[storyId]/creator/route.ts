@@ -34,7 +34,7 @@ export async function GET(
       error: storyError,
     } = await supabaseAdmin
       .from('stories')
-      .select('user_id')
+      .select('user_id, is_banned')
       .eq('id', storyId)
       .maybeSingle();
 
@@ -62,6 +62,16 @@ export async function GET(
         { status: 404 }
       );
     }
+    
+    if (story.is_banned) {
+  return NextResponse.json(
+    {
+      success: false,
+      error: 'นิยายเรื่องนี้ถูกระงับการใช้งาน',
+    },
+    { status: 403 }
+  );
+}
 
     if (!story.user_id) {
       return NextResponse.json({

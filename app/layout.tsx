@@ -1,6 +1,5 @@
-'use client';
-
 import React from 'react';
+import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Inter, Sarabun } from 'next/font/google';
 
@@ -22,6 +21,36 @@ import '@/styles/admin-user-detail.css';
 
 import { Navbar } from '@/components/Navbar';
 
+
+/* =========================================================
+   METADATA
+========================================================= */
+
+export const metadata: Metadata = {
+  title: 'GonnaTales',
+  description: 'Interactive AI Storytelling',
+
+  icons: {
+    icon: '/images/icon.png',
+  },
+
+  openGraph: {
+    title: 'GonnaTales',
+    description: 'Interactive AI Storytelling',
+    images: [
+      {
+        url: '/images/icon.png',
+        alt: 'GonnaTales',
+      },
+    ],
+  },
+};
+
+
+/* =========================================================
+   FONTS
+========================================================= */
+
 const sarabun = Sarabun({
   subsets: ['thai', 'latin'],
   variable: '--font-sarabun',
@@ -35,6 +64,11 @@ const inter = Inter({
   weight: ['400', '500', '600', '700'],
   display: 'swap',
 });
+
+
+/* =========================================================
+   ROOT LAYOUT
+========================================================= */
 
 export default function RootLayout({
   children,

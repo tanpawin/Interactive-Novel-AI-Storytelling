@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { isUserBanned } from '@/lib/auth/user';
 
 type RouteContext = {
   params: Promise<{
@@ -25,6 +27,21 @@ export async function PATCH(
           error: 'กรุณาเข้าสู่ระบบก่อน',
         },
         { status: 401 }
+      );
+    }
+
+    // ==========================================
+    // CHECK USER BAN
+    // ==========================================
+    const banned = await isUserBanned();
+
+    if (banned) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'บัญชีของคุณถูกระงับการใช้งาน',
+        },
+        { status: 403 }
       );
     }
 
@@ -108,10 +125,10 @@ export async function PATCH(
     }
 
     // ==========================================
-    // CHECK STORY PUBLISH STATUS
+    // CHECK STORY STATUS
     //
     // ถ้าจะเปิด Session เป็น Public
-    // Story หลักต้องถูก Publish ก่อน
+    // Story ต้อง Publish และไม่ถูกแบน
     // ==========================================
     if (is_public) {
       const {
@@ -120,14 +137,14 @@ export async function PATCH(
       } = await supabaseAdmin
         .from('stories')
         .select(
-          'id, is_published'
+          'id, is_published, is_banned'
         )
         .eq('id', session.story_id)
         .maybeSingle();
 
       if (storyError) {
         console.error(
-          'Get Story Publish Status Error:',
+          'Get Story Status Error:',
           JSON.stringify(
             storyError,
             null,
@@ -139,7 +156,7 @@ export async function PATCH(
           {
             success: false,
             error:
-              'ไม่สามารถตรวจสอบสถานะการเผยแพร่นิยายได้',
+              'ไม่สามารถตรวจสอบสถานะนิยายได้',
           },
           { status: 500 }
         );
@@ -149,9 +166,21 @@ export async function PATCH(
         return NextResponse.json(
           {
             success: false,
-            error: 'ไม่พบ Story ที่เกี่ยวข้องกับ Session นี้',
+            error:
+              'ไม่พบ Story ที่เกี่ยวข้องกับ Session นี้',
           },
           { status: 404 }
+        );
+      }
+
+      if (story.is_banned) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              'ไม่สามารถเปิด Session เป็น Public ได้ เนื่องจากนิยายเรื่องนี้ถูกระงับการใช้งาน',
+          },
+          { status: 403 }
         );
       }
 

@@ -5,6 +5,8 @@ export type Genre =
   | 'ไซไฟ'
   | 'ประวัติศาสตร์'
   | 'สยองขวัญ'
+  | 'ดราม่า'
+  | 'แอ็กชัน'
   | 'ผจญภัย';
 
 export type NarrativeTone =
@@ -73,6 +75,7 @@ export interface Story {
   isFavorite?: boolean;
   isTrending?: boolean;
   isFresh?: boolean;
+  isBanned?: boolean;
 
   /*
    * สถานะการเผยแพร่นิยาย

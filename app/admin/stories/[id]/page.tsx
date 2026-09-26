@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { isAdmin } from '@/lib/auth/admin';
 import { supabaseAdmin } from '@/lib/supabase/admin';
+import AdminSessionActions from '@/components/admin/AdminSessionActions';
 
 type AdminStoryDetailPageProps = {
   params: Promise<{
@@ -24,6 +25,7 @@ type GameSession = {
   current_chapter: number;
   status: string | null;
   is_public: boolean;
+  is_banned: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -77,9 +79,6 @@ export default async function AdminStoryDetailPage({
 
   // ==================================================
   // 2. โหลด Shared Chapters
-  //
-  // บทกลางของ Story
-  // ปัจจุบันบทที่ 1 จะอยู่ที่นี่
   // ==================================================
 
   const {
@@ -101,8 +100,6 @@ export default async function AdminStoryDetailPage({
 
   // ==================================================
   // 3. โหลด Game Sessions
-  //
-  // แต่ละ Session = เส้นเรื่องของผู้เล่นหนึ่งคน
   // ==================================================
 
   const {
@@ -116,6 +113,7 @@ export default async function AdminStoryDetailPage({
       current_chapter,
       status,
       is_public,
+      is_banned,
       created_at,
       updated_at
     `)
@@ -202,7 +200,7 @@ export default async function AdminStoryDetailPage({
           </Link>
 
           <p className="admin-label">
-            COZYTALES ADMIN
+            GONNATALES ADMIN
           </p>
 
           <h1>{story.title}</h1>
@@ -221,7 +219,7 @@ export default async function AdminStoryDetailPage({
 
           <div className="admin-detail-header">
 
-            <div>
+            <div className="admin-section-heading">
               <h2>
                 ข้อมูลนิยาย
               </h2>
@@ -240,7 +238,7 @@ export default async function AdminStoryDetailPage({
             >
               {story.is_published
                 ? 'เผยแพร่'
-                : 'ร่าง'}
+                : 'ส่วนตัว'}
             </span>
 
           </div>
@@ -327,7 +325,7 @@ export default async function AdminStoryDetailPage({
 
           <div className="admin-detail-header">
 
-            <div>
+            <div className="admin-section-heading">
               <h2>
                 สรุปเส้นเรื่อง
               </h2>
@@ -393,7 +391,7 @@ export default async function AdminStoryDetailPage({
 
           <div className="admin-detail-header">
 
-            <div>
+            <div className="admin-section-heading">
               <h2>
                 เรื่องย่อ
               </h2>
@@ -420,7 +418,7 @@ export default async function AdminStoryDetailPage({
 
           <div className="admin-detail-header">
 
-            <div>
+            <div className="admin-section-heading">
               <h2>
                 โครงเรื่อง
               </h2>
@@ -447,7 +445,7 @@ export default async function AdminStoryDetailPage({
 
           <div className="admin-detail-header">
 
-            <div>
+            <div className="admin-section-heading">
               <h2>
                 บทกลางของเรื่อง
               </h2>
@@ -547,7 +545,7 @@ export default async function AdminStoryDetailPage({
 
           <div className="admin-detail-header">
 
-            <div>
+            <div className="admin-section-heading">
               <h2>
                 เส้นเรื่องของผู้เล่น
               </h2>
@@ -596,16 +594,16 @@ export default async function AdminStoryDetailPage({
                   return (
                     <div
                       key={session.id}
-                      className="admin-session-item"
+                      className={`admin-session-item ${
+                        session.is_banned
+                          ? 'admin-session-banned'
+                          : ''
+                      }`}
                     >
-
-                      {/* Session Number */}
 
                       <div className="admin-session-number">
                         {index + 1}
                       </div>
-
-                      {/* Session Information */}
 
                       <div className="admin-session-content">
 
@@ -623,17 +621,27 @@ export default async function AdminStoryDetailPage({
                             </p>
                           </div>
 
-                          <span
-                            className={
-                              session.is_public
-                                ? 'admin-status published'
-                                : 'admin-status draft'
-                            }
-                          >
-                            {session.is_public
-                              ? 'Public'
-                              : 'Private'}
-                          </span>
+                          <div className="admin-session-statuses">
+
+                            {session.is_banned && (
+                              <span className="admin-status banned">
+                                ถูกแบน
+                              </span>
+                            )}
+
+                            <span
+                              className={
+                                session.is_public
+                                  ? 'admin-status published'
+                                  : 'admin-status draft'
+                              }
+                            >
+                              {session.is_public
+                                ? 'Public'
+                                : 'Private'}
+                            </span>
+
+                          </div>
 
                         </div>
 
@@ -694,15 +702,26 @@ export default async function AdminStoryDetailPage({
                             {session.id}
                           </span>
 
-                          <Link
-                            href={`/admin/stories/${story.id}/sessions/${session.id}`}
-                            className="admin-session-view-button"
-                          >
-                            ดูเส้นเรื่อง
-                            <span aria-hidden="true">
-                              →
-                            </span>
-                          </Link>
+                          <div className="admin-session-footer-actions">
+
+                            <AdminSessionActions
+                              key={session.id}
+                              storyId={story.id}
+                              sessionId={session.id}
+                              isBanned={session.is_banned}
+                            />
+
+                            <Link
+                              href={`/admin/stories/${story.id}/sessions/${session.id}`}
+                              className="admin-session-view-button"
+                            >
+                              ดูเส้นเรื่อง
+                              <span aria-hidden="true">
+                                →
+                              </span>
+                            </Link>
+
+                          </div>
 
                         </div>
 
@@ -736,10 +755,6 @@ export default async function AdminStoryDetailPage({
   );
 }
 
-// ==================================================
-// FORMAT DATE
-// ==================================================
-
 function formatDate(
   date: string | null
 ) {
@@ -755,10 +770,6 @@ function formatDate(
     }
   ).format(new Date(date));
 }
-
-// ==================================================
-// GET CONTENT PREVIEW
-// ==================================================
 
 function getPreview(
   content: string

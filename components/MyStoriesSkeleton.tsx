@@ -28,6 +28,7 @@ const MyStorySkeletonItem = () => {
         <div className="my-story-skeleton-premise">
           <span />
           <span />
+          <span />
         </div>
 
         {/* Meta */}
@@ -39,7 +40,10 @@ const MyStorySkeletonItem = () => {
 
         {/* Progress */}
         <div className="my-story-skeleton-progress">
-          <div className="my-story-skeleton-progress-text" />
+          <div className="my-story-skeleton-progress-top">
+            <div className="my-story-skeleton-progress-text" />
+            <div className="my-story-skeleton-progress-percent" />
+          </div>
 
           <div className="my-story-skeleton-progress-bg">
             <div className="my-story-skeleton-progress-fill" />
@@ -54,6 +58,7 @@ const MyStorySkeletonItem = () => {
         <div className="my-story-skeleton-actions">
           <div className="my-story-skeleton-action continue" />
           <div className="my-story-skeleton-action edit" />
+          <div className="my-story-skeleton-action publish" />
           <div className="my-story-skeleton-action delete" />
         </div>
       </div>

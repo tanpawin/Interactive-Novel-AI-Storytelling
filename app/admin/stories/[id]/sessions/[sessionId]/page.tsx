@@ -79,10 +79,6 @@ export default async function AdminSessionDetailPage({
     sessionId,
   } = await params;
 
-  // ==================================================
-  // 1. โหลด Story
-  // ==================================================
-
   const {
     data: story,
     error: storyError,
@@ -105,10 +101,6 @@ export default async function AdminSessionDetailPage({
   }
 
   const storyData = story as Story;
-
-  // ==================================================
-  // 2. โหลด Game Session
-  // ==================================================
 
   const {
     data: session,
@@ -135,10 +127,6 @@ export default async function AdminSessionDetailPage({
 
   const sessionData =
     session as GameSession;
-
-  // ==================================================
-  // 3. โหลด Profile ผู้เล่น
-  // ==================================================
 
   let profile: Profile | null = null;
 
@@ -174,12 +162,6 @@ export default async function AdminSessionDetailPage({
     profile?.display_name?.trim() ||
     'ไม่ระบุชื่อ';
 
-  // ==================================================
-  // 4. โหลด Shared Chapters
-  //
-  // บทกลางของ Story
-  // ==================================================
-
   const {
     data: sharedChapters,
     error: sharedChaptersError,
@@ -196,12 +178,6 @@ export default async function AdminSessionDetailPage({
     .order('chapter_number', {
       ascending: true,
     });
-
-  // ==================================================
-  // 5. โหลด Session Chapters
-  //
-  // บทที่เกิดจาก Session นี้
-  // ==================================================
 
   const {
     data: sessionChapters,
@@ -221,14 +197,6 @@ export default async function AdminSessionDetailPage({
     .order('chapter_number', {
       ascending: true,
     });
-
-  // ==================================================
-  // 6. รวม Shared + Session Chapters
-  //
-  // Shared Chapter จะเป็นต้นทาง
-  // Session Chapter จะ override ถ้า
-  // chapter_number ซ้ำกัน
-  // ==================================================
 
   const chapterMap =
     new Map<number, DisplayChapter>();
@@ -296,10 +264,6 @@ export default async function AdminSessionDetailPage({
     <main className="admin-page admin-session-detail">
       <div className="admin-container">
 
-        {/* ==================================================
-            HEADER
-        ================================================== */}
-
         <div className="admin-page-header">
 
           <Link
@@ -310,7 +274,7 @@ export default async function AdminSessionDetailPage({
           </Link>
 
           <p className="admin-label">
-            COZYTALES ADMIN
+            GONNATALES ADMIN
           </p>
 
           <h1>
@@ -323,15 +287,13 @@ export default async function AdminSessionDetailPage({
 
         </div>
 
-        {/* ==================================================
-            SESSION INFORMATION
-        ================================================== */}
+        {/* SESSION INFORMATION */}
 
         <section className="admin-detail-card">
 
           <div className="admin-detail-header">
 
-            <div>
+            <div className="admin-section-heading">
               <h2>
                 ข้อมูลเส้นเรื่อง
               </h2>
@@ -358,9 +320,7 @@ export default async function AdminSessionDetailPage({
           <div className="admin-detail-grid">
 
             <div className="admin-detail-item">
-              <span>
-                ผู้เล่น
-              </span>
+              <span>ผู้เล่น</span>
 
               <strong>
                 {displayName}
@@ -368,9 +328,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                Current Chapter
-              </span>
+              <span>Current Chapter</span>
 
               <strong>
                 บทที่{' '}
@@ -379,9 +337,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                สถานะ
-              </span>
+              <span>สถานะ</span>
 
               <strong>
                 {sessionData.status ||
@@ -390,9 +346,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                จำนวนบทใน Session
-              </span>
+              <span>จำนวนบทใน Session</span>
 
               <strong>
                 {sessionChapterCount} บท
@@ -400,9 +354,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                จำนวนบทที่แสดง
-              </span>
+              <span>จำนวนบทที่แสดง</span>
 
               <strong>
                 {totalDisplayedChapters} บท
@@ -410,9 +362,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                Session ID
-              </span>
+              <span>Session ID</span>
 
               <strong className="admin-detail-mono">
                 {sessionData.id}
@@ -420,9 +370,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                User ID
-              </span>
+              <span>User ID</span>
 
               <strong className="admin-detail-mono">
                 {sessionData.user_id ||
@@ -431,9 +379,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                Story ID
-              </span>
+              <span>Story ID</span>
 
               <strong className="admin-detail-mono">
                 {storyData.id}
@@ -441,9 +387,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                เริ่มเล่น
-              </span>
+              <span>เริ่มเล่น</span>
 
               <strong>
                 {formatDate(
@@ -453,9 +397,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                เล่นล่าสุด
-              </span>
+              <span>เล่นล่าสุด</span>
 
               <strong>
                 {formatDate(
@@ -468,15 +410,13 @@ export default async function AdminSessionDetailPage({
 
         </section>
 
-        {/* ==================================================
-            STORY INFORMATION
-        ================================================== */}
+        {/* STORY INFORMATION */}
 
         <section className="admin-detail-card">
 
           <div className="admin-detail-header">
 
-            <div>
+            <div className="admin-section-heading">
               <h2>
                 ข้อมูลนิยาย
               </h2>
@@ -495,7 +435,7 @@ export default async function AdminSessionDetailPage({
             >
               {storyData.is_published
                 ? 'เผยแพร่'
-                : 'ร่าง'}
+                : 'ส่วนตัว'}
             </span>
 
           </div>
@@ -503,9 +443,7 @@ export default async function AdminSessionDetailPage({
           <div className="admin-detail-grid">
 
             <div className="admin-detail-item">
-              <span>
-                ชื่อเรื่อง
-              </span>
+              <span>ชื่อเรื่อง</span>
 
               <strong>
                 {storyData.title}
@@ -513,9 +451,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                ประเภท
-              </span>
+              <span>ประเภท</span>
 
               <strong>
                 {storyData.genre ||
@@ -524,9 +460,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                โทนเรื่อง
-              </span>
+              <span>โทนเรื่อง</span>
 
               <strong>
                 {storyData.tone ||
@@ -535,9 +469,7 @@ export default async function AdminSessionDetailPage({
             </div>
 
             <div className="admin-detail-item">
-              <span>
-                จำนวนตอนเป้าหมาย
-              </span>
+              <span>จำนวนตอนเป้าหมาย</span>
 
               <strong>
                 {storyData.total_chapters}
@@ -548,15 +480,13 @@ export default async function AdminSessionDetailPage({
 
         </section>
 
-        {/* ==================================================
-            CHAPTERS
-        ================================================== */}
+        {/* CHAPTERS */}
 
         <section className="admin-detail-card">
 
           <div className="admin-detail-header">
 
-            <div>
+            <div className="admin-section-heading">
               <h2>
                 เนื้อหาเส้นเรื่อง
               </h2>
@@ -596,13 +526,9 @@ export default async function AdminSessionDetailPage({
                     className="admin-chapter-item"
                   >
 
-                    {/* Chapter Number */}
-
                     <div className="admin-chapter-number">
                       {chapter.chapter_number}
                     </div>
-
-                    {/* Chapter Content */}
 
                     <div className="admin-chapter-content">
 
@@ -656,11 +582,8 @@ export default async function AdminSessionDetailPage({
 
                     </div>
 
-                    {/* Word Count */}
-
                     <div className="admin-chapter-word-count">
-                      {chapter.content?.length ??
-                        0}{' '}
+                      {chapter.content?.length ?? 0}{' '}
                       ตัวอักษร
                     </div>
 
@@ -691,10 +614,6 @@ export default async function AdminSessionDetailPage({
   );
 }
 
-// ==================================================
-// FORMAT DATE
-// ==================================================
-
 function formatDate(
   date: string | null
 ) {
@@ -710,10 +629,6 @@ function formatDate(
     }
   ).format(new Date(date));
 }
-
-// ==================================================
-// GET CONTENT PREVIEW
-// ==================================================
 
 function getPreview(
   content: string

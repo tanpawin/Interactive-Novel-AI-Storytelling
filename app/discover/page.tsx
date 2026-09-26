@@ -7,6 +7,7 @@ import {
 } from 'react';
 
 import {
+  useClerk,
   useSession,
   useUser,
 } from '@clerk/nextjs';
@@ -26,7 +27,14 @@ export default function DiscoverPage() {
   const router = useRouter();
 
   const { session } = useSession();
-  const { user, isLoaded } = useUser();
+
+  const {
+    user,
+    isLoaded,
+    isSignedIn,
+  } = useUser();
+
+  const { openSignIn } = useClerk();
 
   const supabase = useMemo(
     () =>
@@ -44,9 +52,6 @@ export default function DiscoverPage() {
   const [isLoading, setIsLoading] =
     useState(true);
 
-  // ==========================================
-  // LOAD STORIES
-  // ==========================================
   useEffect(() => {
     if (!isLoaded) {
       return;
@@ -56,13 +61,9 @@ export default function DiscoverPage() {
       setIsLoading(true);
 
       try {
-        // ==========================================
-        // LOAD FAVORITES
-        // ==========================================
         let favoriteStoryIds: string[] = [];
 
-        // Favorite โหลดเฉพาะตอน Login
-        if (user) {
+        if (isSignedIn && user) {
           try {
             const favoriteResponse =
               await fetch(
@@ -84,10 +85,6 @@ export default function DiscoverPage() {
                 [];
             }
           } catch (error) {
-            /*
-             * Favorites โหลดไม่ได้
-             * ไม่ควรทำให้ Discover พัง
-             */
             console.error(
               'Load Favorites Error:',
               error
@@ -95,79 +92,54 @@ export default function DiscoverPage() {
           }
         }
 
-        // ==========================================
-        // LOAD PUBLISHED STORIES ONLY
-        // ==========================================
-        const {
-          data: storyData,
-          error: storyError,
-        } = await supabase
-          .from('stories')
-          .select(
-            `
-              id,
-              title,
-              synopsis,
-              genre,
-              tone,
-              total_chapters,
-              cover_image_url,
-              created_at,
-              is_published
-            `
-          )
-          .eq('is_published', true)
-          .order(
-            'created_at',
+        const storyResponse =
+          await fetch(
+            '/api/stories/public',
             {
-              ascending: false,
+              cache: 'no-store',
             }
           );
 
-        if (storyError) {
+        const storyResult =
+          await storyResponse.json();
+
+        if (
+          !storyResponse.ok ||
+          !storyResult.success
+        ) {
           console.error(
-            'Discover Stories Error:',
-            storyError
+            'Discover Stories API Error:',
+            storyResult.error
           );
 
           setStories([]);
           return;
         }
 
-        // ==========================================
-        // NO STORIES
-        // ==========================================
+        const storyData =
+          storyResult.stories ?? [];
+
         if (
-          !storyData ||
           storyData.length === 0
         ) {
           setStories([]);
           return;
         }
 
-        // ==========================================
-        // MAP DATABASE → STORY TYPE
-        // ==========================================
         const mappedStories: Story[] =
           storyData.map(
-            (story) => {
-              // ==========================================
-              // FRESH STORY
-              // ==========================================
+            (story: any) => {
               const isFresh =
                 Date.now() -
-                  new Date(
-                    story.created_at
-                  ).getTime() <
+                new Date(
+                  story.created_at
+                ).getTime() <
                 7 *
                   24 *
                   60 *
                   60 *
                   1000;
 
-              // ==========================================
-              // RETURN STORY
-              // ==========================================
               return {
                 id:
                   story.id,
@@ -212,10 +184,6 @@ export default function DiscoverPage() {
                   story.total_chapters ||
                   0,
 
-                /*
-                 * Discover ไม่ใช่หน้าอ่าน
-                 * จึงไม่ต้องโหลด chapters
-                 */
                 currentChapter:
                   0,
 
@@ -225,19 +193,14 @@ export default function DiscoverPage() {
                 chapters:
                   [],
 
-                // ==========================================
-                // FAVORITE
-                // ==========================================
                 isFavorite:
                   favoriteStoryIds.includes(
                     story.id
                   ),
 
-                // ==========================================
-                // STATUS
-                // ==========================================
                 isPublished:
-                  story.is_published ?? false,
+                  story.is_published ??
+                  false,
 
                 isFresh,
 
@@ -265,21 +228,38 @@ export default function DiscoverPage() {
     loadStories();
   }, [
     isLoaded,
+    isSignedIn,
     user,
     supabase,
   ]);
 
-  // ==========================================
-  // RENDER
-  // ==========================================
+  const handleSelectStory = (
+    id: string
+  ) => {
+    /*
+     * ยังไม่ได้ Login
+     * เปิด Login Modal แต่ไม่เปลี่ยนหน้า
+     */
+    if (!isSignedIn) {
+      openSignIn();
+      return;
+    }
+
+    /*
+     * Login แล้ว
+     * เข้าอ่านนิยายได้ตามปกติ
+     */
+    router.push(
+      `/story/${id}?from=discover`
+    );
+  };
+
   return (
     <DiscoverView
       stories={stories}
       isLoading={isLoading}
-      onSelectStory={(id) =>
-        router.push(
-          `/story/${id}`
-        )
+      onSelectStory={
+        handleSelectStory
       }
     />
   );

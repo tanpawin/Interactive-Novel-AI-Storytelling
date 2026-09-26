@@ -63,19 +63,10 @@ export const Navbar: React.FC = () => {
           onClick={closeMobileMenu}
         >
           <span className="logo-mark" aria-hidden="true">
-            <svg
-              viewBox="0 0 32 32"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M5 7.5A3.5 3.5 0 0 1 8.5 4H27v22H8.5A3.5 3.5 0 0 0 5 29.5v-22Z" />
-              <path d="M5 7.5v22" />
-              <path d="M10 9h11" />
-              <path d="M10 13h9" />
-            </svg>
+            <img
+              src="/images/logo.png"
+              alt=""
+            />
           </span>
 
           <span className="logo-text">

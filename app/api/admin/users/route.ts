@@ -24,8 +24,12 @@ export async function GET() {
     ] = await Promise.all([
       supabaseAdmin
         .from('profiles')
-        .select('user_id, display_name, created_at, updated_at')
-        .order('created_at', { ascending: false }),
+        .select(
+          'user_id, display_name, is_banned, created_at, updated_at'
+        )
+        .order('created_at', {
+          ascending: false,
+        }),
 
       supabaseAdmin
         .from('stories')
@@ -37,7 +41,10 @@ export async function GET() {
     ]);
 
     if (profilesError) {
-      console.error('Admin Users Profiles Error:', profilesError);
+      console.error(
+        'Admin Users Profiles Error:',
+        profilesError
+      );
 
       return NextResponse.json(
         {
@@ -49,7 +56,10 @@ export async function GET() {
     }
 
     if (storiesError) {
-      console.error('Admin Users Stories Error:', storiesError);
+      console.error(
+        'Admin Users Stories Error:',
+        storiesError
+      );
 
       return NextResponse.json(
         {
@@ -61,7 +71,10 @@ export async function GET() {
     }
 
     if (sessionsError) {
-      console.error('Admin Users Sessions Error:', sessionsError);
+      console.error(
+        'Admin Users Sessions Error:',
+        sessionsError
+      );
 
       return NextResponse.json(
         {
@@ -100,10 +113,13 @@ export async function GET() {
     const users = (profiles ?? []).map((profile) => ({
       userId: profile.user_id,
       displayName: profile.display_name,
+      isBanned: profile.is_banned,
       createdAt: profile.created_at,
       updatedAt: profile.updated_at,
-      storyCount: storyCountMap.get(profile.user_id) ?? 0,
-      sessionCount: sessionCountMap.get(profile.user_id) ?? 0,
+      storyCount:
+        storyCountMap.get(profile.user_id) ?? 0,
+      sessionCount:
+        sessionCountMap.get(profile.user_id) ?? 0,
     }));
 
     return NextResponse.json({
@@ -111,7 +127,10 @@ export async function GET() {
       users,
     });
   } catch (error) {
-    console.error('Admin Users API Error:', error);
+    console.error(
+      'Admin Users API Error:',
+      error
+    );
 
     return NextResponse.json(
       {

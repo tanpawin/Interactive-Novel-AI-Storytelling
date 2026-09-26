@@ -240,18 +240,11 @@ const HomeHeroDecoration = () => {
 
       <div className="home-hero-icon-card">
 
-        <svg
-          className="home-hero-book-icon"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.4"
-        >
-          <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 0 4 22V5.5Z" />
-          <path d="M4 5.5V22" />
-          <path d="M8 7h8" />
-          <path d="M8 11h7" />
-        </svg>
+        <img
+          src="/images/hero.png"
+          alt=""
+          className="home-hero-image"
+        />
 
         <span className="home-hero-star home-hero-star-one">
           <svg
@@ -267,7 +260,7 @@ const HomeHeroDecoration = () => {
             viewBox="0 0 24 24"
             fill="currentColor"
           >
-            <path d="m12 3.5 1.9 4.6 4.6 1.9-4.6 1.9-1.9 4.6-1.9-4.6-4.6-1.9 4.6-1.9L12 3.5Z" />
+            <path d="m12 3.5 1.9 4.6 4.6 1.9-4.6 1.9-1.9 4.6-4.6-1.9 4.6-1.9L12 3.5Z" />
           </svg>
         </span>
 

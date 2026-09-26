@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 
 import { createServerSupabaseClient } from '@/lib/supabaseServer';
+import { isUserBanned } from '@/lib/auth/user';
 
 export async function GET(req: Request) {
   try {
@@ -102,6 +103,18 @@ export async function POST(req: Request) {
           error: 'กรุณาเข้าสู่ระบบก่อน',
         },
         { status: 401 }
+      );
+    }
+
+    const banned = await isUserBanned();
+
+    if (banned) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'บัญชีของคุณถูกระงับการใช้งาน',
+        },
+        { status: 403 }
       );
     }
 
@@ -252,6 +265,18 @@ export async function DELETE(req: Request) {
           error: 'กรุณาเข้าสู่ระบบก่อน',
         },
         { status: 401 }
+      );
+    }
+
+    const banned = await isUserBanned();
+
+    if (banned) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'บัญชีของคุณถูกระงับการใช้งาน',
+        },
+        { status: 403 }
       );
     }
 

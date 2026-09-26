@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { isUserBanned } from '@/lib/auth/user';
 
 export async function GET() {
   try {
@@ -13,6 +14,18 @@ export async function GET() {
           error: 'Unauthorized',
         },
         { status: 401 }
+      );
+    }
+
+    const banned = await isUserBanned();
+
+    if (banned) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'บัญชีของคุณถูกระงับการใช้งาน',
+        },
+        { status: 403 }
       );
     }
 
@@ -175,6 +188,18 @@ export async function PUT(request: Request) {
           error: 'Unauthorized',
         },
         { status: 401 }
+      );
+    }
+
+    const banned = await isUserBanned();
+
+    if (banned) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'บัญชีของคุณถูกระงับการใช้งาน',
+        },
+        { status: 403 }
       );
     }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import AdminConfirmModal from '@/components/admin/AdminConfirmModal';
 
 type Story = {
     id: string;
@@ -11,6 +12,7 @@ type Story = {
     tone: string | null;
     total_chapters: number;
     is_published: boolean;
+    is_banned: boolean;
     created_at: string | null;
     updated_at: string | null;
     user_id: string | null;
@@ -21,6 +23,13 @@ export default function AdminStoriesPage() {
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+
+    const [actionStoryId, setActionStoryId] = useState<string | null>(null);
+
+    const [confirmModal, setConfirmModal] = useState<{
+        type: 'ban' | 'unban' | 'delete';
+        story: Story;
+    } | null>(null);
 
     useEffect(() => {
         async function loadStories() {
@@ -62,6 +71,105 @@ export default function AdminStoriesPage() {
 
     const clearSearch = () => {
         setSearch('');
+    };
+
+    const toggleBanStory = async (story: Story) => {
+        const action = story.is_banned
+            ? 'ยกเลิกแบน'
+            : 'แบน';
+
+        try {
+            setActionStoryId(story.id);
+
+            const response = await fetch(
+                `/api/admin/stories/${story.id}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        isBanned: !story.is_banned,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error || `ไม่สามารถ${action}นิยายได้`
+                );
+            }
+
+            setStories((currentStories) =>
+                currentStories.map((item) =>
+                    item.id === story.id
+                        ? {
+                              ...item,
+                              is_banned: !item.is_banned,
+                          }
+                        : item
+                )
+            );
+
+            setConfirmModal(null);
+        } catch (error) {
+            console.error(
+                'Toggle Story Ban Error:',
+                error
+            );
+
+            window.alert(
+                error instanceof Error
+                    ? error.message
+                    : `ไม่สามารถ${action}นิยายได้`
+            );
+        } finally {
+            setActionStoryId(null);
+        }
+    };
+
+    const deleteStory = async (story: Story) => {
+        try {
+            setActionStoryId(story.id);
+
+            const response = await fetch(
+                `/api/admin/stories/${story.id}`,
+                {
+                    method: 'DELETE',
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error || 'ไม่สามารถลบนิยายได้'
+                );
+            }
+
+            setStories((currentStories) =>
+                currentStories.filter(
+                    (item) => item.id !== story.id
+                )
+            );
+
+            setConfirmModal(null);
+        } catch (error) {
+            console.error(
+                'Delete Story Error:',
+                error
+            );
+
+            window.alert(
+                error instanceof Error
+                    ? error.message
+                    : 'ไม่สามารถลบนิยายได้'
+            );
+        } finally {
+            setActionStoryId(null);
+        }
     };
 
     if (loading) {
@@ -176,7 +284,7 @@ export default function AdminStoriesPage() {
                     </Link>
 
                     <span className="admin-label">
-                        COZYTALES ADMIN
+                        GONNATALES ADMIN
                     </span>
 
                     <h1>
@@ -193,7 +301,9 @@ export default function AdminStoriesPage() {
                     <input
                         type="text"
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) =>
+                            setSearch(e.target.value)
+                        }
                         placeholder="ค้นหาชื่อเรื่อง..."
                         className="admin-search-input"
                     />
@@ -236,65 +346,127 @@ export default function AdminStoriesPage() {
                                 </thead>
 
                                 <tbody>
-                                    {filteredStories.map((story) => (
-                                        <tr key={story.id}>
-                                            <td>
-                                                <div className="admin-story-title">
-                                                    <strong>
-                                                        {story.title}
-                                                    </strong>
+                                    {filteredStories.map(
+                                        (story) => (
+                                            <tr key={story.id}>
+                                                <td>
+                                                    <div className="admin-story-title">
+                                                        <strong>
+                                                            {story.title}
+                                                        </strong>
 
-                                                    <span>
-                                                        {story.synopsis
-                                                            ? story.synopsis.length > 90
-                                                                ? `${story.synopsis.slice(
-                                                                    0,
-                                                                    90
-                                                                )}...`
-                                                                : story.synopsis
-                                                            : 'ไม่มีเรื่องย่อ'}
-                                                    </span>
-                                                </div>
-                                            </td>
+                                                        <span>
+                                                            {story.synopsis
+                                                                ? story
+                                                                      .synopsis
+                                                                      .length >
+                                                                  90
+                                                                    ? `${story.synopsis.slice(
+                                                                          0,
+                                                                          90
+                                                                      )}...`
+                                                                    : story.synopsis
+                                                                : 'ไม่มีเรื่องย่อ'}
+                                                        </span>
+                                                    </div>
+                                                </td>
 
-                                            <td>
-                                                {story.genre || '-'}
-                                            </td>
+                                                <td>
+                                                    {story.genre ||
+                                                        '-'}
+                                                </td>
 
-                                            <td>
-                                                {story.total_chapters}
-                                            </td>
+                                                <td>
+                                                    {story.total_chapters}
+                                                </td>
 
-                                            <td>
-                                                <span
-                                                    className={
-                                                        story.is_published
-                                                            ? 'admin-status published'
-                                                            : 'admin-status draft'
-                                                    }
-                                                >
-                                                    {story.is_published
-                                                        ? 'เผยแพร่'
-                                                        : 'ร่าง'}
-                                                </span>
-                                            </td>
+                                                <td>
+                                                    {story.is_banned ? (
+                                                        <span className="admin-status banned">
+                                                            ถูกแบน
+                                                        </span>
+                                                    ) : (
+                                                        <span
+                                                            className={
+                                                                story.is_published
+                                                                    ? 'admin-status published'
+                                                                    : 'admin-status draft'
+                                                            }
+                                                        >
+                                                            {story.is_published
+                                                                ? 'เผยแพร่'
+                                                                : 'ส่วนตัว'}
+                                                        </span>
+                                                    )}
+                                                </td>
 
-                                            <td>
-                                                {formatDate(
-                                                    story.created_at
-                                                )}
-                                            </td>
+                                                <td>
+                                                    {formatDate(
+                                                        story.created_at
+                                                    )}
+                                                </td>
 
-                                            <td>
-                                                <Link
-                                                    href={`/admin/stories/${story.id}`}
-                                                    className="admin-view-button"
-                                                >
-                                                    ดูรายละเอียด
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                <td>
+                                                    <div className="admin-story-actions">
+                                                        <Link
+                                                            href={`/admin/stories/${story.id}`}
+                                                            className="admin-view-button"
+                                                        >
+                                                            ดูรายละเอียด
+                                                        </Link>
+
+                                                        <button
+                                                            type="button"
+                                                            className={
+                                                                story.is_banned
+                                                                    ? 'admin-action-button admin-unban-button'
+                                                                    : 'admin-action-button admin-ban-button'
+                                                            }
+                                                            onClick={() =>
+                                                                setConfirmModal({
+                                                                    type: story.is_banned
+                                                                        ? 'unban'
+                                                                        : 'ban',
+                                                                    story,
+                                                                })
+                                                            }
+                                                            disabled={
+                                                                actionStoryId ===
+                                                                story.id
+                                                            }
+                                                        >
+                                                            {actionStoryId ===
+                                                            story.id
+                                                                ? 'กำลังดำเนินการ...'
+                                                                : story.is_banned
+                                                                  ? 'ยกเลิกแบน'
+                                                                  : 'แบน'}
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            className="admin-action-button admin-delete-button"
+                                                            onClick={() =>
+                                                                setConfirmModal({
+                                                                    type: 'delete',
+                                                                    story,
+                                                                })
+                                                            }
+                                                            disabled={
+                                                                actionStoryId ===
+                                                                story.id
+                                                            }
+                                                        >
+                                                            {actionStoryId ===
+                                                            story.id
+                                                                ? 'กำลังดำเนินการ...'
+                                                                : 'ลบ'}
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -311,6 +483,49 @@ export default function AdminStoriesPage() {
                     )}
                 </section>
             </div>
+
+            <AdminConfirmModal
+                open={confirmModal !== null}
+                variant={confirmModal?.type ?? 'ban'}
+                title={
+                    confirmModal?.type === 'delete'
+                        ? 'ยืนยันการลบนิยาย'
+                        : confirmModal?.type === 'unban'
+                          ? 'ยืนยันการยกเลิกแบน'
+                          : 'ยืนยันการแบน'
+                }
+                description={
+                    confirmModal?.type === 'delete'
+                        ? `ต้องการลบนิยาย "${confirmModal.story.title}" หรือไม่?\n\nการลบจะไม่สามารถกู้คืนได้`
+                        : confirmModal?.type === 'unban'
+                          ? `ต้องการยกเลิกแบน "${confirmModal.story.title}" หรือไม่?`
+                          : `ต้องการแบน "${confirmModal?.story.title}" หรือไม่?`
+                }
+                confirmText={
+                    confirmModal?.type === 'delete'
+                        ? 'ยืนยันการลบ'
+                        : confirmModal?.type === 'unban'
+                          ? 'ยืนยันยกเลิกแบน'
+                          : 'ยืนยันการแบน'
+                }
+                loading={actionStoryId !== null}
+                onCancel={() => {
+                    if (actionStoryId === null) {
+                        setConfirmModal(null);
+                    }
+                }}
+                onConfirm={() => {
+                    if (!confirmModal) {
+                        return;
+                    }
+
+                    if (confirmModal.type === 'delete') {
+                        deleteStory(confirmModal.story);
+                    } else {
+                        toggleBanStory(confirmModal.story);
+                    }
+                }}
+            />
         </main>
     );
 }

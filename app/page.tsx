@@ -80,52 +80,54 @@ export default function HomePage() {
         try {
           /*
            * ========================================
-           * 1. โหลดเฉพาะนิยายที่เผยแพร่แล้ว
+           * 1. โหลดนิยายผ่าน Public Stories API
            *
-           * Guest  = 8 เรื่อง
-           * Login  = 100 เรื่อง
-           *
-           * สำคัญ:
-           * Home แสดงเฉพาะ is_published = true
-           * ไม่ว่าจะเป็น Guest หรือ Login
+           * API จะกรองให้แล้ว:
+           * - is_published = true
+           * - is_banned = false
+           * - เจ้าของนิยายต้องไม่ถูกแบน
            * ========================================
            */
 
-          const {
-            data: storyData,
-            error: storyError,
-          } =
-            await supabase
-              .from('stories')
-              .select('*')
-              .eq(
-                'is_published',
-                true
-              )
-              .order(
-                'created_at',
-                {
-                  ascending: false,
-                }
-              )
-              .limit(
-                user
-                  ? 100
-                  : 8
-              );
+          const storyResponse =
+            await fetch(
+              '/api/stories/public',
+              {
+                cache: 'no-store',
+              }
+            );
 
-          if (storyError) {
+          const storyResult =
+            await storyResponse.json();
+
+          if (
+            !storyResponse.ok ||
+            !storyResult.success
+          ) {
             console.error(
-              'Supabase Story Error:',
-              storyError
+              'Public Stories API Error:',
+              storyResult.error
             );
 
             setStories([]);
             return;
           }
 
+          const allStoryData =
+            storyResult.stories ?? [];
+
+          /*
+           * Home:
+           * - Login → แสดงสูงสุด 100 เรื่อง
+           * - Guest → แสดงสูงสุด 8 เรื่อง
+           */
+          const storyData =
+            allStoryData.slice(
+              0,
+              user ? 100 : 8
+            );
+
           if (
-            !storyData ||
             storyData.length === 0
           ) {
             setStories([]);
@@ -140,7 +142,9 @@ export default function HomePage() {
 
           const storyIds =
             storyData.map(
-              (story) =>
+              (story: {
+                id: string;
+              }) =>
                 story.id
             );
 
@@ -237,14 +241,6 @@ export default function HomePage() {
               );
             }
 
-            /*
-             * สำคัญ:
-             *
-             * ถึงแม้ User จะมี session
-             * ของนิยายที่ถูกซ่อนไว้ในฐานข้อมูล
-             * ก็จะไม่ถูกนำมาแสดง เพราะ
-             * storyData ด้านบนกรอง is_published = true แล้ว
-             */
             sessions =
               sessionData || [];
 
@@ -325,7 +321,7 @@ export default function HomePage() {
 
           const mappedStories: Story[] =
             storyData.map(
-              (story) => {
+              (story: any) => {
                 /*
                  * Chapters ของเรื่องนี้
                  */
@@ -365,10 +361,10 @@ export default function HomePage() {
                 const userSession =
                   user
                     ? sessions.find(
-                        (session) =>
-                          session.story_id ===
-                          story.id
-                      )
+                      (session) =>
+                        session.story_id ===
+                        story.id
+                    )
                     : undefined;
 
                 /*
@@ -401,14 +397,14 @@ export default function HomePage() {
 
                 const isFresh =
                   Date.now() -
-                    new Date(
-                      story.created_at
-                    ).getTime() <
+                  new Date(
+                    story.created_at
+                  ).getTime() <
                   7 *
-                    24 *
-                    60 *
-                    60 *
-                    1000;
+                  24 *
+                  60 *
+                  60 *
+                  1000;
 
                 return {
                   id:
@@ -432,10 +428,10 @@ export default function HomePage() {
 
                   length:
                     story.total_chapters <=
-                    5
+                      5
                       ? 'เรื่องสั้น'
                       : story.total_chapters <=
-                          15
+                        15
                         ? 'นวนิยายขนาดกลาง'
                         : 'นวนิยายยาว',
 
@@ -451,7 +447,7 @@ export default function HomePage() {
 
                   author:
                     creatorMap[
-                      story.id
+                    story.id
                     ] ||
                     'ไม่ระบุชื่อ',
 
@@ -469,8 +465,8 @@ export default function HomePage() {
                   isFavorite:
                     user
                       ? favoriteStoryIds.includes(
-                          story.id
-                        )
+                        story.id
+                      )
                       : false,
 
                   isFresh,
@@ -478,13 +474,6 @@ export default function HomePage() {
                   isTrending:
                     false,
 
-                  /*
-                   * Publish Status
-                   *
-                   * storyData ถูกกรอง
-                   * is_published = true แล้ว
-                   * ดังนั้นค่าตรงนี้จะเป็น true
-                   */
                   isPublished:
                     story.is_published ??
                     false,
@@ -532,11 +521,11 @@ export default function HomePage() {
         prevStories.map(
           (story) =>
             story.id ===
-            storyId
+              storyId
               ? {
-                  ...story,
-                  isFavorite,
-                }
+                ...story,
+                isFavorite,
+              }
               : story
         )
     );
@@ -571,9 +560,6 @@ export default function HomePage() {
   /*
    * ========================================
    * Create Story
-   *
-   * Guest → Clerk Sign In
-   * Login → Create Story
    * ========================================
    */
 

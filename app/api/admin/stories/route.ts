@@ -30,6 +30,7 @@ export async function GET() {
                 tone,
                 total_chapters,
                 is_published,
+                is_banned,
                 created_at,
                 updated_at,
                 user_id

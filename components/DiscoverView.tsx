@@ -29,6 +29,8 @@ const CATEGORIES: ('ทั้งหมด' | Genre)[] = [
   'ไซไฟ',
   'ประวัติศาสตร์',
   'สยองขวัญ',
+  'ดราม่า',
+  'แอ็กชัน',
   'ผจญภัย',
 ];
 
@@ -39,210 +41,109 @@ export const DiscoverView: React.FC<
   isLoading = false,
   onSelectStory,
 }) => {
-  const [
-    selectedCategory,
-    setSelectedCategory,
-  ] = useState<string>('ทั้งหมด');
+    const [
+      selectedCategory,
+      setSelectedCategory,
+    ] = useState<string>('ทั้งหมด');
 
-  const [
-    searchQuery,
-    setSearchQuery,
-  ] = useState('');
+    const [
+      searchQuery,
+      setSearchQuery,
+    ] = useState('');
 
-  const [
-    isCategoryOpen,
-    setIsCategoryOpen,
-  ] = useState(false);
+    const [
+      isCategoryOpen,
+      setIsCategoryOpen,
+    ] = useState(false);
 
-  const dropdownRef =
-    useRef<HTMLDivElement>(null);
+    const dropdownRef =
+      useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (
-      event: MouseEvent
-    ) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(
-          event.target as Node
-        )
-      ) {
-        setIsCategoryOpen(false);
-      }
-    };
+    useEffect(() => {
+      const handleClickOutside = (
+        event: MouseEvent
+      ) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(
+            event.target as Node
+          )
+        ) {
+          setIsCategoryOpen(false);
+        }
+      };
 
-    document.addEventListener(
-      'mousedown',
-      handleClickOutside
-    );
-
-    return () => {
-      document.removeEventListener(
+      document.addEventListener(
         'mousedown',
         handleClickOutside
       );
-    };
-  }, []);
 
-  const filteredStories =
-    stories.filter((story) => {
-      const matchesCategory =
-        selectedCategory === 'ทั้งหมด' ||
-        story.genre === selectedCategory;
+      return () => {
+        document.removeEventListener(
+          'mousedown',
+          handleClickOutside
+        );
+      };
+    }, []);
 
-      const matchesSearch =
-        story.title
-          .toLowerCase()
-          .includes(
-            searchQuery.toLowerCase()
-          ) ||
-        story.corePremise
-          .toLowerCase()
-          .includes(
-            searchQuery.toLowerCase()
-          );
+    const filteredStories =
+      stories.filter((story) => {
+        const matchesCategory =
+          selectedCategory === 'ทั้งหมด' ||
+          story.genre === selectedCategory;
 
-      return (
-        matchesCategory &&
-        matchesSearch
-      );
-    });
+        const matchesSearch =
+          story.title
+            .toLowerCase()
+            .includes(
+              searchQuery.toLowerCase()
+            ) ||
+          story.corePremise
+            .toLowerCase()
+            .includes(
+              searchQuery.toLowerCase()
+            );
 
-  // ==========================================
-  // FULL PAGE LOADING
-  // ==========================================
+        return (
+          matchesCategory &&
+          matchesSearch
+        );
+      });
 
-  if (isLoading) {
-    return <DiscoverSkeleton />;
-  }
+    // ==========================================
+    // FULL PAGE LOADING
+    // ==========================================
 
-  return (
-    <div className="view-container">
+    if (isLoading) {
+      return <DiscoverSkeleton />;
+    }
 
-      {/* ======================================
+    return (
+      <div className="view-container">
+
+        {/* ======================================
           TITLE & SEARCH BAR
       ======================================= */}
 
-      <div className="discover-header">
+        <div className="discover-header">
 
-        <div className="discover-title">
+          <div className="discover-title">
 
-          <span className="discover-eyebrow">
-            ค้นพบโลกใบใหม่
-          </span>
-
-          <h1 className="discover-main-title">
-            Discover Stories
-          </h1>
-
-        </div>
-
-        <div className="search-input-wrapper">
-
-          <span
-            className="search-icon"
-            aria-hidden="true"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle
-                cx="11"
-                cy="11"
-                r="7"
-              />
-
-              <path d="m20 20-4-4" />
-            </svg>
-          </span>
-
-          <input
-            type="text"
-            placeholder="ค้นหาชื่อเรื่อง..."
-            value={searchQuery}
-            onChange={(e) =>
-              setSearchQuery(
-                e.target.value
-              )
-            }
-          />
-
-        </div>
-
-      </div>
-
-
-      {/* ======================================
-          DESKTOP - CATEGORY PILLS
-      ======================================= */}
-
-      <div className="category-scroll">
-
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat}
-            type="button"
-            className={`cat-pill ${
-              selectedCategory === cat
-                ? 'active'
-                : ''
-            }`}
-            onClick={() =>
-              setSelectedCategory(cat)
-            }
-          >
-            {cat}
-          </button>
-        ))}
-
-      </div>
-
-
-      {/* ======================================
-          MOBILE - CUSTOM CATEGORY DROPDOWN
-      ======================================= */}
-
-      <div className="discover-filters">
-
-        <div
-          className="filter-group"
-          ref={dropdownRef}
-        >
-
-          <label>
-            หมวดหมู่
-          </label>
-
-          <button
-            type="button"
-            className={`category-select ${
-              isCategoryOpen
-                ? 'open'
-                : ''
-            }`}
-            onClick={() =>
-              setIsCategoryOpen(
-                (prev) => !prev
-              )
-            }
-            aria-expanded={
-              isCategoryOpen
-            }
-          >
-
-            <span>
-              {selectedCategory}
+            <span className="discover-eyebrow">
+              ค้นพบโลกใบใหม่
             </span>
 
+            <h1 className="discover-main-title">
+              Discover Stories
+            </h1>
+
+          </div>
+
+          <div className="search-input-wrapper">
+
             <span
-              className={`category-arrow ${
-                isCategoryOpen
-                  ? 'open'
-                  : ''
-              }`}
+              className="search-icon"
+              aria-hidden="true"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -250,78 +151,175 @@ export const DiscoverView: React.FC<
                 stroke="currentColor"
                 strokeWidth="2"
               >
-                <path d="m6 9 6 6 6-6" />
+                <circle
+                  cx="11"
+                  cy="11"
+                  r="7"
+                />
+
+                <path d="m20 20-4-4" />
               </svg>
             </span>
 
-          </button>
+            <input
+              type="text"
+              placeholder="ค้นหาชื่อเรื่อง..."
+              value={searchQuery}
+              onChange={(e) =>
+                setSearchQuery(
+                  e.target.value
+                )
+              }
+            />
 
-          {isCategoryOpen && (
-            <div className="category-menu">
+          </div>
 
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  className={`category-option ${
-                    selectedCategory === cat
-                      ? 'selected'
-                      : ''
+        </div>
+
+
+        {/* ======================================
+          DESKTOP - CATEGORY PILLS
+      ======================================= */}
+
+        <div className="category-scroll">
+
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              className={`cat-pill ${selectedCategory === cat
+                  ? 'active'
+                  : ''
+                }`}
+              onClick={() =>
+                setSelectedCategory(cat)
+              }
+            >
+              {cat}
+            </button>
+          ))}
+
+        </div>
+
+
+        {/* ======================================
+          MOBILE - CUSTOM CATEGORY DROPDOWN
+      ======================================= */}
+
+        <div className="discover-filters">
+
+          <div
+            className="filter-group"
+            ref={dropdownRef}
+          >
+
+            <label>
+              หมวดหมู่
+            </label>
+
+            <button
+              type="button"
+              className={`category-select ${isCategoryOpen
+                  ? 'open'
+                  : ''
+                }`}
+              onClick={() =>
+                setIsCategoryOpen(
+                  (prev) => !prev
+                )
+              }
+              aria-expanded={
+                isCategoryOpen
+              }
+            >
+
+              <span>
+                {selectedCategory}
+              </span>
+
+              <span
+                className={`category-arrow ${isCategoryOpen
+                    ? 'open'
+                    : ''
                   }`}
-                  onClick={() => {
-                    setSelectedCategory(
-                      cat
-                    );
-
-                    setIsCategoryOpen(
-                      false
-                    );
-                  }}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
                 >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </span>
 
-                  <span>
-                    {cat}
-                  </span>
+            </button>
 
-                  {selectedCategory ===
-                    cat && (
-                    <span className="category-check">
-                      ✓
+            {isCategoryOpen && (
+              <div className="category-menu">
+
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    className={`category-option ${selectedCategory === cat
+                        ? 'selected'
+                        : ''
+                      }`}
+                    onClick={() => {
+                      setSelectedCategory(
+                        cat
+                      );
+
+                      setIsCategoryOpen(
+                        false
+                      );
+                    }}
+                  >
+
+                    <span>
+                      {cat}
                     </span>
-                  )}
 
-                </button>
-              ))}
+                    {selectedCategory ===
+                      cat && (
+                        <span className="category-check">
+                          ✓
+                        </span>
+                      )}
 
-            </div>
+                  </button>
+                ))}
+
+              </div>
+            )}
+
+          </div>
+
+        </div>
+
+
+        {/* ======================================
+          STORIES GRID
+      ======================================= */}
+
+        <div className="story-grid">
+
+          {filteredStories.map(
+            (story) => (
+              <StoryCard
+                key={story.id}
+                story={story}
+                onClick={
+                  onSelectStory
+                }
+                branchFrom="discover"
+              />
+            )
           )}
 
         </div>
 
       </div>
-
-
-      {/* ======================================
-          STORIES GRID
-      ======================================= */}
-
-      <div className="story-grid">
-
-        {filteredStories.map(
-          (story) => (
-            <StoryCard
-              key={story.id}
-              story={story}
-              onClick={
-                onSelectStory
-              }
-              branchFrom="discover"
-            />
-          )
-        )}
-
-      </div>
-
-    </div>
-  );
-};
+    );
+  };

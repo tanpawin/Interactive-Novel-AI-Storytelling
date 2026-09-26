@@ -53,7 +53,8 @@ export async function GET(
         genre,
         tone,
         synopsis,
-        is_published
+        is_published,
+        is_banned
         `
       )
       .eq('id', storyId)
@@ -66,6 +67,17 @@ export async function GET(
           error: 'Story not found',
         },
         { status: 404 }
+      );
+    }
+
+    if (story.is_banned) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'นิยายเรื่องนี้ถูกระงับการใช้งาน',
+        },
+        { status: 403 }
       );
     }
 

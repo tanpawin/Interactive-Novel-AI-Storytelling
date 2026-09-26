@@ -276,6 +276,13 @@ export default function MyStoriesPage() {
                 story.is_published ??
                 false,
 
+              // ==========================================
+              // BAN STATUS
+              // ==========================================
+              isBanned:
+                story.is_banned ??
+                false,
+
               isFresh:
                 Date.now() -
                   new Date(

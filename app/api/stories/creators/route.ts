@@ -10,7 +10,8 @@ export async function GET() {
     } = await supabaseAdmin
       .from('stories')
       .select('id, user_id, is_published')
-      .eq('is_published', true);
+      .eq('is_published', true)
+      .eq('is_banned', false);
 
     if (storiesError) {
       console.error(

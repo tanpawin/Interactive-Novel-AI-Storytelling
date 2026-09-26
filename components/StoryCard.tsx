@@ -47,7 +47,6 @@ export const StoryCard: React.FC<StoryCardProps> = ({
   const [isSavingFavorite, setIsSavingFavorite] =
     useState(false);
 
-
   /*
    * ========================================
    * Cover Loading
@@ -60,34 +59,13 @@ export const StoryCard: React.FC<StoryCardProps> = ({
   const [coverError, setCoverError] =
     useState(false);
 
-  /*
-   * เก็บ reference ของ <img>
-   *
-   * ใช้ตรวจว่ารูปถูก Browser Cache
-   * และโหลดเสร็จไปแล้วหรือยัง
-   */
   const coverImageRef =
     useRef<HTMLImageElement | null>(null);
-
 
   /*
    * ========================================
    * Reset / Check Cover
    * ========================================
-   *
-   * เมื่อเปลี่ยน Story หรือเปลี่ยนรูปปก
-   *
-   * เราจะ:
-   * 1. reset loading state
-   * 2. ตรวจว่ารูปโหลดอยู่ใน cache แล้วหรือยัง
-   *
-   * ป้องกันปัญหา:
-   *
-   * ไปหน้าอื่น
-   * ↓
-   * กลับมา
-   * ↓
-   * รูปค้างเบลอ
    */
 
   useEffect(() => {
@@ -98,12 +76,6 @@ export const StoryCard: React.FC<StoryCardProps> = ({
       const image =
         coverImageRef.current;
 
-      /*
-       * complete = Browser โหลดรูปเสร็จแล้ว
-       *
-       * naturalWidth > 0
-       * = รูปโหลดสำเร็จจริง
-       */
       if (
         image &&
         image.complete &&
@@ -113,9 +85,6 @@ export const StoryCard: React.FC<StoryCardProps> = ({
       }
     };
 
-    /*
-     * รอให้ <img> ถูกสร้างใน DOM ก่อน
-     */
     const frame =
       requestAnimationFrame(
         checkImageLoaded
@@ -125,7 +94,6 @@ export const StoryCard: React.FC<StoryCardProps> = ({
       cancelAnimationFrame(frame);
     };
   }, [story.coverUrl]);
-
 
   /*
    * ========================================
@@ -142,10 +110,6 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
     const newFavoriteState =
       !isFavorite;
-
-    /*
-     * Optimistic UI
-     */
 
     setIsFavorite(newFavoriteState);
 
@@ -195,16 +159,11 @@ export const StoryCard: React.FC<StoryCardProps> = ({
             'Favorite request failed'
         );
       }
-
     } catch (error) {
       console.error(
         'Favorite Error:',
         error
       );
-
-      /*
-       * Rollback
-       */
 
       setIsFavorite(
         !newFavoriteState
@@ -218,12 +177,10 @@ export const StoryCard: React.FC<StoryCardProps> = ({
       alert(
         'ไม่สามารถบันทึกเรื่องโปรดได้'
       );
-
     } finally {
       setIsSavingFavorite(false);
     }
   };
-
 
   /*
    * ========================================
@@ -241,6 +198,16 @@ export const StoryCard: React.FC<StoryCardProps> = ({
     );
   };
 
+  /*
+   * ========================================
+   * Cover
+   * ========================================
+   */
+
+  const coverSrc =
+    story.coverUrl && !coverError
+      ? story.coverUrl
+      : '/images/default-cover.png';
 
   /*
    * ========================================
@@ -262,69 +229,39 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
       <div className="card-cover-wrapper">
 
-        {/* =================================
-            Cover Image
-        ================================= */}
-
-        {story.coverUrl &&
-        !coverError ? (
-
-          <img
-            ref={coverImageRef}
-            src={story.coverUrl}
-            alt={story.title}
-
-            className={`card-cover-img ${
-              isCoverLoaded
-                ? 'card-cover-loaded'
-                : 'card-cover-loading'
-            }`}
-
-            /*
-             * กรณีรูปโหลดใหม่จริง ๆ
-             */
-            onLoad={() => {
-              setIsCoverLoaded(true);
-            }}
-
-            /*
-             * กรณีรูปเสีย / URL ใช้ไม่ได้
-             */
-            onError={() => {
+        <img
+          ref={coverImageRef}
+          src={coverSrc}
+          alt={story.title}
+          className={`card-cover-img ${
+            isCoverLoaded
+              ? 'card-cover-loaded'
+              : 'card-cover-loading'
+          }`}
+          onLoad={() => {
+            setIsCoverLoaded(true);
+          }}
+          onError={() => {
+            if (
+              story.coverUrl &&
+              !coverError
+            ) {
+              setIsCoverLoaded(false);
               setCoverError(true);
-            }}
-          />
+              return;
+            }
 
-        ) : (
+            setIsCoverLoaded(true);
+          }}
+        />
 
-          /* =================================
-             Cover Placeholder
-          ================================= */
-
-          <div
-            className="
-              card-cover-img
-              card-cover-placeholder
-            "
-          >
-            <span>📖</span>
-          </div>
-
-        )}
-
-
-        {/* =================================
-            Genre Badge
-        ================================= */}
+        {/* Genre Badge */}
 
         <span className="genre-badge">
           {story.genre}
         </span>
 
-
-        {/* =================================
-            Favorite Button
-        ================================= */}
+        {/* Favorite Button */}
 
         <button
           type="button"
@@ -352,7 +289,6 @@ export const StoryCard: React.FC<StoryCardProps> = ({
 
       </div>
 
-
       {/* =================================
           Story Info
       ================================= */}
@@ -365,13 +301,11 @@ export const StoryCard: React.FC<StoryCardProps> = ({
           {story.title}
         </h3>
 
-
         {/* Author */}
 
         <p className="card-author">
           {story.author}
         </p>
-
 
         {/* =================================
             Progress / Stats
@@ -391,7 +325,6 @@ export const StoryCard: React.FC<StoryCardProps> = ({
               </span>
 
             </div>
-
 
             <div className="progress-bar-bg">
 
@@ -437,7 +370,6 @@ export const StoryCard: React.FC<StoryCardProps> = ({
           </div>
 
         )}
-
 
         {/* =================================
             Branch Button

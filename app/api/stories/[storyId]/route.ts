@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { isUserBanned } from '@/lib/auth/user';
 
 type RouteContext = {
   params: Promise<{
@@ -23,6 +25,18 @@ export async function DELETE(
           error: 'กรุณาเข้าสู่ระบบก่อน',
         },
         { status: 401 }
+      );
+    }
+
+    const banned = await isUserBanned();
+
+    if (banned) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'บัญชีของคุณถูกระงับการใช้งาน',
+        },
+        { status: 403 }
       );
     }
 
@@ -114,6 +128,18 @@ export async function PATCH(
           error: 'กรุณาเข้าสู่ระบบก่อน',
         },
         { status: 401 }
+      );
+    }
+
+    const banned = await isUserBanned();
+
+    if (banned) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'บัญชีของคุณถูกระงับการใช้งาน',
+        },
+        { status: 403 }
       );
     }
 
