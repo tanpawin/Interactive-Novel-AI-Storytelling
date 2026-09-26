@@ -96,7 +96,7 @@ const DEFAULT_FORM_DATA: CreateStoryFormData = {
 };
 
 const DRAFT_KEY =
-  'cozytales_create_story_draft';
+  'GonnaTales_create_story_draft';
 
 export const CreateStoryModal: React.FC<
   CreateStoryModalProps
@@ -753,7 +753,7 @@ export const CreateStoryModal: React.FC<
       );
 
       sessionStorage.setItem(
-        'cozytales_create_story',
+        'GonnaTales_create_story',
         JSON.stringify(
           cleanFormData
         )

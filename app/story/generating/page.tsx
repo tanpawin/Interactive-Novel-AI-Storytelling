@@ -15,19 +15,19 @@ import type {
 import '../../../styles/generating.css';
 
 const CREATE_KEY =
-  'cozytales_create_story';
+  'GonnaTales_create_story';
 
 const GENERATING_KEY =
-  'cozytales_generating';
+  'GonnaTales_generating';
 
 const RESULT_KEY =
-  'cozytales_generated_story';
+  'GonnaTales_generated_story';
 
 const STORY_ID_KEY =
-  'cozytales_generating_story_id';
+  'GonnaTales_generating_story_id';
 
 const DRAFT_KEY =
-  'cozytales_create_story_draft';
+  'GonnaTales_create_story_draft';
 
 export default function GeneratingStoryPage() {
   const router = useRouter();
@@ -321,7 +321,7 @@ export default function GeneratingStoryPage() {
           </div>
 
           <div className="eyebrow">
-            COZYTALES
+            GonnaTales
           </div>
 
           <h1>
@@ -392,7 +392,7 @@ export default function GeneratingStoryPage() {
         </div>
 
         <div className="eyebrow">
-          COZYTALES
+          GonnaTales
         </div>
 
         <h1>

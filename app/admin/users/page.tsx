@@ -375,7 +375,7 @@ export default function AdminUsersPage() {
           </h1>
 
           <p className="admin-description">
-            จัดการและตรวจสอบข้อมูลผู้ใช้งานภายใน CozyTales
+            จัดการและตรวจสอบข้อมูลผู้ใช้งานภายใน GonnaTales
           </p>
         </header>
 

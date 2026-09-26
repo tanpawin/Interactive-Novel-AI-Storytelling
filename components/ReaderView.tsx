@@ -430,18 +430,26 @@ export const ReaderView: React.FC<
             </button>
           </div>
 
-          {/* AI Loading */}
+          {/* Story Generation Loading */}
           {isGeneratingNext && (
             <div className="ai-generating-card">
-              <div className="pulse-icon">
-                ✨
+              <div className="story-writing-animation">
+                <span className="writing-line line-1" />
+                <span className="writing-line line-2" />
+                <span className="writing-line line-3" />
+
+                <span className="writing-cursor" />
               </div>
 
-              <p>
-                Gemini AI
-                กำลังเขียนเรื่องราวบทต่อไป
-                ตามการตัดสินใจของคุณ...
-              </p>
+              <div className="ai-generating-content">
+                <p>
+                  กำลังเรียบเรียงเรื่องราวบทต่อไป
+                </p>
+
+                <span>
+                  ตามการตัดสินใจของคุณ
+                </span>
+              </div>
             </div>
           )}
         </main>

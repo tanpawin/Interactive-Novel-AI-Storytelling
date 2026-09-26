@@ -33,7 +33,7 @@ export const Navbar: React.FC = () => {
 
   const handleCreateStory = () => {
     sessionStorage.removeItem(
-      'cozytales_create_story_draft'
+      'GonnaTales_create_story_draft'
     );
 
     setIsMobileMenuOpen(false);

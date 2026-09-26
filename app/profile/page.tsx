@@ -148,7 +148,7 @@ export default function ProfilePage() {
             </h1>
 
             <p>
-              ชื่อที่ใช้แสดงใน CozyTales
+              ชื่อที่ใช้แสดงใน GonnaTales
             </p>
           </div>
 

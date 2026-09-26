@@ -522,7 +522,7 @@ async function syncCharactersFromChapter({
 
     const extractionPrompt = `
 คุณคือระบบวิเคราะห์ความสัมพันธ์ของตัวละคร
-สำหรับเกม Interactive Novel ของ CozyTales
+สำหรับเกม Interactive Novel ของ GonnaTales
 
 หน้าที่ของคุณคืออ่านข้อความบทที่ ${chapterNumber}
 แล้วตรวจจับ "ความสัมพันธ์ระหว่างตัวละคร"
@@ -1384,7 +1384,7 @@ export async function POST(req: Request) {
           : 'ไม่มี NPC ที่ผู้สร้างกำหนดไว้ล่วงหน้า';
 
       const systemPrompt = `
-คุณคือ AI นักเขียนนิยายสำหรับแอป CozyTales
+คุณคือ AI นักเขียนนิยายสำหรับแอป GonnaTales
 
 หน้าที่ของคุณคือเขียนนิยายภาษาไทยที่อ่านเป็นธรรมชาติ
 มีบรรยากาศ มีรายละเอียด และมีความต่อเนื่องของเรื่อง
@@ -2619,7 +2619,7 @@ ${chapter.content || ''}
 `;
 
       const prompt = `
-คุณคือ AI นักเขียนนิยายของ CozyTales
+คุณคือ AI นักเขียนนิยายของ GonnaTales
 
 ชื่อเรื่อง:
 ${story.title}

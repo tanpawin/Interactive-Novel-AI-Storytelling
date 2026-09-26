@@ -221,7 +221,7 @@ export default function AdminPage() {
           </h1>
 
           <p className="admin-dashboard-description">
-            ภาพรวมและการจัดการข้อมูลภายในระบบ CozyTales
+            ภาพรวมและการจัดการข้อมูลภายในระบบ GonnaTales
           </p>
         </header>
 
@@ -259,7 +259,7 @@ export default function AdminPage() {
                   <h2>ภาพรวมระบบ</h2>
 
                   <p>
-                    ข้อมูลสำคัญของ CozyTales ในปัจจุบัน
+                    ข้อมูลสำคัญของ GonnaTales ในปัจจุบัน
                   </p>
                 </div>
               </div>

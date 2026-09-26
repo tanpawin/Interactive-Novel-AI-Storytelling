@@ -23,10 +23,10 @@ import {
 } from '@/types/story';
 
 const DRAFT_KEY =
-  'cozytales_create_story_draft';
+  'GonnaTales_create_story_draft';
 
 const CREATE_KEY =
-  'cozytales_create_story';
+  'GonnaTales_create_story';
 
 const genres: Genre[] = [
   'แฟนตาซี',
@@ -582,11 +582,11 @@ export default function CreateStoryPage() {
 
     try {
       sessionStorage.removeItem(
-        'cozytales_generated_story'
+        'GonnaTales_generated_story'
       );
 
       sessionStorage.removeItem(
-        'cozytales_generating_story_id'
+        'GonnaTales_generating_story_id'
       );
 
       sessionStorage.setItem(

@@ -575,7 +575,7 @@ export default function HomePage() {
       }
 
       sessionStorage.removeItem(
-        'cozytales_create_story_draft'
+        'GonnaTales_create_story_draft'
       );
 
       router.push(
