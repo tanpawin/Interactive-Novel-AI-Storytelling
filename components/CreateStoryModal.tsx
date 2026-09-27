@@ -132,6 +132,25 @@ export const CreateStoryModal: React.FC<
     const fileInputRef =
       useRef<HTMLInputElement>(null);
 
+
+    const modalBodyRef = useRef<HTMLDivElement>(null);
+
+
+    useEffect(() => {
+      if (!isOpen) return;
+
+      const body = modalBodyRef.current;
+      const modal = body?.closest('.story-modal');
+
+      if (body) {
+        body.scrollTop = 0;
+      }
+
+      if (modal) {
+        modal.scrollTop = 0;
+      }
+    }, [step, isOpen]);
+
     // ==========================================
     // RESTORE DRAFT
     // ==========================================
@@ -837,8 +856,11 @@ export const CreateStoryModal: React.FC<
           BODY
         ====================================== */}
 
-          <div className="story-modal-body">
 
+          <div
+            ref={modalBodyRef}
+            className="story-modal-body"
+          >
             {/* =====================================
             STEP 1
           ====================================== */}
@@ -929,9 +951,9 @@ export const CreateStoryModal: React.FC<
                           key={genre}
                           type="button"
                           className={`story-modal-pill-btn ${formData.genre ===
-                              genre
-                              ? 'selected'
-                              : ''
+                            genre
+                            ? 'selected'
+                            : ''
                             }`}
                           onClick={() =>
                             updateFormData({
@@ -963,9 +985,9 @@ export const CreateStoryModal: React.FC<
                           key={tone}
                           type="button"
                           className={`story-modal-pill-btn ${formData.tone ===
-                              tone
-                              ? 'selected'
-                              : ''
+                            tone
+                            ? 'selected'
+                            : ''
                             }`}
                           onClick={() =>
                             updateFormData({
@@ -999,9 +1021,9 @@ export const CreateStoryModal: React.FC<
                           }
                           type="button"
                           className={`story-modal-length-card ${formData.length ===
-                              item.label
-                              ? 'selected'
-                              : ''
+                            item.label
+                            ? 'selected'
+                            : ''
                             }`}
                           onClick={() =>
                             updateFormData({

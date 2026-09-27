@@ -284,3 +284,35 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+
+
+.story-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(44, 34, 30, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.story-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 580px;
+  max-height: 90dvh;
+  overflow: hidden;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+}
+
+.story-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
